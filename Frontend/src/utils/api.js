@@ -4,8 +4,7 @@ export async function apiGet(path, token) {
   // The 'process' object is not available in browser environments with Vite.
   // VITE_API_BASE should be defined in your .env file (e.g., .env.local)
   // Example: VITE_API_BASE=http://localhost:5000
-  const apiBaseUrl =
-      import.meta.env.VITE_API_BASE || "https://tekna-ryyc.onrender.com";
+  const apiBaseUrl = "https://tekna-ryyc.onrender.com";
 
   // Prepend '/api' to the path to match the backend routes
   const fullPath = `/api${path}`;
