@@ -29,11 +29,11 @@ const formatINR = (val) => {
     }).format(val || 0);
 };
 
-/* --- 2. Window Sketch Component (Enhanced Look & Fixed Width Centering) --- */
+/* --- 2. Window Sketch Component (FIXED DIMENSION LOOK) --- */
 const WindowSketch = ({ width, height, type = "normal" }) => {
     const boxSize = 150;
     const strokeColor = "#000000";
-    const glassColor = "#ffffff";
+    const glassColor = "#f5faff"; // Slightly off-white blue
 
     const w = Math.max(1, Number(width));
     const h = Math.max(1, Number(height));
@@ -48,48 +48,14 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
         drawW = boxSize * aspect;
     }
 
-    const startX = 20;
-    const startY = 20;
+    // Position the drawing slightly inward to make space for dimension lines
+    const startX = 25;
+    const startY = 25;
 
     return (
         <div className="relative flex flex-col items-start justify-start p-2 w-full h-full">
-            {/* Height Label (Left) */}
-            <div
-                className="absolute left-0 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm font-semibold text-gray-800 whitespace-nowrap"
-                style={{ transformOrigin: "center" }}
-            >
-                {height}"
-            </div>
-
-            {/* Width Label (Bottom - FIXED CENTERING) */}
-            <div
-                className="absolute left-1/2 bottom-0 transform -translate-x-1/2 text-sm font-semibold text-gray-800"
-                // Adjusted positioning logic for more accurate centering relative to SVG
-                style={{ marginLeft: `${(drawW - boxSize) / 2}px` }}
-            >
-                {width}"
-            </div>
-
             <svg width="200" height="200" viewBox="0 0 200 200">
-                {/* Visual Dimension lines (Enhancement) */}
-                <line
-                    x1={startX}
-                    y1={startY + drawH + 5}
-                    x2={startX + drawW}
-                    y2={startY + drawH + 5}
-                    stroke="#555"
-                    strokeWidth="0.5"
-                />
-                <line
-                    x1={startX - 5}
-                    y1={startY}
-                    x2={startX - 5}
-                    y2={startY + drawH}
-                    stroke="#555"
-                    strokeWidth="0.5"
-                />
-
-                {/* Main Frame */}
+                {/* --- WINDOW FRAME --- */}
                 <rect
                     x={startX}
                     y={startY}
@@ -97,29 +63,134 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                     height={drawH}
                     fill={glassColor}
                     stroke={strokeColor}
-                    strokeWidth="2.5"
+                    strokeWidth="2"
                 />
 
-                {/* Enhanced Crosshair for clarity */}
+                {/* --- Glass Highlight (Simulated Glare) --- */}
                 <line
                     x1={startX}
-                    y1={startY + drawH / 2}
+                    y1={startY}
                     x2={startX + drawW}
-                    y2={startY + drawH / 2}
-                    stroke="#ddd"
+                    y2={startY + drawH}
+                    stroke="#ffffff"
+                    strokeWidth="1"
+                    opacity="0.5"
+                />
+
+                {/* --- Inner Window Details (Crosshair/Divider) --- */}
+                {type.toLowerCase().includes("slider") ? (
+                    <>
+                        <line
+                            x1={startX + drawW / 2}
+                            y1={startY}
+                            x2={startX + drawW / 2}
+                            y2={startY + drawH}
+                            stroke="#555"
+                            strokeWidth="1"
+                        />
+                        {/* Simplified handle indicators */}
+                        <circle
+                            cx={startX + drawW * 0.1}
+                            cy={startY + drawH * 0.5}
+                            r={2}
+                            fill="#555"
+                        />
+                        <circle
+                            cx={startX + drawW * 0.9}
+                            cy={startY + drawH * 0.5}
+                            r={2}
+                            fill="#555"
+                        />
+                    </>
+                ) : (
+                    <>
+                        {/* Simple Fixed Crosshair */}
+                        <line
+                            x1={startX + drawW / 2}
+                            y1={startY}
+                            x2={startX + drawW / 2}
+                            y2={startY + drawH}
+                            stroke="#ccc"
+                            strokeWidth="0.5"
+                            strokeDasharray="3 2"
+                        />
+                        <line
+                            x1={startX}
+                            y1={startY + drawH / 2}
+                            x2={startX + drawW}
+                            y2={startY + drawH / 2}
+                            stroke="#ccc"
+                            strokeWidth="0.5"
+                            strokeDasharray="3 2"
+                        />
+                    </>
+                )}
+
+                {/* --- Dimension Lines (Visual ONLY, not interactive) --- */}
+
+                {/* Horizontal (Width) Dimension Line */}
+                <line
+                    x1={startX}
+                    y1={startY + drawH + 10}
+                    x2={startX + drawW}
+                    y2={startY + drawH + 10}
+                    stroke="#555"
                     strokeWidth="0.5"
-                    strokeDasharray="3 2"
                 />
                 <line
-                    x1={startX + drawW / 2}
-                    y1={startY}
-                    x2={startX + drawW / 2}
-                    y2={startY + drawH}
-                    stroke="#ddd"
+                    x1={startX}
+                    y1={startY + drawH}
+                    x2={startX}
+                    y2={startY + drawH + 15}
+                    stroke="#555"
                     strokeWidth="0.5"
-                    strokeDasharray="3 2"
+                />
+                <line
+                    x1={startX + drawW}
+                    y1={startY + drawH}
+                    x2={startX + drawW}
+                    y2={startY + drawH + 15}
+                    stroke="#555"
+                    strokeWidth="0.5"
+                />
+
+                {/* Vertical (Height) Dimension Line */}
+                <line
+                    x1={startX - 10}
+                    y1={startY}
+                    x2={startX - 10}
+                    y2={startY + drawH}
+                    stroke="#555"
+                    strokeWidth="0.5"
+                />
+                <line
+                    x1={startX - 15}
+                    y1={startY}
+                    x2={startX}
+                    y2={startY}
+                    stroke="#555"
+                    strokeWidth="0.5"
+                />
+                <line
+                    x1={startX - 15}
+                    y1={startY + drawH}
+                    x2={startX}
+                    y2={startY + drawH}
+                    stroke="#555"
+                    strokeWidth="0.5"
                 />
             </svg>
+
+            {/* --- Dimension Text --- */}
+            <div className="absolute left-1/2 bottom-3 transform -translate-x-1/2 text-sm font-semibold text-gray-800">
+                {width}"
+            </div>
+            <div
+                className="absolute left-1 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm font-semibold text-gray-800 whitespace-nowrap"
+                style={{ transformOrigin: "center" }}
+            >
+                {height}"
+            </div>
         </div>
     );
 };
@@ -494,7 +565,7 @@ export default function QuotePreview() {
                             ref={mainRef}
                             className="bg-white shadow-2xl w-full min-h-[297mm] p-10 relative text-gray-900"
                         >
-                            {/* 1. HEADER (LEFT ALIGNED COMPANY, RIGHT LOGO/DATE) */}
+                            {/* 1. HEADER (REVISED) */}
                             <header
                                 ref={(el) => (itemRefs.current["header"] = el)}
                                 className="flex justify-between items-start pb-6 border-b-2 border-gray-900 mb-8"
@@ -526,20 +597,22 @@ export default function QuotePreview() {
                                     </div>
                                 </div>
 
-                                {/* Right Side: Logo and Date (Right Aligned) */}
+                                {/* Right Side: Logo and Date (Right Aligned - FIX STRETCHING/SIZE) */}
                                 <div className="flex flex-col items-end text-right">
-                                    {/* Logo Placeholder (BIGGER) */}
-                                    {logo ? (
-                                        <img
-                                            src={logo}
-                                            alt="Logo"
-                                            className="h-auto w-50 object-contain"
-                                        />
-                                    ) : (
-                                        <div className="h-20 w-20 bg-red-100 border border-red-300 text-red-500 rounded flex items-center justify-center text-sm">
-                                            TWS
-                                        </div>
-                                    )}
+                                    {/* Logo Placeholder (FIXED ASPECT RATIO + LARGER) */}
+                                    <div className="h-24 w-24 mb-1 relative">
+                                        {logo ? (
+                                            <img
+                                                src={logo}
+                                                alt="Logo"
+                                                className="h-full w-full object-contain"
+                                            />
+                                        ) : (
+                                            <div className="h-full w-full bg-red-100 border border-red-300 text-red-500 flex items-center justify-center text-xs">
+                                                TWS
+                                            </div>
+                                        )}
+                                    </div>
 
                                     {/* Date Block */}
                                     <div className="mt-8 bg-gray-100 px-3 py-1.5 text-sm font-semibold text-gray-700 shadow-sm border border-gray-300">
