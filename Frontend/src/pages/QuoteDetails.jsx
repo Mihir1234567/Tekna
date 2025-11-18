@@ -148,84 +148,77 @@ function WindowSketch({ width = 36, height = 48, type = "normal" }) {
 
 /* ---------- Enhanced Spacer Component ---------- */
 const ManualSpacer = ({ id, height, updateHeight, visible }) => {
-    if (!visible && height === 0) return null;
+    // Logic update: If height > 0, we force visibility so the user can see/edit the auto-added space
+    const isVisible = visible || height > 0;
+
+    if (!isVisible) return null;
 
     const SMALL_STEP = 20;
     const BIG_STEP = 100;
 
     return (
         <div
-            className={`transition-all duration-200 ease-in-out ${
-                visible ? "my-3" : ""
-            }`}
+            className="transition-all duration-200 ease-in-out my-2"
             style={{ height: `${height}px` }}
         >
-            {visible ? (
-                <div className="h-full min-h-[40px] bg-blue-50 border border-dashed border-blue-300 rounded-lg flex items-center justify-center gap-2 text-blue-700 text-xs select-none relative shadow-sm">
-                    <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden">
-                        <button
-                            onClick={() =>
-                                updateHeight(id, Math.max(0, height - BIG_STEP))
-                            }
-                            className="p-1.5 hover:bg-blue-100 border-r border-blue-100"
-                            title="-100px"
-                        >
-                            <ChevronsUp size={14} />
-                        </button>
-                        <button
-                            onClick={() =>
-                                updateHeight(
-                                    id,
-                                    Math.max(0, height - SMALL_STEP)
-                                )
-                            }
-                            className="p-1.5 hover:bg-blue-100"
-                            title="-20px"
-                        >
-                            <Minus size={14} />
-                        </button>
-                    </div>
-
-                    <span className="font-mono font-bold min-w-[60px] text-center bg-white px-2 py-1 rounded border border-blue-200">
-                        {height}px
-                    </span>
-
-                    <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden">
-                        <button
-                            onClick={() =>
-                                updateHeight(id, height + SMALL_STEP)
-                            }
-                            className="p-1.5 hover:bg-blue-100 border-r border-blue-100"
-                            title="+20px"
-                        >
-                            <Plus size={14} />
-                        </button>
-                        <button
-                            onClick={() => updateHeight(id, height + BIG_STEP)}
-                            className="p-1.5 hover:bg-blue-100"
-                            title="+100px (Push Down)"
-                        >
-                            <ChevronsDown size={14} />
-                        </button>
-                    </div>
-
-                    {height > 0 && (
-                        <button
-                            onClick={() => updateHeight(id, 0)}
-                            className="absolute right-2 p-1 text-red-500 hover:bg-red-50 rounded"
-                            title="Reset to 0"
-                        >
-                            <RotateCcw size={14} />
-                        </button>
-                    )}
-
-                    <div className="absolute left-3 text-[10px] uppercase tracking-wider opacity-40 font-bold hidden sm:block">
-                        Manual Spacer
-                    </div>
+            <div className="h-full min-h-[40px] bg-blue-50 border border-dashed border-blue-300 rounded-lg flex items-center justify-center gap-2 text-blue-700 text-xs select-none relative shadow-sm group">
+                {/* Controls container */}
+                <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden shadow-sm">
+                    <button
+                        onClick={() =>
+                            updateHeight(id, Math.max(0, height - BIG_STEP))
+                        }
+                        className="p-1.5 hover:bg-blue-100 border-r border-blue-100 active:bg-blue-200"
+                        title="-100px"
+                    >
+                        <ChevronsUp size={14} />
+                    </button>
+                    <button
+                        onClick={() =>
+                            updateHeight(id, Math.max(0, height - SMALL_STEP))
+                        }
+                        className="p-1.5 hover:bg-blue-100 active:bg-blue-200"
+                        title="-20px"
+                    >
+                        <Minus size={14} />
+                    </button>
                 </div>
-            ) : (
-                <div style={{ height: `${height}px` }} />
-            )}
+
+                <span className="font-mono font-bold min-w-[60px] text-center bg-white px-2 py-1 rounded border border-blue-200 shadow-sm text-blue-800">
+                    {height}px
+                </span>
+
+                <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden shadow-sm">
+                    <button
+                        onClick={() => updateHeight(id, height + SMALL_STEP)}
+                        className="p-1.5 hover:bg-blue-100 border-r border-blue-100 active:bg-blue-200"
+                        title="+20px"
+                    >
+                        <Plus size={14} />
+                    </button>
+                    <button
+                        onClick={() => updateHeight(id, height + BIG_STEP)}
+                        className="p-1.5 hover:bg-blue-100 active:bg-blue-200"
+                        title="+100px (Push Down)"
+                    >
+                        <ChevronsDown size={14} />
+                    </button>
+                </div>
+
+                {height > 0 && (
+                    <button
+                        onClick={() => updateHeight(id, 0)}
+                        className="absolute right-2 p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
+                        title="Reset to 0"
+                    >
+                        <RotateCcw size={14} />
+                    </button>
+                )}
+
+                <div className="absolute left-3 text-[10px] uppercase tracking-wider opacity-40 font-bold hidden sm:block">
+                    Spacer
+                </div>
+            </div>
         </div>
     );
 };
@@ -246,10 +239,10 @@ export default function QuotePreview() {
     const [error, setError] = useState(null);
     const [isAdjusting, setIsAdjusting] = useState(false);
 
+    // Unified Spacing State (Used by both Manual and Auto)
     const [spacers, setSpacers] = useState({});
     const [showSpacers, setShowSpacers] = useState(false);
     const [pageBreaks, setPageBreaks] = useState([]);
-    const [autoMargins, setAutoMargins] = useState({});
 
     // SCALING STATE
     const [scale, setScale] = useState(1);
@@ -325,24 +318,24 @@ export default function QuotePreview() {
     const grandTotal = subtotal + packingCharges + cgstAmount + sgstAmount;
     const avgRate = totalSqFt > 0 ? (grandTotal / totalSqFt).toFixed(2) : 0;
 
-    /* --- ROBUST AUTO ADJUST LOGIC --- */
+    /* --- AUTO ADJUST LOGIC --- */
     const handleAutoAdjust = () => {
         if (!mainRef.current) return;
         setIsAdjusting(true);
+        setShowSpacers(true); // Enable tools so user can see what happened
 
-        // 1. Reset existing margins to 0 to get natural flow
-        setAutoMargins({});
+        // 1. Reset ALL spacers to 0 to measure "natural" flow
+        setSpacers({});
 
-        // 2. Wait for React to render the reset state
+        // 2. Wait for render to clear spacers, then measure
         setTimeout(() => {
             const containerWidth = mainRef.current.offsetWidth;
-            // A4 Ratio 1:1.4142. 1024px width -> ~1448px height per page
-            const pageHeightPx = containerWidth * 1.4142;
+            const pageHeightPx = containerWidth * 1.4142; // A4 Aspect Ratio
 
-            const newMargins = {};
+            const newSpacers = {};
             let totalAddedMargin = 0;
 
-            const keys = ["header"];
+            const keys = ["header"]; // Header usually safe, but included for offset calc
             windowList.forEach((_, i) => keys.push(`w-${i}`));
             keys.push("totals");
             keys.push("footer");
@@ -351,63 +344,62 @@ export default function QuotePreview() {
                 const el = itemRefs.current[key];
                 if (!el) return;
 
-                // Get natural position relative to container top
-                // We add 'totalAddedMargin' because we are processing sequentially
-                // and pushing subsequent items down.
+                // Current Top relative to container + any margin we already added to previous items
                 const naturalTop = el.offsetTop + totalAddedMargin;
                 const height = el.offsetHeight;
                 const currentBottom = naturalTop + height;
 
-                // Check which page start/end falls on (0-indexed)
                 const startPage = Math.floor(naturalTop / pageHeightPx);
                 const endPage = Math.floor(currentBottom / pageHeightPx);
 
-                // If item starts on one page but ends on another, it crosses the line
+                // If element crosses a page boundary
                 if (startPage !== endPage) {
-                    // Calculate how much to push down to start fresh on the next page
+                    // Push to next page
                     const nextPageStart = (startPage + 1) * pageHeightPx;
-                    // Add a buffer (e.g., 40px) for clean look
-                    const marginNeeded = nextPageStart - naturalTop + 40;
+                    // Add slight buffer (50px) for aesthetics
+                    const spaceNeeded = nextPageStart - naturalTop + 50;
 
-                    newMargins[key] = marginNeeded;
-                    totalAddedMargin += marginNeeded;
-                } else {
-                    newMargins[key] = 0;
+                    // Map element ID to Spacer ID
+                    let spacerKey = key;
+                    if (key === "totals") spacerKey = "spacer-totals";
+                    if (key === "footer") spacerKey = "spacer-footer";
+
+                    // Don't add spacer for header (it's always top)
+                    if (key !== "header") {
+                        newSpacers[spacerKey] = Math.ceil(spaceNeeded);
+                        totalAddedMargin += spaceNeeded;
+                    }
                 }
             });
 
-            setAutoMargins(newMargins);
+            setSpacers(newSpacers);
             setIsAdjusting(false);
-            setTimeout(calculatePageBreaks, 100); // Update red lines
-        }, 100);
+            setTimeout(calculatePageBreaks, 100);
+        }, 200);
     };
 
     const calculatePageBreaks = () => {
         if (!mainRef.current) return;
-        const containerWidth = mainRef.current.offsetWidth;
         const containerHeight = mainRef.current.scrollHeight;
+        const containerWidth = mainRef.current.offsetWidth;
         const pageHeightPx = containerWidth * 1.4142;
 
         const breaks = [];
         let currentH = pageHeightPx;
-        while (currentH < containerHeight) {
+        // Draw lines further than current height to allow for expansion
+        while (currentH < containerHeight + 2000) {
             breaks.push(currentH);
             currentH += pageHeightPx;
         }
         setPageBreaks(breaks);
     };
 
-    // Run adjust once on load after data is ready
-    useLayoutEffect(() => {
-        if (!loading && windowList.length > 0) {
-            setTimeout(handleAutoAdjust, 500);
-        }
-    }, [loading, windowList]);
-
+    // Initial Line Draw
     useEffect(() => {
+        setTimeout(calculatePageBreaks, 500);
         window.addEventListener("resize", calculatePageBreaks);
         return () => window.removeEventListener("resize", calculatePageBreaks);
-    }, [autoMargins, spacers]);
+    }, [spacers]); // Re-calc lines when spacers change
 
     const updateSpacer = (key, val) => {
         setSpacers((prev) => ({ ...prev, [key]: val }));
@@ -419,7 +411,7 @@ export default function QuotePreview() {
 
         const oldScale = scale;
         setScale(1);
-        setShowSpacers(false);
+        setShowSpacers(false); // Hide tools for clean PDF
         setIsPDFMode(true);
 
         setTimeout(async () => {
@@ -565,12 +557,6 @@ export default function QuotePreview() {
                             {/* Header */}
                             <div
                                 ref={(el) => (itemRefs.current["header"] = el)}
-                                style={{
-                                    // Use '||' to default to 1.5rem if no extra margin is calculated
-                                    marginBottom: autoMargins["header"]
-                                        ? `${autoMargins["header"]}px`
-                                        : "1.5rem",
-                                }}
                             >
                                 <div className="flex justify-between border-b-2 border-gray-800 pb-6">
                                     <div>
@@ -681,13 +667,6 @@ export default function QuotePreview() {
                                                 (itemRefs.current[`w-${i}`] =
                                                     el)
                                             }
-                                            style={{
-                                                marginTop: autoMargins[`w-${i}`]
-                                                    ? `${
-                                                          autoMargins[`w-${i}`]
-                                                      }px`
-                                                    : "0px",
-                                            }}
                                             className="transition-all duration-500"
                                         >
                                             <div className="border border-gray-300 rounded p-4 flex flex-row gap-6 mb-8 break-inside-avoid bg-white">
@@ -824,11 +803,6 @@ export default function QuotePreview() {
                             {/* Totals Section */}
                             <div
                                 ref={(el) => (itemRefs.current["totals"] = el)}
-                                style={{
-                                    marginTop: autoMargins["totals"]
-                                        ? `${autoMargins["totals"]}px`
-                                        : "1rem",
-                                }}
                                 className="break-inside-avoid flex justify-end"
                             >
                                 <div className="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-6 shadow-sm">
@@ -977,11 +951,6 @@ export default function QuotePreview() {
                             {/* Footer */}
                             <div
                                 ref={(el) => (itemRefs.current["footer"] = el)}
-                                style={{
-                                    marginTop: autoMargins["footer"]
-                                        ? `${autoMargins["footer"]}px`
-                                        : "2rem",
-                                }}
                                 className="break-inside-avoid"
                             >
                                 <div className="grid grid-cols-2 gap-8">
