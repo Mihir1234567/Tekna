@@ -1,10 +1,19 @@
 // src/pages/QuotePreview.jsx
 import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Download, ArrowLeft, Ruler, Plus, Minus, Wand2 } from "lucide-react";
+import {
+    Download,
+    Ruler,
+    Plus,
+    Minus,
+    Wand2,
+    RotateCcw,
+    ChevronsUp,
+    ChevronsDown,
+} from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import logo from "../assets/logo.png"; // Ensure this path matches your project structure
+import logo from "../assets/logo.png"; // Ensure this path is correct
 import { apiGet } from "../utils/api";
 import { getToken } from "../utils/auth";
 
@@ -136,34 +145,85 @@ function WindowSketch({ width = 36, height = 48, type = "normal" }) {
     );
 }
 
-/* ---------- Spacer Component ---------- */
+/* ---------- Enhanced Spacer Component ---------- */
 const ManualSpacer = ({ id, height, updateHeight, visible }) => {
     if (!visible && height === 0) return null;
-    const STEP = 20;
+
+    const SMALL_STEP = 20;
+    const BIG_STEP = 100;
+
     return (
         <div
             className={`transition-all duration-200 ease-in-out ${
-                visible ? "my-2" : ""
+                visible ? "my-3" : ""
             }`}
             style={{ height: `${height}px` }}
         >
             {visible ? (
-                <div className="h-full min-h-[30px] bg-blue-50 border border-dashed border-blue-300 rounded flex items-center justify-center gap-4 text-blue-600 text-sm select-none relative group">
-                    <button
-                        onClick={() =>
-                            updateHeight(id, Math.max(0, height - STEP))
-                        }
-                        className="p-1 hover:bg-blue-200 rounded"
-                    >
-                        <Minus size={16} />
-                    </button>
-                    <span className="font-mono">{height}px Spacer</span>
-                    <button
-                        onClick={() => updateHeight(id, height + STEP)}
-                        className="p-1 hover:bg-blue-200 rounded"
-                    >
-                        <Plus size={16} />
-                    </button>
+                <div className="h-full min-h-[40px] bg-blue-50 border border-dashed border-blue-300 rounded-lg flex items-center justify-center gap-2 text-blue-700 text-xs select-none relative shadow-sm">
+                    {/* Decrease Controls */}
+                    <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden">
+                        <button
+                            onClick={() =>
+                                updateHeight(id, Math.max(0, height - BIG_STEP))
+                            }
+                            className="p-1.5 hover:bg-blue-100 border-r border-blue-100"
+                            title="-100px"
+                        >
+                            <ChevronsUp size={14} />
+                        </button>
+                        <button
+                            onClick={() =>
+                                updateHeight(
+                                    id,
+                                    Math.max(0, height - SMALL_STEP)
+                                )
+                            }
+                            className="p-1.5 hover:bg-blue-100"
+                            title="-20px"
+                        >
+                            <Minus size={14} />
+                        </button>
+                    </div>
+
+                    <span className="font-mono font-bold min-w-[60px] text-center bg-white px-2 py-1 rounded border border-blue-200">
+                        {height}px
+                    </span>
+
+                    {/* Increase Controls */}
+                    <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden">
+                        <button
+                            onClick={() =>
+                                updateHeight(id, height + SMALL_STEP)
+                            }
+                            className="p-1.5 hover:bg-blue-100 border-r border-blue-100"
+                            title="+20px"
+                        >
+                            <Plus size={14} />
+                        </button>
+                        <button
+                            onClick={() => updateHeight(id, height + BIG_STEP)}
+                            className="p-1.5 hover:bg-blue-100"
+                            title="+100px (Push Down)"
+                        >
+                            <ChevronsDown size={14} />
+                        </button>
+                    </div>
+
+                    {/* Reset Button */}
+                    {height > 0 && (
+                        <button
+                            onClick={() => updateHeight(id, 0)}
+                            className="absolute right-2 p-1 text-red-500 hover:bg-red-50 rounded"
+                            title="Reset to 0"
+                        >
+                            <RotateCcw size={14} />
+                        </button>
+                    )}
+
+                    <div className="absolute left-3 text-[10px] uppercase tracking-wider opacity-40 font-bold hidden sm:block">
+                        Manual Spacer
+                    </div>
                 </div>
             ) : (
                 <div style={{ height: `${height}px` }} />
@@ -182,14 +242,12 @@ export default function QuotePreview() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Spacing State
+    // Spacing & Layout State
     const [spacers, setSpacers] = useState({});
     const [showSpacers, setShowSpacers] = useState(false);
     const [pageBreaks, setPageBreaks] = useState([]);
-
-    // AUTOMATIC LAYOUT STATE
     const [autoMargins, setAutoMargins] = useState({});
-    const itemRefs = useRef({}); // Stores references to every printable DOM element
+    const itemRefs = useRef({});
 
     // Pricing State
     const [applyGST, setApplyGST] = useState(true);
@@ -231,18 +289,17 @@ export default function QuotePreview() {
     const grandTotal = subtotal + packingCharges + cgstAmount + sgstAmount;
     const avgRate = totalSqFt > 0 ? (grandTotal / totalSqFt).toFixed(2) : 0;
 
-    /* --- Automatic Layout Logic --- */
+    /* --- Smart Layout Calculation (Auto + Manual) --- */
     const calculateAutoLayout = () => {
         if (!mainRef.current) return;
 
         const containerWidth = mainRef.current.offsetWidth;
-        // A4 Aspect Ratio is ~1.4142. Height = Width * 1.4142
+        // A4 Ratio: Height = Width * 1.4142
         const pageHeightPx = containerWidth * 1.4142;
 
-        let currentY = 0; // Tracks accumulated height of all elements
+        let currentY = 0;
         const newMargins = {};
 
-        // Define the order of elements to check
         const keysToProcess = ["header"];
         windowList.forEach((_, i) => keysToProcess.push(`w-${i}`));
         keysToProcess.push("totals");
@@ -252,20 +309,20 @@ export default function QuotePreview() {
             const el = itemRefs.current[key];
             if (!el) return;
 
+            // 1. Add Manual Space First
+            const manualSpace = spacers[key] || 0;
+            currentY += manualSpace;
+
+            // 2. Measure Element
             const height = el.offsetHeight;
 
-            // Where does this element currently start on the theoretical page?
-            // (modulo operator finds position relative to the top of the current page)
+            // 3. Check Page Cut
             const startOnPage = currentY % pageHeightPx;
             const endOnPage = startOnPage + height;
 
-            // If the element ends past the page bottom boundary
-            // AND the element is smaller than a full page (to prevent infinite loops on huge items)
+            // If element crosses the cut line (and isn't huge)
             if (endOnPage > pageHeightPx && height < pageHeightPx) {
-                // Calculate margin needed to push it to the start of the NEXT page
-                // +20px buffer for aesthetics
-                const marginNeeded = pageHeightPx - startOnPage + 20;
-
+                const marginNeeded = pageHeightPx - startOnPage + 20; // +20px buffer
                 newMargins[key] = marginNeeded;
                 currentY += marginNeeded + height;
             } else {
@@ -275,22 +332,18 @@ export default function QuotePreview() {
         });
 
         setAutoMargins(newMargins);
-
-        // Recalculate the red visual lines after the margins are applied
         setTimeout(calculatePageBreaks, 100);
     };
 
-    /* --- Visual Page Break Lines (Red Dashed Lines) --- */
+    /* --- Visual Page Lines --- */
     const calculatePageBreaks = () => {
         if (!mainRef.current) return;
         const containerWidth = mainRef.current.offsetWidth;
         const containerHeight = mainRef.current.scrollHeight;
-        const a4Ratio = 1.4142;
-        const pageHeightPx = containerWidth * a4Ratio;
+        const pageHeightPx = containerWidth * 1.4142;
 
         const breaks = [];
         let currentH = pageHeightPx;
-        // Draw lines all the way down the document
         while (currentH < containerHeight) {
             breaks.push(currentH);
             currentH += pageHeightPx;
@@ -298,31 +351,27 @@ export default function QuotePreview() {
         setPageBreaks(breaks);
     };
 
-    // Run auto layout once when data loads to ensure good initial state
     useLayoutEffect(() => {
         if (!loading && windowList.length > 0) {
-            setTimeout(() => {
-                calculateAutoLayout();
-            }, 500); // Delay to allow DOM to fully render images/fonts
+            setTimeout(calculateAutoLayout, 500);
         }
     }, [loading, windowList, applyGST]);
 
-    // Recalculate red lines on window resize
+    // Recalculate lines on resize
     useEffect(() => {
         window.addEventListener("resize", calculatePageBreaks);
         return () => window.removeEventListener("resize", calculatePageBreaks);
-    }, [autoMargins]);
+    }, [autoMargins, spacers]); // Re-run when margins or spacers change
 
     const updateSpacer = (key, val) => {
         setSpacers((prev) => ({ ...prev, [key]: val }));
     };
 
-    /* --- PDF Generation --- */
     const downloadPDF = async () => {
         const container = mainRef.current;
         if (!container) return;
 
-        setShowSpacers(false); // Hide helper tools
+        setShowSpacers(false);
         setIsPDFMode(true);
 
         setTimeout(async () => {
@@ -334,7 +383,7 @@ export default function QuotePreview() {
                 scale: 2,
                 useCORS: true,
                 windowWidth: 1200,
-                scrollY: -window.scrollY, // Ensures full height capture
+                scrollY: -window.scrollY,
             });
 
             const imgData = canvas.toDataURL("image/png");
@@ -372,7 +421,7 @@ export default function QuotePreview() {
 
     return (
         <div className="min-h-screen bg-gray-100 p-4 font-sans text-gray-900">
-            {/* --- HEADER CONTROLS --- */}
+            {/* --- HEADER TOOLBAR --- */}
             <div
                 className={`max-w-5xl mx-auto mb-6 flex flex-wrap justify-between items-center gap-4 ${
                     isPDFMode ? "hidden" : ""
@@ -380,17 +429,27 @@ export default function QuotePreview() {
             >
                 <h1 className="text-2xl font-bold">Quotation Preview</h1>
                 <div className="flex flex-wrap gap-3">
-                    {/* Auto Adjust Button */}
                     <button
                         onClick={calculateAutoLayout}
-                        className="px-4 py-2 border border-purple-300 bg-purple-50 text-purple-700 rounded flex gap-2 items-center hover:bg-purple-100 transition-colors"
-                        title="Automatically fix page cuts"
+                        className="px-4 py-2 border border-purple-300 bg-purple-50 text-purple-700 rounded flex gap-2 items-center hover:bg-purple-100 transition-colors shadow-sm"
+                        title="Recalculate Page Breaks"
                     >
                         <Wand2 size={16} /> Auto Adjust
                     </button>
 
-                    {/* GST Toggle */}
-                    <div className="flex items-center bg-white border rounded px-3">
+                    <button
+                        onClick={() => setShowSpacers(!showSpacers)}
+                        className={`px-4 py-2 border rounded flex gap-2 items-center shadow-sm transition-colors ${
+                            showSpacers
+                                ? "bg-blue-600 text-white border-blue-600"
+                                : "bg-white hover:bg-gray-50 text-gray-700"
+                        }`}
+                    >
+                        <Ruler size={16} />{" "}
+                        {showSpacers ? "Hide Spacing Tools" : "Adjust Spacing"}
+                    </button>
+
+                    <div className="flex items-center bg-white border rounded px-3 shadow-sm">
                         <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
                             <input
                                 type="checkbox"
@@ -402,56 +461,43 @@ export default function QuotePreview() {
                         </label>
                     </div>
 
-                    {/* Manual Tools Toggle */}
-                    <button
-                        onClick={() => setShowSpacers(!showSpacers)}
-                        className={`px-4 py-2 border rounded flex gap-2 items-center ${
-                            showSpacers
-                                ? "bg-blue-100 border-blue-300 text-blue-800"
-                                : "bg-white hover:bg-gray-50"
-                        }`}
-                    >
-                        <Ruler size={16} />{" "}
-                        {showSpacers ? "Hide Tools" : "Manual Tools"}
-                    </button>
-
                     <button
                         onClick={() => navigate(-1)}
-                        className="px-4 py-2 border rounded bg-white hover:bg-gray-50"
+                        className="px-4 py-2 border rounded bg-white hover:bg-gray-50 shadow-sm"
                     >
                         Back
                     </button>
 
                     <button
                         onClick={downloadPDF}
-                        className="px-4 py-2 bg-blue-600 text-white rounded flex gap-2 items-center hover:bg-blue-700"
+                        className="px-4 py-2 bg-gray-800 text-white rounded flex gap-2 items-center hover:bg-gray-900 shadow-sm"
                     >
                         <Download size={16} /> Save PDF
                     </button>
                 </div>
             </div>
 
-            {/* --- MAIN DOCUMENT AREA --- */}
+            {/* --- DOCUMENT PREVIEW --- */}
             <div className="max-w-5xl mx-auto relative">
-                {/* --- PAGE CUT VISUALIZERS --- */}
+                {/* Page Cut Lines */}
                 {(showSpacers || true) &&
                     pageBreaks.map((y, i) => (
                         <div
                             key={i}
-                            className="absolute w-full border-t-2 border-dashed border-red-400 z-50 pointer-events-none flex items-start justify-end opacity-50"
+                            className="absolute w-full border-t-2 border-dashed border-red-400 z-50 pointer-events-none flex items-start justify-end opacity-60"
                             style={{ top: `${y}px` }}
                         >
-                            <span className="bg-red-400 text-white text-[10px] px-2 py-0.5 rounded-b">
-                                Page Cut {i + 1}
+                            <span className="bg-red-400 text-white text-[10px] px-2 py-0.5 rounded-b font-bold tracking-wider">
+                                PAGE CUT {i + 1}
                             </span>
                         </div>
                     ))}
 
                 <div
                     ref={mainRef}
-                    className="bg-white shadow-lg border p-8 md:p-12 min-h-[297mm] relative transition-all"
+                    className="bg-white shadow-2xl border border-gray-200 p-8 md:p-12 min-h-[297mm] relative transition-all"
                 >
-                    {/* --- HEADER SECTION --- */}
+                    {/* Header (No manual spacer above header usually) */}
                     <div
                         ref={(el) => (itemRefs.current["header"] = el)}
                         style={{
@@ -459,15 +505,16 @@ export default function QuotePreview() {
                                 ? `${autoMargins["header"]}px`
                                 : "2rem",
                         }}
-                        className="flex justify-between border-b-2 border-gray-800 pb-6 transition-all"
+                        className="flex justify-between border-b-2 border-gray-800 pb-6 transition-all duration-500"
                     >
                         <div>
                             <h2 className="text-3xl font-extrabold tracking-wide">
                                 TEKNA WINDOW SYSTEM
                             </h2>
                             <div className="text-sm font-medium mt-2 text-gray-700">
-                                <p>VAVDI INDUSTRY AREA, VAVDI MAIN ROAD</p>
-                                <p>RAJKOT, GUJARAT</p>
+                                <p>
+                                    VAVDI INDUSTRY AREA, VAVDI MAIN ROAD, RAJKOT
+                                </p>
                                 <div className="mt-3 space-y-1">
                                     <p>
                                         <strong>Mobile:</strong> 9825256525
@@ -500,10 +547,11 @@ export default function QuotePreview() {
                         </div>
                     </div>
 
-                    {/* --- WINDOW LIST --- */}
+                    {/* Windows Loop */}
                     <div className="space-y-0">
                         {windowList.map((w, i) => (
                             <React.Fragment key={i}>
+                                {/* Manual Spacer controls specific to this window */}
                                 <ManualSpacer
                                     id={`w-${i}`}
                                     visible={showSpacers}
@@ -511,7 +559,7 @@ export default function QuotePreview() {
                                     updateHeight={updateSpacer}
                                 />
 
-                                {/* WRAPPER FOR AUTO MARGIN & REF */}
+                                {/* Auto-Adjust Wrapper */}
                                 <div
                                     ref={(el) =>
                                         (itemRefs.current[`w-${i}`] = el)
@@ -521,7 +569,7 @@ export default function QuotePreview() {
                                             ? `${autoMargins[`w-${i}`]}px`
                                             : "0px",
                                     }}
-                                    className="transition-all duration-300"
+                                    className="transition-all duration-500"
                                 >
                                     <div className="border border-gray-300 rounded p-4 flex flex-col md:flex-row gap-6 mb-8 break-inside-avoid bg-white">
                                         <div className="w-full md:w-1/3 border border-gray-200 bg-gray-50 flex items-center justify-center p-4">
@@ -617,7 +665,7 @@ export default function QuotePreview() {
                         updateHeight={updateSpacer}
                     />
 
-                    {/* --- QUOTE TOTAL SECTION --- */}
+                    {/* Totals Section */}
                     <div
                         ref={(el) => (itemRefs.current["totals"] = el)}
                         style={{
@@ -625,7 +673,7 @@ export default function QuotePreview() {
                                 ? `${autoMargins["totals"]}px`
                                 : "1rem",
                         }}
-                        className="break-inside-avoid flex justify-end transition-all"
+                        className="break-inside-avoid flex justify-end transition-all duration-500"
                     >
                         <div className="w-full md:w-2/3 lg:w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-6 shadow-sm">
                             <h3 className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-300 pb-2">
@@ -767,7 +815,7 @@ export default function QuotePreview() {
                         updateHeight={updateSpacer}
                     />
 
-                    {/* --- FOOTER SECTION --- */}
+                    {/* Footer */}
                     <div
                         ref={(el) => (itemRefs.current["footer"] = el)}
                         style={{
@@ -775,7 +823,7 @@ export default function QuotePreview() {
                                 ? `${autoMargins["footer"]}px`
                                 : "2.5rem",
                         }}
-                        className="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs text-gray-800 break-inside-avoid transition-all"
+                        className="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs text-gray-800 break-inside-avoid transition-all duration-500"
                     >
                         <div>
                             <h4 className="font-bold border-b border-gray-300 mb-2 pb-1">
