@@ -60,12 +60,10 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
 
     return (
         <div className="relative flex flex-col items-center justify-center p-4 pl-8 bg-white border border-slate-200 rounded-lg shadow-sm w-full h-full">
-            {/* Width Label (Top - Centered Horizontally) */}
             <div className="absolute top-2 w-full text-center text-[10px] font-bold text-slate-600">
                 W: {width}"
             </div>
 
-            {/* Height Label (Left - Perfectly Centered Vertically) */}
             <div className="absolute left-0 top-0 h-full w-10 flex items-center justify-center">
                 <div
                     className="transform -rotate-90 text-[10px] font-bold text-slate-600 whitespace-nowrap"
@@ -224,7 +222,6 @@ export default function QuotePreview() {
     const mainRef = useRef(null);
     const itemRefs = useRef({});
 
-    // --- State ---
     const [windowList, setWindowList] = useState([]);
     const [clientDetails, setClientDetails] = useState({
         clientName: "",
@@ -234,7 +231,6 @@ export default function QuotePreview() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // UI/PDF State
     const [isPDFMode, setIsPDFMode] = useState(false);
     const [scale, setScale] = useState(1);
     const [spacers, setSpacers] = useState({});
@@ -242,7 +238,6 @@ export default function QuotePreview() {
     const [isAdjusting, setIsAdjusting] = useState(false);
     const [pageBreaks, setPageBreaks] = useState([]);
 
-    // Financial State
     const [applyGST, setApplyGST] = useState(true);
     const [cgstPerc, setCgstPerc] = useState(9);
     const [sgstPerc, setSgstPerc] = useState(9);
@@ -287,7 +282,7 @@ export default function QuotePreview() {
     const sgstAmount = applyGST ? (subtotal * sgstPerc) / 100 : 0;
     const grandTotal = subtotal + packingCharges + cgstAmount + sgstAmount;
 
-    // --- Core Logic Functions (Restored for functionality) ---
+    // --- Core Layout/Spacer Logic ---
     const updateSpacer = (key, val) =>
         setSpacers((prev) => ({ ...prev, [key]: val }));
 
@@ -309,7 +304,7 @@ export default function QuotePreview() {
         if (!mainRef.current) return;
         setIsAdjusting(true);
         setShowSpacers(true);
-        setSpacers({}); // Reset
+        setSpacers({});
 
         setTimeout(() => {
             const containerWidth = mainRef.current.offsetWidth;
@@ -368,7 +363,7 @@ export default function QuotePreview() {
             setTimeout(handleAutoAdjust, 500);
     }, [loading, windowList]);
 
-    // --- PDF Logic (Unchanged) ---
+    // --- PDF Logic ---
     const downloadPDF = async () => {
         const container = mainRef.current;
         if (!container) return;
@@ -547,7 +542,7 @@ export default function QuotePreview() {
                                         </h1>
                                     </div>
                                     <p className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-2">
-                                        Window Systems
+                                        WINDOW SYSTEMS
                                     </p>
                                     <div className="text-xs text-slate-500 leading-relaxed">
                                         <p>VAVDI INDUSTRY AREA</p>
@@ -557,6 +552,8 @@ export default function QuotePreview() {
                                         </p>
                                     </div>
                                 </div>
+
+                                {/* CONTACT DETAILS (FIXED ALIGNMENT) */}
                                 <div className="w-1/2 flex flex-col items-end text-right space-y-2">
                                     <div className="inline-flex items-center gap-2 text-xs font-medium text-slate-700 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
                                         <Phone
@@ -657,7 +654,7 @@ export default function QuotePreview() {
 
                                                 {/* Middle: Specs */}
                                                 <div className="flex-1 p-5 flex flex-col justify-between text-xs">
-                                                    {/* Header Badge - CLEANED UP */}
+                                                    {/* Header Badge */}
                                                     <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-sm font-extrabold text-slate-900">
@@ -703,7 +700,6 @@ export default function QuotePreview() {
                                                                 "Premium"}
                                                         </span>
 
-                                                        {/* ADDED ADDITIONAL DETAILS TO TABLE */}
                                                         <span className="font-medium text-slate-500">
                                                             Mesh
                                                         </span>
