@@ -29,9 +29,8 @@ const formatINR = (val) => {
     }).format(val || 0);
 };
 
-/* --- 2. Window Sketch Component (Traditional Look) --- */
+/* --- 2. Window Sketch Component (Enhanced Look & Fixed Width Centering) --- */
 const WindowSketch = ({ width, height, type = "normal" }) => {
-    // Retaining basic logic but simplifying output for the traditional look
     const boxSize = 150;
     const strokeColor = "#000000";
     const glassColor = "#ffffff";
@@ -62,22 +61,35 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                 {height}"
             </div>
 
-            {/* Width Label (Bottom) */}
-            <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 text-sm font-semibold text-gray-800">
+            {/* Width Label (Bottom - FIXED CENTERING) */}
+            <div
+                className="absolute left-1/2 bottom-0 transform -translate-x-1/2 text-sm font-semibold text-gray-800"
+                // Adjusted positioning logic for more accurate centering relative to SVG
+                style={{ marginLeft: `${(drawW - boxSize) / 2}px` }}
+            >
                 {width}"
             </div>
 
             <svg width="200" height="200" viewBox="0 0 200 200">
-                {/* Outer Dimension lines */}
-                <path
-                    d={`M${startX} ${startY + drawH} L${startX} ${startY} L${
-                        startX + drawW
-                    } ${startY} L${startX + drawW} ${startY + drawH}`}
-                    stroke="black"
-                    strokeWidth="1"
-                    fill="none"
+                {/* Visual Dimension lines (Enhancement) */}
+                <line
+                    x1={startX}
+                    y1={startY + drawH + 5}
+                    x2={startX + drawW}
+                    y2={startY + drawH + 5}
+                    stroke="#555"
+                    strokeWidth="0.5"
+                />
+                <line
+                    x1={startX - 5}
+                    y1={startY}
+                    x2={startX - 5}
+                    y2={startY + drawH}
+                    stroke="#555"
+                    strokeWidth="0.5"
                 />
 
+                {/* Main Frame */}
                 <rect
                     x={startX}
                     y={startY}
@@ -85,16 +97,16 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                     height={drawH}
                     fill={glassColor}
                     stroke={strokeColor}
-                    strokeWidth="1.5"
+                    strokeWidth="2.5"
                 />
 
-                {/* Simple Crosshair (Mimics placeholder lines in original image) */}
+                {/* Enhanced Crosshair for clarity */}
                 <line
                     x1={startX}
                     y1={startY + drawH / 2}
                     x2={startX + drawW}
                     y2={startY + drawH / 2}
-                    stroke="#ccc"
+                    stroke="#ddd"
                     strokeWidth="0.5"
                     strokeDasharray="3 2"
                 />
@@ -103,7 +115,7 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                     y1={startY}
                     x2={startX + drawW / 2}
                     y2={startY + drawH}
-                    stroke="#ccc"
+                    stroke="#ddd"
                     strokeWidth="0.5"
                     strokeDasharray="3 2"
                 />
@@ -112,7 +124,7 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
     );
 };
 
-/* --- 3. Manual Spacer Component --- */
+/* --- 3. Manual Spacer Component (Unchanged) --- */
 const ManualSpacer = ({ id, height, updateHeight, visible, pdfMode }) => {
     if ((pdfMode && height === 0) || (!pdfMode && !visible && height === 0))
         return null;
@@ -413,7 +425,7 @@ export default function QuotePreview() {
             >
                 <h1 className="text-xl font-bold text-gray-800">Preview</h1>
                 <div className="flex flex-wrap justify-center gap-2">
-                    {/* ADDED AUTO ADJUST BUTTON */}
+                    {/* AUTO ADJUST BUTTON */}
                     <button
                         onClick={handleAutoAdjust}
                         disabled={isAdjusting}
@@ -482,7 +494,7 @@ export default function QuotePreview() {
                             ref={mainRef}
                             className="bg-white shadow-2xl w-full min-h-[297mm] p-10 relative text-gray-900"
                         >
-                            {/* 1. HEADER (REVISED TO MATCH IMAGE) */}
+                            {/* 1. HEADER (LEFT ALIGNED COMPANY, RIGHT LOGO/DATE) */}
                             <header
                                 ref={(el) => (itemRefs.current["header"] = el)}
                                 className="flex justify-between items-start pb-6 border-b-2 border-gray-900 mb-8"
@@ -516,15 +528,15 @@ export default function QuotePreview() {
 
                                 {/* Right Side: Logo and Date (Right Aligned) */}
                                 <div className="flex flex-col items-end text-right">
-                                    {/* Logo Placeholder/Image - TWS Look */}
+                                    {/* Logo Placeholder (BIGGER) */}
                                     {logo ? (
                                         <img
                                             src={logo}
                                             alt="Logo"
-                                            className="h-16 w-16 object-contain"
+                                            className="h-20 w-20 object-contain"
                                         />
                                     ) : (
-                                        <div className="h-16 w-16 bg-red-100 border border-red-300 text-red-500 rounded flex items-center justify-center text-xs">
+                                        <div className="h-20 w-20 bg-red-100 border border-red-300 text-red-500 rounded flex items-center justify-center text-sm">
                                             TWS
                                         </div>
                                     )}
