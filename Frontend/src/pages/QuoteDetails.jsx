@@ -619,6 +619,8 @@ export default function QuotePreview() {
                                                                 ({w.windowType})
                                                             </span>
                                                         </h3>
+
+                                                        {/* RESTORED GRID FIELDS */}
                                                         <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
                                                             <div>
                                                                 <strong>
@@ -636,6 +638,13 @@ export default function QuotePreview() {
                                                             </div>
                                                             <div>
                                                                 <strong>
+                                                                    Design:
+                                                                </strong>{" "}
+                                                                {w.design ||
+                                                                    "-"}
+                                                            </div>
+                                                            <div>
+                                                                <strong>
                                                                     Glass:
                                                                 </strong>{" "}
                                                                 {w.glassType ||
@@ -643,9 +652,29 @@ export default function QuotePreview() {
                                                             </div>
                                                             <div>
                                                                 <strong>
-                                                                    Mesh:
+                                                                    Locking:
+                                                                </strong>{" "}
+                                                                {w.locking ||
+                                                                    "-"}
+                                                            </div>
+                                                            <div>
+                                                                <strong>
+                                                                    Grill:
+                                                                </strong>{" "}
+                                                                {w.grill || "-"}
+                                                            </div>
+                                                            <div>
+                                                                <strong>
+                                                                    Mess:
                                                                 </strong>{" "}
                                                                 {w.mess || "-"}
+                                                            </div>
+                                                            <div>
+                                                                <strong>
+                                                                    Hardware:
+                                                                </strong>{" "}
+                                                                {w.hardware ||
+                                                                    "-"}
                                                             </div>
                                                         </div>
                                                     </div>
