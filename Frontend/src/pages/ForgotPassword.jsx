@@ -78,7 +78,8 @@ export default function ForgotPassword() {
     const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
-    const apiBaseUrl = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+    const apiBaseUrl =
+        process.env.REACT_APP_API_BASE || "https://tekna-ryyc.onrender.com";
 
     const handleSubmit = async (e) => {
         e.preventDefault();

@@ -112,7 +112,8 @@ export default function Dashboard() {
     // Added 'approved' to stats state
     const [stats, setStats] = useState({ pending: 0, approved: 0, total: 0 });
 
-    const apiBaseUrl = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+    const apiBaseUrl =
+        process.env.REACT_APP_API_BASE || "https://tekna-ryyc.onrender.com";
 
     useEffect(() => {
         const fetchDashboardData = async () => {

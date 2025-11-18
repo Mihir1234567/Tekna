@@ -112,7 +112,8 @@ export default function Login() {
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
-    const apiBaseUrl = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+    const apiBaseUrl =
+        process.env.REACT_APP_API_BASE || "https://tekna-ryyc.onrender.com";
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -208,10 +209,10 @@ export default function Login() {
                                     to="/forgot-password"
                                     className="text-xs font-medium text-blue-600 hover:text-blue-500"
                                 >
-                                Forgot password?
-                            </Link>
-                        </div>
-                        <div className="relative">
+                                    Forgot password?
+                                </Link>
+                            </div>
+                            <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                                     <Icons.Lock />
                                 </div>
