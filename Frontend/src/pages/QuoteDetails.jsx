@@ -36,7 +36,7 @@ function WindowSketch({ width = 36, height = 48, type = "normal" }) {
     const H = Math.max(1, Number(height));
     const boxW = 200;
     const boxH = 200;
-    const padding = 40;
+    const padding = 20; // Reduced padding since we draw dimensions outside now
     const aspect = W / H;
     let drawW = boxW;
     let drawH = boxH;
@@ -51,10 +51,10 @@ function WindowSketch({ width = 36, height = 48, type = "normal" }) {
     const offsetY = (boxH - drawH) / 2 + padding;
 
     const styles = {
-        frame: "#1a1a1a",
-        glass: "#e1eff9",
-        sashFrame: "#2d3748",
-        strokeWidth: 3,
+        frame: "#374151", // Gray-700
+        glass: "#eff6ff", // Blue-50
+        sashFrame: "#4b5563", // Gray-600
+        strokeWidth: 2,
     };
 
     return (
@@ -97,7 +97,7 @@ function WindowSketch({ width = 36, height = 48, type = "normal" }) {
                         d={`M${offsetX + drawW * 0.75} ${
                             offsetY + drawH * 0.5
                         } L${offsetX + drawW * 0.85} ${offsetY + drawH * 0.5}`}
-                        stroke="#000"
+                        stroke="#9ca3af"
                         strokeWidth="1.5"
                         opacity="0.6"
                     />
@@ -117,38 +117,17 @@ function WindowSketch({ width = 36, height = 48, type = "normal" }) {
                         d={`M${offsetX + 5} ${offsetY + drawH} L${
                             offsetX + drawW
                         } ${offsetY + 5}`}
-                        fill="rgba(255,255,255,0.4)"
+                        fill="rgba(255,255,255,0.5)"
                     />
                 </>
             )}
-            <text
-                x={offsetX + drawW / 2}
-                y={offsetY + drawH + 30}
-                textAnchor="middle"
-                fontSize="11"
-                fill="#6b7280"
-                fontWeight="600"
-            >
-                {W}"
-            </text>
-            <text
-                x={offsetX - 25}
-                y={offsetY + drawH / 2}
-                textAnchor="middle"
-                fontSize="11"
-                fill="#6b7280"
-                fontWeight="600"
-                transform={`rotate(-90 ${offsetX - 25} ${offsetY + drawH / 2})`}
-            >
-                {H}"
-            </text>
+            {/* Inner Dimensions Removed - Moved to Outside Layout */}
         </svg>
     );
 }
 
 /* ---------- Mobile-Optimized Spacer Component ---------- */
 const ManualSpacer = ({ id, height, updateHeight, visible }) => {
-    // Logic update: If height > 0, we force visibility
     const isVisible = visible || height > 0;
 
     if (!isVisible) return null;
@@ -161,11 +140,8 @@ const ManualSpacer = ({ id, height, updateHeight, visible }) => {
             className="transition-all duration-200 ease-in-out my-2"
             style={{ height: `${height}px` }}
         >
-            {/* Container is taller (h-14) on mobile for easier tapping, compact (h-10) on desktop */}
             <div className="h-14 sm:h-10 bg-blue-50 border border-dashed border-blue-300 rounded-lg flex items-center justify-center gap-3 sm:gap-2 text-blue-700 select-none relative shadow-sm group">
-                {/* Left Controls (Minus) */}
                 <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden shadow-sm">
-                    {/* P-3 on mobile (large touch target), P-1.5 on desktop */}
                     <button
                         onClick={() =>
                             updateHeight(id, Math.max(0, height - BIG_STEP))
@@ -186,12 +162,10 @@ const ManualSpacer = ({ id, height, updateHeight, visible }) => {
                     </button>
                 </div>
 
-                {/* Value Display */}
                 <span className="font-mono font-bold min-w-[70px] sm:min-w-[60px] text-center bg-white px-2 py-1.5 sm:py-1 rounded border border-blue-200 shadow-sm text-blue-800 text-sm sm:text-xs">
                     {height}px
                 </span>
 
-                {/* Right Controls (Plus) */}
                 <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden shadow-sm">
                     <button
                         onClick={() => updateHeight(id, height + SMALL_STEP)}
@@ -209,7 +183,6 @@ const ManualSpacer = ({ id, height, updateHeight, visible }) => {
                     </button>
                 </div>
 
-                {/* Reset Button */}
                 {height > 0 && (
                     <button
                         onClick={() => updateHeight(id, 0)}
@@ -220,7 +193,6 @@ const ManualSpacer = ({ id, height, updateHeight, visible }) => {
                     </button>
                 )}
 
-                {/* Label only visible on desktop to save space on mobile */}
                 <div className="absolute left-3 text-[10px] uppercase tracking-wider opacity-40 font-bold hidden sm:block">
                     Spacer
                 </div>
@@ -607,7 +579,7 @@ export default function QuotePreview() {
                                     </div>
                                 </div>
 
-                                {/* --- CLIENT DETAILS SECTION (Unified Doc Style) --- */}
+                                {/* --- CLIENT DETAILS SECTION --- */}
                                 <div className="mt-8 mb-8">
                                     <div className="border-y-2 border-gray-100 py-5 bg-gray-50/50">
                                         <div className="grid grid-cols-2 gap-y-6 gap-x-12 px-2">
@@ -653,8 +625,8 @@ export default function QuotePreview() {
                                 </div>
                             </div>
 
-                            {/* Windows Loop */}
-                            <div className="space-y-0 border-t border-gray-200">
+                            {/* Windows Loop (TECHNICAL TABLE LAYOUT) */}
+                            <div className="space-y-6 border-t border-gray-200 pt-6">
                                 {windowList.map((w, i) => (
                                     <React.Fragment key={i}>
                                         <ManualSpacer
@@ -671,130 +643,240 @@ export default function QuotePreview() {
                                             }
                                             className="transition-all duration-500"
                                         >
-                                            {/* Unified Row Design - Table Style */}
-                                            <div className="border-b border-gray-200 py-6 flex flex-row gap-8 break-inside-avoid bg-white">
-                                                <div className="w-[220px] flex-shrink-0 flex items-center justify-center p-2">
-                                                    <WindowSketch
-                                                        width={w.width}
-                                                        height={w.height}
-                                                        type={w.windowType}
-                                                    />
+                                            {/* Main Box Container */}
+                                            <div className="border border-gray-300 flex flex-col bg-white break-inside-avoid">
+                                                {/* 1. Header Bar */}
+                                                <div className="flex justify-between bg-gray-100 border-b border-gray-300 px-3 py-2 text-sm font-bold text-gray-800">
+                                                    <span>
+                                                        Location : Window{" "}
+                                                        {i + 1}
+                                                    </span>
+                                                    <span className="uppercase">
+                                                        Code : {w.windowType}
+                                                    </span>
                                                 </div>
-                                                <div className="flex-grow flex flex-col justify-between">
-                                                    <div>
-                                                        <div className="flex justify-between items-baseline mb-3">
-                                                            <h3 className="text-lg font-bold text-gray-900">
-                                                                Window {i + 1}
-                                                            </h3>
-                                                            <span className="text-sm font-medium text-gray-400 uppercase tracking-wide">
-                                                                {w.windowType}
-                                                            </span>
+
+                                                {/* 2. Content Area */}
+                                                <div className="flex flex-row">
+                                                    {/* Left: Drawing with Dimension Lines */}
+                                                    <div className="w-1/3 border-r border-gray-300 p-10 flex items-center justify-center relative bg-white">
+                                                        {/* Top Dimension Text */}
+                                                        <div className="absolute top-3 left-0 w-full text-center text-xs font-semibold text-gray-600">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <div className="h-px w-12 bg-gray-400"></div>
+                                                                <span>
+                                                                    W x{" "}
+                                                                    {Number(
+                                                                        w.width
+                                                                    ).toFixed(
+                                                                        2
+                                                                    )}
+                                                                </span>
+                                                                <div className="h-px w-12 bg-gray-400"></div>
+                                                            </div>
                                                         </div>
 
-                                                        {/* Data Grid - Clean Table Look */}
-                                                        <div className="grid grid-cols-2 gap-x-10 gap-y-2 text-sm text-gray-700">
-                                                            <div className="flex justify-between border-b border-dashed border-gray-100 pb-1">
-                                                                <span className="text-gray-400">
-                                                                    Size
+                                                        {/* Left Dimension Text */}
+                                                        <div className="absolute left-3 top-0 h-full flex flex-col justify-center text-xs font-semibold text-gray-600">
+                                                            <div
+                                                                className="flex flex-col items-center gap-2"
+                                                                style={{
+                                                                    writingMode:
+                                                                        "vertical-rl",
+                                                                    textOrientation:
+                                                                        "mixed",
+                                                                    transform:
+                                                                        "rotate(180deg)",
+                                                                }}
+                                                            >
+                                                                <div className="h-12 w-px bg-gray-400"></div>
+                                                                <span>
+                                                                    H x{" "}
+                                                                    {Number(
+                                                                        w.height
+                                                                    ).toFixed(
+                                                                        2
+                                                                    )}
                                                                 </span>
-                                                                <span className="font-semibold">
-                                                                    W {w.width}"
-                                                                    × H{" "}
-                                                                    {w.height}"
+                                                                <div className="h-12 w-px bg-gray-400"></div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* The Window Itself */}
+                                                        <WindowSketch
+                                                            width={w.width}
+                                                            height={w.height}
+                                                            type={w.windowType}
+                                                        />
+                                                    </div>
+
+                                                    {/* Right: Data Table */}
+                                                    <div className="w-2/3 flex flex-col text-xs text-gray-800">
+                                                        {/* Specs Section */}
+                                                        <div className="flex-grow p-4 space-y-1.5 leading-relaxed">
+                                                            <div className="grid grid-cols-[100px_auto]">
+                                                                <span className="font-bold">
+                                                                    Size (Inch)
+                                                                </span>
+                                                                <span>
+                                                                    : W x{" "}
+                                                                    {w.width}{" "}
+                                                                    &nbsp;&nbsp;
+                                                                    H x{" "}
+                                                                    {w.height}
                                                                 </span>
                                                             </div>
-                                                            <div className="flex justify-between border-b border-dashed border-gray-100 pb-1">
-                                                                <span className="text-gray-400">
+                                                            <div className="grid grid-cols-[100px_auto]">
+                                                                <span className="font-bold">
                                                                     Profile
+                                                                    System
                                                                 </span>
-                                                                <span className="font-semibold">
+                                                                <span className="uppercase">
+                                                                    :{" "}
                                                                     {w.profileSystem ||
                                                                         "-"}
                                                                 </span>
                                                             </div>
-                                                            <div className="flex justify-between border-b border-dashed border-gray-100 pb-1">
-                                                                <span className="text-gray-400">
-                                                                    Glass
-                                                                </span>
-                                                                <span className="font-semibold">
-                                                                    {w.glassType ||
-                                                                        "-"}
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex justify-between border-b border-dashed border-gray-100 pb-1">
-                                                                <span className="text-gray-400">
+                                                            <div className="grid grid-cols-[100px_auto]">
+                                                                <span className="font-bold">
                                                                     Design
                                                                 </span>
-                                                                <span className="font-semibold">
+                                                                <span className="uppercase">
+                                                                    :{" "}
                                                                     {w.design ||
                                                                         "-"}
                                                                 </span>
                                                             </div>
-                                                            <div className="flex justify-between border-b border-dashed border-gray-100 pb-1">
-                                                                <span className="text-gray-400">
-                                                                    Hardware
+                                                            <div className="grid grid-cols-[100px_auto]">
+                                                                <span className="font-bold">
+                                                                    Glass
                                                                 </span>
-                                                                <span className="font-semibold">
-                                                                    {w.hardware ||
+                                                                <span className="uppercase">
+                                                                    :{" "}
+                                                                    {w.glassType ||
                                                                         "-"}
                                                                 </span>
                                                             </div>
-                                                            <div className="flex justify-between border-b border-dashed border-gray-100 pb-1">
-                                                                <span className="text-gray-400">
-                                                                    Mesh
+                                                            <div className="grid grid-cols-[100px_auto]">
+                                                                <span className="font-bold">
+                                                                    Mess
                                                                 </span>
-                                                                <span className="font-semibold">
+                                                                <span className="uppercase">
+                                                                    :{" "}
                                                                     {w.mess ||
                                                                         "-"}
                                                                 </span>
                                                             </div>
+                                                            <div className="grid grid-cols-[100px_auto]">
+                                                                <span className="font-bold">
+                                                                    Locking
+                                                                </span>
+                                                                <span className="uppercase">
+                                                                    :{" "}
+                                                                    {w.locking ||
+                                                                        "-"}
+                                                                </span>
+                                                            </div>
+                                                            <div className="grid grid-cols-[100px_auto]">
+                                                                <span className="font-bold">
+                                                                    Grill
+                                                                </span>
+                                                                <span className="uppercase">
+                                                                    :{" "}
+                                                                    {w.grill ||
+                                                                        "-"}
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                    </div>
 
-                                                    {/* Pricing Strip */}
-                                                    <div className="mt-5 pt-3 flex justify-between items-end text-sm text-gray-800">
-                                                        <div className="space-x-6">
-                                                            <span>
-                                                                <span className="text-gray-400 text-xs uppercase mr-1">
-                                                                    Area
-                                                                </span>{" "}
-                                                                <strong>
-                                                                    {Number(
-                                                                        w.sqFt
-                                                                    ).toFixed(
-                                                                        2
-                                                                    )}
-                                                                </strong>{" "}
-                                                                sq.ft
-                                                            </span>
-                                                            <span>
-                                                                <span className="text-gray-400 text-xs uppercase mr-1">
-                                                                    Rate
-                                                                </span>{" "}
-                                                                <strong>
-                                                                    {formatINR(
-                                                                        w.pricePerFt
-                                                                    )}
-                                                                </strong>
-                                                            </span>
-                                                            <span>
-                                                                <span className="text-gray-400 text-xs uppercase mr-1">
-                                                                    Qty
-                                                                </span>{" "}
-                                                                <strong>
-                                                                    {w.quantity}
-                                                                </strong>
-                                                            </span>
+                                                        {/* Computed Values Section */}
+                                                        <div>
+                                                            <div className="bg-gray-100 border-y border-gray-300 px-3 py-1 font-bold text-gray-700">
+                                                                Computed Values
+                                                            </div>
+                                                            <div className="px-3 py-2 space-y-1">
+                                                                <div className="flex justify-between border-b border-dotted border-gray-200 pb-1">
+                                                                    <span>
+                                                                        Sq.ft
+                                                                        per
+                                                                        Window :
+                                                                    </span>
+                                                                    <div className="flex gap-2">
+                                                                        <span className="font-bold">
+                                                                            {Number(
+                                                                                w.sqFt
+                                                                            ).toFixed(
+                                                                                2
+                                                                            )}
+                                                                        </span>
+                                                                        <span className="w-8 text-gray-500">
+                                                                            Sq.ft.
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex justify-between border-b border-dotted border-gray-200 pb-1">
+                                                                    <span>
+                                                                        Rate
+                                                                        sq.ft :
+                                                                    </span>
+                                                                    <div className="flex gap-2">
+                                                                        <span className="font-bold">
+                                                                            {Number(
+                                                                                w.pricePerFt
+                                                                            ).toFixed(
+                                                                                2
+                                                                            )}
+                                                                        </span>
+                                                                        <span className="w-8 text-gray-500">
+                                                                            Rs.
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex justify-between border-b border-dotted border-gray-200 pb-1">
+                                                                    <span>
+                                                                        Quantity
+                                                                        :
+                                                                    </span>
+                                                                    <div className="flex gap-2">
+                                                                        <span className="font-bold">
+                                                                            {
+                                                                                w.quantity
+                                                                            }
+                                                                        </span>
+                                                                        <span className="w-8 text-gray-500">
+                                                                            pcs
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex justify-between">
+                                                                    <span>
+                                                                        Value :
+                                                                    </span>
+                                                                    <div className="flex gap-2">
+                                                                        <span className="font-bold">
+                                                                            {Number(
+                                                                                w.amount
+                                                                            ).toFixed(
+                                                                                2
+                                                                            )}
+                                                                        </span>
+                                                                        <span className="w-8 text-gray-500">
+                                                                            Rs.
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div className="text-right">
-                                                            <span className="text-gray-400 text-xs uppercase mr-2">
-                                                                Total
-                                                            </span>
-                                                            <span className="text-lg font-bold text-gray-900">
-                                                                {formatINR(
-                                                                    w.amount
-                                                                )}
-                                                            </span>
+
+                                                        {/* Hardware Footer */}
+                                                        <div>
+                                                            <div className="bg-gray-100 border-y border-gray-300 px-3 py-1 font-bold text-gray-700">
+                                                                Hardware Brand
+                                                            </div>
+                                                            <div className="px-3 py-2 uppercase font-medium text-gray-600">
+                                                                {w.hardware ||
+                                                                    "PREMIUM QUALITY"}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -814,7 +896,7 @@ export default function QuotePreview() {
                             {/* Totals Section (Clean Document Style) */}
                             <div
                                 ref={(el) => (itemRefs.current["totals"] = el)}
-                                className="break-inside-avoid flex justify-end pt-4"
+                                className="break-inside-avoid flex justify-end pt-8"
                             >
                                 <div className="w-1/2 pl-8">
                                     <div className="space-y-3 text-sm text-gray-700">
