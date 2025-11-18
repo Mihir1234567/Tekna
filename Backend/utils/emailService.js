@@ -9,7 +9,7 @@ exports.sendResetEmail = async ({ to, resetURL }) => {
 
     try {
         await resend.emails.send({
-            from: "Tekna Support <noreply@tekna.app>",
+            from: "Tekna Support <onboarding@resend.dev>",
             to,
             subject: "Reset your Tekna password",
             html: `
