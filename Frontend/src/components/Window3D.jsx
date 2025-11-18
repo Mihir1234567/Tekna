@@ -162,7 +162,7 @@ const Window3D = ({ width, height, windowType = "normal" }) => {
         <div className="w-full h-full min-h-[500px]">
             {/* Camera positioned straight on for "Blueprint" feel initially */}
             <Canvas camera={{ position: [0, 0, 5], fov: 50 }} dpr={[1, 2]}>
-                <Environment files="/hdr/potsdamer_platz_1k.hdr" background />
+                <Environment files="/hdr/potsdamer_platz_1k.hdr"  />
 
                 {/* ✅ ALIGNMENT FIX: 
            We are NOT using <Center>. 
