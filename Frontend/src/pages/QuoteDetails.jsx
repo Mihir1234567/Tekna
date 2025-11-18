@@ -2,23 +2,16 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
-    Download,
-    Phone,
-    Mail,
-    FileText,
-    Calendar,
-    User,
-    Briefcase,
-    CreditCard,
-    Printer,
-    Ruler,
-    Wand2,
     Loader2,
+    RotateCcw,
     ChevronsUp,
     ChevronsDown,
     Plus,
     Minus,
-    RotateCcw,
+    Ruler,
+    Wand2,
+    Printer,
+    Download,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -36,11 +29,12 @@ const formatINR = (val) => {
     }).format(val || 0);
 };
 
-/* --- 2. Window Sketch Component --- */
+/* --- 2. Window Sketch Component (Traditional Look) --- */
 const WindowSketch = ({ width, height, type = "normal" }) => {
-    const boxSize = 120;
-    const strokeColor = "#334155";
-    const glassColor = "#eff6ff";
+    // Retaining basic logic but simplifying output for the traditional look
+    const boxSize = 150;
+    const strokeColor = "#000000";
+    const glassColor = "#ffffff";
 
     const w = Math.max(1, Number(width));
     const h = Math.max(1, Number(height));
@@ -55,25 +49,35 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
         drawW = boxSize * aspect;
     }
 
-    const startX = (160 - drawW) / 2;
-    const startY = (160 - drawH) / 2;
+    const startX = 20;
+    const startY = 20;
 
     return (
-        <div className="relative flex flex-col items-center justify-center p-4 pl-8 bg-white border border-slate-200 rounded-lg shadow-sm w-full h-full">
-            <div className="absolute top-2 w-full text-center text-[10px] font-bold text-slate-600">
-                W: {width}"
+        <div className="relative flex flex-col items-start justify-start p-2 w-full h-full">
+            {/* Height Label (Left) */}
+            <div
+                className="absolute left-0 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm font-semibold text-gray-800 whitespace-nowrap"
+                style={{ transformOrigin: "center" }}
+            >
+                {height}"
             </div>
 
-            <div className="absolute left-0 top-0 h-full w-10 flex items-center justify-center">
-                <div
-                    className="transform -rotate-90 text-[10px] font-bold text-slate-600 whitespace-nowrap"
-                    style={{ transformOrigin: "center" }}
-                >
-                    H: {height}"
-                </div>
+            {/* Width Label (Bottom) */}
+            <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 text-sm font-semibold text-gray-800">
+                {width}"
             </div>
 
-            <svg width="160" height="160" viewBox="0 0 160 160">
+            <svg width="200" height="200" viewBox="0 0 200 200">
+                {/* Outer Dimension lines */}
+                <path
+                    d={`M${startX} ${startY + drawH} L${startX} ${startY} L${
+                        startX + drawW
+                    } ${startY} L${startX + drawW} ${startY + drawH}`}
+                    stroke="black"
+                    strokeWidth="1"
+                    fill="none"
+                />
+
                 <rect
                     x={startX}
                     y={startY}
@@ -81,63 +85,29 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                     height={drawH}
                     fill={glassColor}
                     stroke={strokeColor}
-                    strokeWidth="2.5"
+                    strokeWidth="1.5"
                 />
-                {type.toLowerCase().includes("slider") ||
-                type.toLowerCase().includes("sliding") ? (
-                    <>
-                        <line
-                            x1={startX + drawW / 2}
-                            y1={startY}
-                            x2={startX + drawW / 2}
-                            y2={startY + drawH}
-                            stroke={strokeColor}
-                            strokeWidth="2"
-                        />
-                        <path
-                            d={`M${startX + drawW * 0.25} ${
-                                startY + drawH / 2
-                            } l-5 0 l2 -2 m-2 2 l2 2`}
-                            stroke="#94a3b8"
-                            strokeWidth="1.5"
-                            fill="none"
-                        />
-                        <path
-                            d={`M${startX + drawW * 0.75} ${
-                                startY + drawH / 2
-                            } l5 0 l-2 -2 m2 2 l-2 2`}
-                            stroke="#94a3b8"
-                            strokeWidth="1.5"
-                            fill="none"
-                        />
-                    </>
-                ) : (
-                    <>
-                        <line
-                            x1={startX + drawW / 2}
-                            y1={startY + 10}
-                            x2={startX + drawW / 2}
-                            y2={startY + drawH - 10}
-                            stroke="#cbd5e1"
-                            strokeWidth="1"
-                            strokeDasharray="4 2"
-                        />
-                        <line
-                            x1={startX + 10}
-                            y1={startY + drawH / 2}
-                            x2={startX + drawW - 10}
-                            y2={startY + drawH / 2}
-                            stroke="#cbd5e1"
-                            strokeWidth="1"
-                            strokeDasharray="4 2"
-                        />
-                    </>
-                )}
-            </svg>
 
-            <div className="mt-2 text-[10px] uppercase font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-600 truncate max-w-full border border-slate-200">
-                {type}
-            </div>
+                {/* Simple Crosshair (Mimics placeholder lines in original image) */}
+                <line
+                    x1={startX}
+                    y1={startY + drawH / 2}
+                    x2={startX + drawW}
+                    y2={startY + drawH / 2}
+                    stroke="#ccc"
+                    strokeWidth="0.5"
+                    strokeDasharray="3 2"
+                />
+                <line
+                    x1={startX + drawW / 2}
+                    y1={startY}
+                    x2={startX + drawW / 2}
+                    y2={startY + drawH}
+                    stroke="#ccc"
+                    strokeWidth="0.5"
+                    strokeDasharray="3 2"
+                />
+            </svg>
         </div>
     );
 };
@@ -222,6 +192,7 @@ export default function QuotePreview() {
     const mainRef = useRef(null);
     const itemRefs = useRef({});
 
+    // --- State ---
     const [windowList, setWindowList] = useState([]);
     const [clientDetails, setClientDetails] = useState({
         clientName: "",
@@ -231,6 +202,7 @@ export default function QuotePreview() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // UI/PDF State
     const [isPDFMode, setIsPDFMode] = useState(false);
     const [scale, setScale] = useState(1);
     const [spacers, setSpacers] = useState({});
@@ -238,6 +210,7 @@ export default function QuotePreview() {
     const [isAdjusting, setIsAdjusting] = useState(false);
     const [pageBreaks, setPageBreaks] = useState([]);
 
+    // Financial State
     const [applyGST, setApplyGST] = useState(true);
     const [cgstPerc, setCgstPerc] = useState(9);
     const [sgstPerc, setSgstPerc] = useState(9);
@@ -428,7 +401,7 @@ export default function QuotePreview() {
 
     return (
         <div
-            className={`bg-slate-100 p-4 font-sans text-slate-800 ${
+            className={`bg-gray-100 p-4 font-sans text-gray-800 ${
                 isPDFMode ? "min-h-screen" : "h-screen overflow-y-auto w-full"
             }`}
         >
@@ -438,23 +411,13 @@ export default function QuotePreview() {
                     isPDFMode ? "hidden" : ""
                 }`}
             >
-                <h1 className="text-xl font-bold text-slate-800">Preview</h1>
+                <h1 className="text-xl font-bold text-gray-800">Preview</h1>
                 <div className="flex flex-wrap justify-center gap-2">
-                    <div className="flex items-center bg-white border rounded px-2 py-1 shadow-sm text-xs">
-                        <label className="flex items-center gap-2 cursor-pointer font-medium">
-                            <input
-                                type="checkbox"
-                                checked={applyGST}
-                                onChange={(e) => setApplyGST(e.target.checked)}
-                                className="w-3 h-3"
-                            />
-                            GST Mode
-                        </label>
-                    </div>
+                    {/* ADDED AUTO ADJUST BUTTON */}
                     <button
                         onClick={handleAutoAdjust}
                         disabled={isAdjusting}
-                        className="px-3 py-1.5 bg-white border border-indigo-200 text-indigo-700 rounded text-xs font-medium hover:bg-indigo-50 flex items-center gap-1"
+                        className="px-3 py-1.5 bg-white border border-purple-200 text-purple-700 rounded text-xs font-medium hover:bg-purple-50 flex items-center gap-1"
                     >
                         {isAdjusting ? (
                             <Loader2 size={14} className="animate-spin" />
@@ -463,6 +426,7 @@ export default function QuotePreview() {
                         )}{" "}
                         Auto-Layout
                     </button>
+
                     <button
                         onClick={() => setShowSpacers(!showSpacers)}
                         className={`px-3 py-1.5 border rounded text-xs font-medium flex items-center gap-1 ${
@@ -476,13 +440,13 @@ export default function QuotePreview() {
                     </button>
                     <button
                         onClick={() => navigate(-1)}
-                        className="px-3 py-1.5 bg-white border rounded text-xs font-medium hover:bg-slate-50"
+                        className="px-3 py-1.5 bg-white border rounded text-xs font-medium hover:bg-gray-50"
                     >
                         Back
                     </button>
                     <button
                         onClick={downloadPDF}
-                        className="px-4 py-1.5 bg-slate-800 text-white rounded text-xs font-medium hover:bg-slate-900 flex items-center gap-2"
+                        className="px-4 py-1.5 bg-gray-800 text-white rounded text-xs font-medium hover:bg-gray-900 flex items-center gap-2"
                     >
                         <Printer size={14} /> Save PDF
                     </button>
@@ -516,135 +480,114 @@ export default function QuotePreview() {
 
                         <div
                             ref={mainRef}
-                            className="bg-white shadow-2xl w-full min-h-[297mm] p-10 relative"
+                            className="bg-white shadow-2xl w-full min-h-[297mm] p-10 relative text-gray-900"
                         >
-                            {/* 1. HEADER (FIXED ALIGNMENT/SIZE) */}
+                            {/* 1. HEADER (REVISED TO MATCH IMAGE) */}
                             <header
                                 ref={(el) => (itemRefs.current["header"] = el)}
-                                className="flex justify-between items-start pb-6 border-b-2 border-slate-800 mb-8"
+                                className="flex justify-between items-start pb-6 border-b-2 border-gray-900 mb-8"
                             >
-                                <div className="w-1/2 flex flex-col items-center text-center">
-                                    <div className="flex flex-col items-center gap-3 mb-2">
-                                        {/* LOGO (BIGGER) */}
-                                        {logo ? (
-                                            <img
-                                                src={logo}
-                                                alt="Logo"
-                                                className="h-16 w-16 object-contain"
-                                            />
-                                        ) : (
-                                            <div className="h-16 w-16 bg-indigo-600 rounded flex items-center justify-center text-white font-bold text-2xl">
-                                                T
-                                            </div>
-                                        )}
-                                        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
-                                            TEKNA
-                                        </h1>
-                                    </div>
-                                    <p className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-2">
-                                        WINDOW SYSTEMS
+                                {/* Left Side: Company Details (Left Aligned) */}
+                                <div className="flex flex-col items-start text-left">
+                                    <h1 className="text-3xl font-extrabold tracking-wide text-gray-900 mb-1">
+                                        TEKNA WINDOW SYSTEM
+                                    </h1>
+                                    <p className="text-sm text-gray-700">
+                                        VAVDI INDUSTRY AREA, VAVDI MAIN ROAD
                                     </p>
-                                    <div className="text-xs text-slate-500 leading-relaxed">
-                                        <p>VAVDI INDUSTRY AREA</p>
-                                        <p>VAVDI MAIN ROAD, RAJKOT</p>
-                                        <p className="mt-2 font-semibold text-slate-700">
-                                            GSTIN: 24AMIPS5762R1Z4
+                                    <p className="text-sm text-gray-700 mb-4">
+                                        RAJKOT, GUJARAT
+                                    </p>
+
+                                    <div className="text-sm space-y-1">
+                                        <p>
+                                            <strong>Mobile:</strong> 9825256525
+                                        </p>
+                                        <p>
+                                            <strong>Email:</strong>{" "}
+                                            TEKNAWIN01@GMAIL.COM
+                                        </p>
+                                        <p>
+                                            <strong>GSTIN:</strong>{" "}
+                                            24AMIPS5762R1Z4
                                         </p>
                                     </div>
                                 </div>
 
-                                {/* CONTACT DETAILS (FIXED ALIGNMENT) */}
-                                <div className="w-1/2 flex flex-col items-end text-right space-y-2">
-                                    <div className="inline-flex items-center gap-2 text-xs font-medium text-slate-700 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
-                                        <Phone
-                                            size={12}
-                                            className="text-indigo-600"
-                                        />{" "}
-                                        87588 02598
-                                    </div>
-                                    <div className="inline-flex items-center gap-2 text-xs font-medium text-slate-700 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
-                                        <Mail
-                                            size={12}
-                                            className="text-indigo-600"
-                                        />{" "}
-                                        TEKNAWIN01@GMAIL.COM
-                                    </div>
-                                    <div className="text-xs text-slate-400 mt-2">
+                                {/* Right Side: Logo and Date (Right Aligned) */}
+                                <div className="flex flex-col items-end text-right">
+                                    {/* Logo Placeholder/Image - TWS Look */}
+                                    {logo ? (
+                                        <img
+                                            src={logo}
+                                            alt="Logo"
+                                            className="h-16 w-16 object-contain"
+                                        />
+                                    ) : (
+                                        <div className="h-16 w-16 bg-red-100 border border-red-300 text-red-500 rounded flex items-center justify-center text-xs">
+                                            TWS
+                                        </div>
+                                    )}
+
+                                    {/* Date Block */}
+                                    <div className="mt-8 bg-gray-100 px-3 py-1.5 text-sm font-semibold text-gray-700 shadow-sm border border-gray-300">
                                         Date:{" "}
                                         {new Date().toLocaleDateString("en-IN")}
                                     </div>
                                 </div>
                             </header>
 
-                            {/* 2. CLIENT GRID */}
-                            <section className="bg-slate-50 p-6 rounded-xl border border-slate-200 mb-10">
-                                <div className="grid grid-cols-4 gap-6">
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase mb-1 flex items-center gap-1">
-                                            <User size={10} /> Client
-                                        </span>
-                                        <span className="text-sm font-bold text-slate-800 break-words">
-                                            {clientDetails.clientName || "—"}
-                                        </span>
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase mb-1 flex items-center gap-1">
-                                            <Briefcase size={10} /> Project
-                                        </span>
-                                        <span className="text-sm font-bold text-slate-800 break-words">
-                                            {clientDetails.project || "—"}
-                                        </span>
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase mb-1 flex items-center gap-1">
-                                            <FileText size={10} /> Quote No
-                                        </span>
-                                        <span className="text-sm font-bold text-indigo-600 font-mono">
-                                            {id || "DRAFT"}
-                                        </span>
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase mb-1 flex items-center gap-1">
-                                            <Calendar size={10} /> Finish
-                                        </span>
-                                        <span className="text-sm font-bold text-slate-800 break-words">
-                                            {clientDetails.finish || "—"}
-                                        </span>
-                                    </div>
-                                </div>
+                            {/* 2. CLIENT INFO (Simple block) */}
+                            <section className="mb-8 text-sm text-gray-700">
+                                <h3 className="font-bold text-lg mb-4 border-b border-gray-200 pb-2">
+                                    Client Details
+                                </h3>
+                                <p>
+                                    <strong>Client:</strong>{" "}
+                                    {clientDetails.clientName || "—"}
+                                </p>
+                                <p>
+                                    <strong>Project:</strong>{" "}
+                                    {clientDetails.project || "—"}
+                                </p>
+                                <p>
+                                    <strong>Quotation No:</strong>{" "}
+                                    {id || "Q-0000"}
+                                </p>
+                                <p>
+                                    <strong>Finish:</strong>{" "}
+                                    {clientDetails.finish || "—"}
+                                </p>
                             </section>
 
-                            {/* 3. WINDOWS LIST */}
-                            <section className="mb-10">
-                                <div className="flex items-center justify-between mb-4 px-2">
-                                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                                        Window Specifications
-                                    </h3>
-                                </div>
+                            {/* 3. WINDOWS LIST (Traditional Layout) */}
+                            <section className="mb-10 space-y-8">
+                                {windowList.map((win, index) => (
+                                    <React.Fragment key={index}>
+                                        <ManualSpacer
+                                            id={`w-${index}`}
+                                            visible={showSpacers}
+                                            pdfMode={isPDFMode}
+                                            height={spacers[`w-${index}`] || 0}
+                                            updateHeight={updateSpacer}
+                                        />
 
-                                <div className="space-y-6">
-                                    {windowList.map((win, index) => (
-                                        <React.Fragment key={index}>
-                                            <ManualSpacer
-                                                id={`w-${index}`}
-                                                visible={showSpacers}
-                                                pdfMode={isPDFMode}
-                                                height={
-                                                    spacers[`w-${index}`] || 0
-                                                }
-                                                updateHeight={updateSpacer}
-                                            />
+                                        <div
+                                            ref={(el) =>
+                                                (itemRefs.current[
+                                                    `w-${index}`
+                                                ] = el)
+                                            }
+                                            className="break-inside-avoid border border-gray-300 p-4"
+                                        >
+                                            <h4 className="font-bold text-md mb-3 border-b border-gray-200 pb-2">
+                                                Window {index + 1} (
+                                                {win.windowType || "NORMAL"})
+                                            </h4>
 
-                                            <div
-                                                ref={(el) =>
-                                                    (itemRefs.current[
-                                                        `w-${index}`
-                                                    ] = el)
-                                                }
-                                                className="break-inside-avoid flex flex-row border border-slate-200 rounded-xl overflow-hidden"
-                                            >
+                                            <div className="flex">
                                                 {/* Left: Sketch */}
-                                                <div className="w-[200px] bg-slate-50 p-4 flex items-center justify-center border-r border-slate-200">
+                                                <div className="w-1/3 flex items-center justify-center p-2">
                                                     <WindowSketch
                                                         width={win.width}
                                                         height={win.height}
@@ -652,121 +595,82 @@ export default function QuotePreview() {
                                                     />
                                                 </div>
 
-                                                {/* Middle: Specs */}
-                                                <div className="flex-1 p-5 flex flex-col justify-between text-xs">
-                                                    {/* Header Badge */}
-                                                    <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-sm font-extrabold text-slate-900">
-                                                                Window{" "}
-                                                                {index + 1}
-                                                            </span>
-                                                            <span className="text-xs font-medium text-slate-500 px-2 py-0.5 bg-slate-100 rounded uppercase">
-                                                                {win.windowType}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-[80px_1fr] gap-y-1.5">
-                                                        <span className="font-medium text-slate-500">
-                                                            Dimensions
-                                                        </span>
-                                                        <span className="font-bold text-slate-900">
-                                                            W: {win.width}" x H:{" "}
-                                                            {win.height}"
-                                                        </span>
-
-                                                        <span className="font-medium text-slate-500">
-                                                            Profile
-                                                        </span>
-                                                        <span className="font-semibold text-slate-800 uppercase">
-                                                            {win.profileSystem ||
-                                                                "-"}
-                                                        </span>
-
-                                                        <span className="font-medium text-slate-500">
-                                                            Glass
-                                                        </span>
-                                                        <span className="font-semibold text-slate-800 uppercase">
-                                                            {win.glassType ||
-                                                                "-"}
-                                                        </span>
-
-                                                        <span className="font-medium text-slate-500">
-                                                            Hardware
-                                                        </span>
-                                                        <span className="font-semibold text-slate-800 uppercase">
-                                                            {win.hardware ||
-                                                                "Premium"}
-                                                        </span>
-
-                                                        <span className="font-medium text-slate-500">
-                                                            Mesh
-                                                        </span>
-                                                        <span className="font-semibold text-slate-800 uppercase">
-                                                            {win.mess || "-"}
-                                                        </span>
-
-                                                        <span className="font-medium text-slate-500">
-                                                            Locking
-                                                        </span>
-                                                        <span className="font-semibold text-slate-800 uppercase">
-                                                            {win.locking || "-"}
-                                                        </span>
-
-                                                        <span className="font-medium text-slate-500">
-                                                            Grill
-                                                        </span>
-                                                        <span className="font-semibold text-slate-800 uppercase">
-                                                            {win.grill || "-"}
-                                                        </span>
-                                                    </div>
+                                                {/* Middle: Specs (Vertical List) */}
+                                                <div className="w-1/3 p-2 space-y-1.5 text-sm text-gray-700">
+                                                    <p>
+                                                        <strong>Size:</strong> W{" "}
+                                                        {win.width}" x H{" "}
+                                                        {win.height}"
+                                                    </p>
+                                                    <p>
+                                                        <strong>
+                                                            Profile System:
+                                                        </strong>{" "}
+                                                        {win.profileSystem ||
+                                                            "—"}
+                                                    </p>
+                                                    <p>
+                                                        <strong>Design:</strong>{" "}
+                                                        {win.design || "—"}
+                                                    </p>
+                                                    <p>
+                                                        <strong>Glass:</strong>{" "}
+                                                        {win.glassType || "—"}
+                                                    </p>
+                                                    <p>
+                                                        <strong>Grill:</strong>{" "}
+                                                        {win.grill || "—"}
+                                                    </p>
+                                                    <p>
+                                                        <strong>
+                                                            Locking:
+                                                        </strong>{" "}
+                                                        {win.locking || "—"}
+                                                    </p>
+                                                    <p>
+                                                        <strong>Mess:</strong>{" "}
+                                                        {win.mess || "—"}
+                                                    </p>
+                                                    <p>
+                                                        <strong>
+                                                            Hardware:
+                                                        </strong>{" "}
+                                                        {win.hardware || "—"}
+                                                    </p>
                                                 </div>
 
-                                                {/* Right: Financials */}
-                                                <div className="w-[160px] bg-slate-50 p-4 flex flex-col justify-center gap-3 border-l border-slate-200 text-right">
-                                                    <div>
-                                                        <span className="block text-[10px] text-slate-400 uppercase font-bold">
-                                                            Area
-                                                        </span>
-                                                        <span className="font-bold text-slate-700">
-                                                            {Number(
-                                                                win.sqFt
-                                                            ).toFixed(2)}{" "}
-                                                            sq.ft
-                                                        </span>
-                                                    </div>
-                                                    <div>
-                                                        <span className="block text-[10px] text-slate-400 uppercase font-bold">
-                                                            Rate
-                                                        </span>
-                                                        <span className="font-bold text-slate-700">
-                                                            ₹{win.pricePerFt}
-                                                        </span>
-                                                    </div>
-                                                    <div>
-                                                        <span className="block text-[10px] text-slate-400 uppercase font-bold">
-                                                            Qty
-                                                        </span>
-                                                        <span className="font-bold text-slate-700">
-                                                            {win.quantity} pcs
-                                                        </span>
-                                                    </div>
-                                                    <div className="mt-2 pt-2 border-t border-slate-200">
-                                                        <span className="block text-[10px] text-indigo-600 font-bold uppercase">
-                                                            Total
-                                                        </span>
-                                                        <span className="font-bold text-lg text-indigo-700">
+                                                {/* Right: Financials (COMPUTED VALUES BLOCK) */}
+                                                <div className="w-1/3 p-2 border-l border-gray-200 text-sm">
+                                                    <h5 className="font-bold text-gray-800 mb-2 border-b border-gray-300 pb-1">
+                                                        COMPUTED VALUES
+                                                    </h5>
+                                                    <div className="space-y-3">
+                                                        <div className="text-lg font-bold text-gray-900">
+                                                            Value:{" "}
                                                             {formatINR(
                                                                 win.amount
                                                             )}
-                                                        </span>
+                                                        </div>
+                                                        <div className="text-sm text-gray-700">
+                                                            Sq.ft:{" "}
+                                                            {Number(
+                                                                win.sqFt
+                                                            ).toFixed(2)}
+                                                        </div>
+                                                        <div className="text-sm text-gray-700">
+                                                            Rate:{" "}
+                                                            {win.pricePerFt}
+                                                        </div>
+                                                        <div className="text-sm text-gray-700">
+                                                            Qty: {win.quantity}{" "}
+                                                            pcs
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </React.Fragment>
-                                    ))}
-                                </div>
+                                        </div>
+                                    </React.Fragment>
+                                ))}
                             </section>
 
                             <ManualSpacer
@@ -777,128 +681,77 @@ export default function QuotePreview() {
                                 updateHeight={updateSpacer}
                             />
 
-                            {/* 4. SUMMARY */}
+                            {/* 4. SUMMARY & GRAND TOTAL */}
                             <section
                                 ref={(el) => (itemRefs.current["totals"] = el)}
                                 className="break-inside-avoid flex justify-end mb-12"
                             >
-                                <div className="w-1/2 bg-slate-900 text-white rounded-xl p-6 shadow-lg">
-                                    <h4 className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-4 border-b border-slate-700 pb-2">
+                                <div className="w-full md:w-2/3 lg:w-1/2 p-4 border border-gray-400">
+                                    <h5 className="font-bold text-gray-800 mb-3 border-b border-gray-400 pb-1">
                                         Quote Summary
-                                    </h4>
+                                    </h5>
 
-                                    <div className="flex justify-between mb-2 text-sm">
-                                        <span className="text-slate-300">
-                                            Total Windows
-                                        </span>
-                                        <span className="font-bold">
-                                            {windowList.length} Units
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between mb-2 text-sm">
-                                        <span className="text-slate-300">
-                                            Total Area
-                                        </span>
-                                        <span className="font-bold">
-                                            {Number(totalSqFt).toFixed(2)} Sq.ft
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between mb-4 text-sm">
-                                        <span className="text-slate-300">
-                                            Subtotal
-                                        </span>
-                                        <span className="font-bold">
-                                            {formatINR(subtotal)}
-                                        </span>
-                                    </div>
-
-                                    <div className="space-y-1 border-t border-slate-700 pt-2 mb-4">
-                                        <div className="flex justify-between text-xs text-slate-400 items-center">
-                                            <span>Packing Charges</span>
-                                            {isPDFMode ? (
-                                                <span>
-                                                    {formatINR(packingCharges)}
-                                                </span>
-                                            ) : (
-                                                <input
-                                                    type="number"
-                                                    value={packingCharges}
-                                                    onChange={(e) =>
-                                                        setPackingCharges(
-                                                            Number(
-                                                                e.target.value
-                                                            )
-                                                        )
-                                                    }
-                                                    className="bg-slate-800 border border-slate-600 rounded w-20 text-right px-1 text-white"
-                                                />
-                                            )}
+                                    <div className="space-y-1.5 text-sm">
+                                        <div className="flex justify-between">
+                                            <span>Total Windows</span>
+                                            <span>{windowList.length} pcs</span>
                                         </div>
+                                        <div className="flex justify-between">
+                                            <span>Total Sq.ft</span>
+                                            <span>
+                                                {Number(totalSqFt).toFixed(2)}{" "}
+                                                Sq.ft.
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span>Subtotal Amount</span>
+                                            <span>{formatINR(subtotal)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span>Packing & Forwarding</span>
+                                            <span>
+                                                {formatINR(packingCharges)}
+                                            </span>
+                                        </div>
+
                                         {applyGST && (
                                             <>
-                                                <div className="flex justify-between text-xs text-slate-400 items-center">
+                                                <div className="flex justify-between">
                                                     <span>
-                                                        CGST ({cgstPerc}%)
+                                                        CGST (@{cgstPerc}%)
                                                     </span>
-                                                    {isPDFMode ? (
-                                                        <span>
-                                                            {formatINR(
-                                                                cgstAmount
-                                                            )}
-                                                        </span>
-                                                    ) : (
-                                                        <input
-                                                            type="number"
-                                                            value={cgstPerc}
-                                                            onChange={(e) =>
-                                                                setCgstPerc(
-                                                                    Number(
-                                                                        e.target
-                                                                            .value
-                                                                    )
-                                                                )
-                                                            }
-                                                            className="bg-slate-800 border border-slate-600 rounded w-10 text-center text-white"
-                                                        />
-                                                    )}
+                                                    <span>
+                                                        {formatINR(cgstAmount)}
+                                                    </span>
                                                 </div>
-                                                <div className="flex justify-between text-xs text-slate-400 items-center">
+                                                <div className="flex justify-between">
                                                     <span>
-                                                        SGST ({sgstPerc}%)
+                                                        SGST (@{sgstPerc}%)
                                                     </span>
-                                                    {isPDFMode ? (
-                                                        <span>
-                                                            {formatINR(
-                                                                sgstAmount
-                                                            )}
-                                                        </span>
-                                                    ) : (
-                                                        <input
-                                                            type="number"
-                                                            value={sgstPerc}
-                                                            onChange={(e) =>
-                                                                setSgstPerc(
-                                                                    Number(
-                                                                        e.target
-                                                                            .value
-                                                                    )
-                                                                )
-                                                            }
-                                                            className="bg-slate-800 border border-slate-600 rounded w-10 text-center text-white"
-                                                        />
-                                                    )}
+                                                    <span>
+                                                        {formatINR(sgstAmount)}
+                                                    </span>
                                                 </div>
                                             </>
                                         )}
-                                    </div>
 
-                                    <div className="flex justify-between items-center border-t border-slate-700 pt-4">
-                                        <span className="text-lg font-light">
-                                            Grand Total
-                                        </span>
-                                        <span className="text-2xl font-bold text-indigo-400">
-                                            {formatINR(grandTotal)}
-                                        </span>
+                                        <div className="pt-3 flex justify-between items-baseline border-t border-gray-900">
+                                            <span className="font-bold text-md">
+                                                GRAND TOTAL
+                                            </span>
+                                            <span className="text-xl font-extrabold text-gray-900">
+                                                {formatINR(grandTotal)}
+                                            </span>
+                                        </div>
+                                        <div className="text-right text-xs text-gray-500">
+                                            Avg Rate:{" "}
+                                            {totalSqFt > 0
+                                                ? formatINR(
+                                                      grandTotal / totalSqFt
+                                                  )
+                                                : formatINR(0)}
+                                            /sq.ft
+                                        </div>
                                     </div>
                                 </div>
                             </section>
@@ -911,111 +764,106 @@ export default function QuotePreview() {
                                 updateHeight={updateSpacer}
                             />
 
-                            {/* 5. FOOTER (Terms & Bank) */}
+                            {/* 5. FOOTER (Traditional Blocks) */}
                             <section
                                 ref={(el) => (itemRefs.current["footer"] = el)}
-                                className="break-inside-avoid grid grid-cols-2 gap-8 border-t border-slate-200 pt-8"
+                                className="break-inside-avoid pt-8 space-y-8"
                             >
-                                <div className="text-[10px] text-slate-500 leading-relaxed">
-                                    <h5 className="font-bold text-slate-800 uppercase mb-2 flex items-center gap-2">
-                                        <FileText size={12} /> Terms &
-                                        Conditions
+                                {/* Terms & Conditions */}
+                                <div className="text-xs text-gray-700">
+                                    <h5 className="font-bold text-gray-800 mb-2 border-b border-gray-400 pb-1">
+                                        TERMS & CONDITIONS
                                     </h5>
-                                    <ul className="list-disc pl-3 space-y-1">
+                                    <ul className="list-disc pl-4 space-y-1">
                                         <li>
-                                            Quotation valid for{" "}
-                                            <strong>1 week</strong>. Rates
-                                            subject to material price change.
+                                            QUOTATION VALID UPTO 1 WEEK (RATES
+                                            MAY CHANGE).
                                         </li>
                                         <li>
-                                            Size calculated in{" "}
-                                            <strong>3-inch steps</strong>.
+                                            SIZE CALCULATED IN WIDTH/HEIGHT IN 3
+                                            INCH STEPS.
                                         </li>
                                         <li>
-                                            Design changes post-confirmation
-                                            charged extra.
+                                            DESIGN/STYLE REMAINS UNCHANGED;
+                                            CHANGES CHARGEABLE.
                                         </li>
                                         <li>
-                                            No warranty on glass after
-                                            installation.
+                                            NO WARRANTY FOR GLASS
+                                            POST-INSTALLATION.
                                         </li>
                                         <li>
-                                            Defects must be reported within{" "}
-                                            <strong>48 hours</strong>.
+                                            MANUFACTURING DEFECTS: REPORT WITHIN
+                                            48 HOURS.
                                         </li>
                                         <li>
-                                            Scaffolding/electricity under
-                                            customer scope.
+                                            SCAFFOLDING/CRANE/ELECTRICITY/CLEANING:
+                                            CUSTOMER SCOPE.
                                         </li>
                                         <li>
-                                            <strong>Payment:</strong> 70%
-                                            Advance, 20% Dispatch, 10%
-                                            Installation.
+                                            STONE DAMAGE/BREAKAGE: NOT OUR
+                                            RESPONSIBILITY.
                                         </li>
                                         <li>
-                                            <strong>Delivery:</strong> 40-45
-                                            Days.
+                                            POST-HANDOVER SERVICE IS CHARGEABLE.
                                         </li>
-                                        <li>Subject to Rajkot Jurisdiction.</li>
+                                        <li>
+                                            INSTALLATION: 40-45 DAYS FROM
+                                            ADVANCE PAYMENT.
+                                        </li>
+                                        <li>
+                                            PAYMENT: 70% ADVANCE, 20% BEFORE
+                                            DISPATCH, 10% AFTER INSTALL.
+                                        </li>
+                                        <li>
+                                            DISPUTES SUBJECT TO RAJKOT
+                                            JURISDICTION ONLY.
+                                        </li>
+                                        <li>TRANSPORTATION AND GST EXTRA.</li>
                                     </ul>
                                 </div>
 
-                                <div>
-                                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
-                                        <h5 className="font-bold text-slate-800 uppercase mb-3 text-xs flex items-center gap-2">
-                                            <CreditCard size={12} /> Bank
-                                            Details
-                                        </h5>
-                                        <div className="grid grid-cols-[80px_1fr] gap-y-1 text-xs">
-                                            <span className="text-slate-500">
-                                                Bank:
-                                            </span>
-                                            <span className="font-bold text-slate-800">
-                                                STATE BANK OF INDIA
-                                            </span>
-                                            <span className="text-slate-500">
-                                                Branch:
-                                            </span>
-                                            <span className="text-slate-800">
-                                                CHANDRESH NAGAR, MAVDI
-                                            </span>
-                                            <span className="text-slate-500">
-                                                A/C No:
-                                            </span>
-                                            <span className="font-mono font-bold text-slate-800">
-                                                34200993101
-                                            </span>
-                                            <span className="text-slate-500">
-                                                IFSC:
-                                            </span>
-                                            <span className="font-mono font-bold text-slate-800">
-                                                SBIN0060314
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex justify-between items-end pt-4 gap-4">
-                                        <div className="text-center flex-1">
-                                            <div className="h-12 border-b border-slate-300 mb-1"></div>
-                                            <p className="text-[10px] font-bold text-slate-900 uppercase">
-                                                Auth. Signatory
-                                            </p>
-                                        </div>
-                                        <div className="text-center flex-1">
-                                            <div className="h-12 border-b border-slate-300 mb-1"></div>
-                                            <p className="text-[10px] font-bold text-slate-900 uppercase">
-                                                Customer Sign
-                                            </p>
-                                        </div>
+                                {/* Bank Details */}
+                                <div className="text-xs">
+                                    <h5 className="font-bold text-gray-800 mb-2 border-b border-gray-400 pb-1">
+                                        BANK DETAILS
+                                    </h5>
+                                    <div className="grid grid-cols-2 gap-y-1">
+                                        <p>
+                                            <strong>BANK NAME:</strong> STATE
+                                            BANK OF INDIA
+                                        </p>
+                                        <p>
+                                            <strong>BRANCH:</strong> CHANDRESH
+                                            NAGAR, MAVDI PLOT
+                                        </p>
+                                        <p>
+                                            <strong>CURRENT A/C:</strong>{" "}
+                                            34200993101
+                                        </p>
+                                        <p>
+                                            <strong>IFSC CODE:</strong>{" "}
+                                            SBIN0060314
+                                        </p>
                                     </div>
                                 </div>
-                            </section>
 
-                            <div className="mt-12 text-center text-[10px] text-slate-400">
-                                <p>
-                                    Thank you for choosing TEKNA Window Systems.
-                                </p>
-                            </div>
+                                {/* Signatures */}
+                                <div className="pt-8 flex justify-between text-xs font-bold">
+                                    <div className="text-center">
+                                        <div className="h-12 border-b border-gray-600 w-40 mb-1 mx-auto"></div>
+                                        <p>TEKNA WINDOW SYSTEM</p>
+                                        <p>Authorised Signatory</p>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="h-12 border-b border-gray-600 w-40 mb-1 mx-auto"></div>
+                                        <p>I ACCEPT THE ESTIMATE & TERMS</p>
+                                        <p>Signature of Customer</p>
+                                    </div>
+                                </div>
+                                <div className="text-right text-[10px] text-gray-400 italic mt-4">
+                                    .
+                                </div>
+                            </section>
                         </div>
                     </div>
                 </div>
