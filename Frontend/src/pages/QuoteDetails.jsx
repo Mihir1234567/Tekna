@@ -12,6 +12,13 @@ import {
     Wand2,
     Printer,
     Download,
+    Phone,
+    Mail,
+    FileText,
+    CreditCard,
+    User,
+    Briefcase,
+    Calendar,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -29,11 +36,11 @@ const formatINR = (val) => {
     }).format(val || 0);
 };
 
-/* --- 2. Window Sketch Component (FINAL FIX: Width Centering) --- */
+/* --- 2. Window Sketch Component (SVG Text for Perfect Centering) --- */
 const WindowSketch = ({ width, height, type = "normal" }) => {
-    const boxSize = 150;
-    const strokeColor = "#000000";
-    const glassColor = "#ffffff";
+    const boxSize = 140; // Slightly smaller to leave room for text inside SVG
+    const strokeColor = "#1f2937"; // Dark Gray
+    const glassColor = "#f8fafc"; // Very light gray/blue
 
     const w = Math.max(1, Number(width));
     const h = Math.max(1, Number(height));
@@ -48,36 +55,102 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
         drawW = boxSize * aspect;
     }
 
-    const startX = 25;
-    const startY = 25;
-
-    // Calculate the horizontal center position of the window frame relative to the container
-    const windowCenterX = startX + drawW / 2;
+    // Center the drawing in the 200x200 viewbox
+    const startX = (200 - drawW) / 2;
+    const startY = (200 - drawH) / 2;
 
     return (
-        <div className="relative flex flex-col items-start justify-start p-2 w-full h-full">
-            {/* Height Label (Left - Aligned to Dimension Line) */}
-            <div
-                className="absolute left-1 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm font-semibold text-gray-800 whitespace-nowrap"
-                style={{ transformOrigin: "center" }}
-            >
-                {height}"
-            </div>
-
-            {/* Width Label (Bottom - FINAL CENTERING FIX) */}
-            <div
-                className="absolute bottom-3 text-sm font-semibold text-gray-800"
-                // Positioned directly using the calculated center of the SVG element, then translating the text's width back by 50%
-                style={{
-                    left: `${windowCenterX}px`,
-                    transform: "translateX(-50%)",
-                }}
-            >
-                {width}"
-            </div>
-
+        <div className="w-full h-full flex items-center justify-center">
             <svg width="200" height="200" viewBox="0 0 200 200">
-                {/* --- WINDOW FRAME --- */}
+                {/* --- Dimension Lines --- */}
+                {/* Width Line */}
+                <line
+                    x1={startX}
+                    y1={startY + drawH + 10}
+                    x2={startX + drawW}
+                    y2={startY + drawH + 10}
+                    stroke="#94a3b8"
+                    strokeWidth="1"
+                />
+                <line
+                    x1={startX}
+                    y1={startY + drawH + 5}
+                    x2={startX}
+                    y2={startY + drawH + 15}
+                    stroke="#94a3b8"
+                    strokeWidth="1"
+                />
+                <line
+                    x1={startX + drawW}
+                    y1={startY + drawH + 5}
+                    x2={startX + drawW}
+                    y2={startY + drawH + 15}
+                    stroke="#94a3b8"
+                    strokeWidth="1"
+                />
+
+                {/* Height Line */}
+                <line
+                    x1={startX - 10}
+                    y1={startY}
+                    x2={startX - 10}
+                    y2={startY + drawH}
+                    stroke="#94a3b8"
+                    strokeWidth="1"
+                />
+                <line
+                    x1={startX - 15}
+                    y1={startY}
+                    x2={startX - 5}
+                    y2={startY}
+                    stroke="#94a3b8"
+                    strokeWidth="1"
+                />
+                <line
+                    x1={startX - 15}
+                    y1={startY + drawH}
+                    x2={startX - 5}
+                    y2={startY + drawH}
+                    stroke="#94a3b8"
+                    strokeWidth="1"
+                />
+
+                {/* --- DIMENSION TEXT (Inside SVG for perfect centering) --- */}
+
+                {/* Width Text */}
+                <text
+                    x={startX + drawW / 2}
+                    y={startY + drawH + 24}
+                    textAnchor="middle"
+                    fill="#374151"
+                    style={{
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        fontFamily: "sans-serif",
+                    }}
+                >
+                    {width}"
+                </text>
+
+                {/* Height Text (Rotated around its center) */}
+                <text
+                    x={startX - 20}
+                    y={startY + drawH / 2}
+                    textAnchor="middle"
+                    fill="#374151"
+                    transform={`rotate(-90, ${startX - 20}, ${
+                        startY + drawH / 2
+                    })`}
+                    style={{
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        fontFamily: "sans-serif",
+                    }}
+                >
+                    {height}"
+                </text>
+
+                {/* --- Main Window Frame --- */}
                 <rect
                     x={startX}
                     y={startY}
@@ -88,18 +161,17 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                     strokeWidth="2"
                 />
 
-                {/* --- Glass Highlight --- */}
+                {/* --- Glass Glare Effect --- */}
                 <line
                     x1={startX}
                     y1={startY}
                     x2={startX + drawW}
                     y2={startY + drawH}
-                    stroke="#ffffff"
+                    stroke="#e2e8f0"
                     strokeWidth="1"
-                    opacity="0.5"
                 />
 
-                {/* --- Inner Window Details --- */}
+                {/* --- Inner Details --- */}
                 {type.toLowerCase().includes("slider") ? (
                     <>
                         <line
@@ -107,20 +179,25 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                             y1={startY}
                             x2={startX + drawW / 2}
                             y2={startY + drawH}
-                            stroke="#555"
+                            stroke={strokeColor}
                             strokeWidth="1"
                         />
-                        <circle
-                            cx={startX + drawW * 0.1}
-                            cy={startY + drawH * 0.5}
-                            r={2}
-                            fill="#555"
+                        {/* Arrow indicators */}
+                        <path
+                            d={`M${startX + drawW * 0.25} ${
+                                startY + drawH / 2
+                            } l-3 0 l2 -2 m-2 2 l2 2`}
+                            stroke="#94a3b8"
+                            strokeWidth="1"
+                            fill="none"
                         />
-                        <circle
-                            cx={startX + drawW * 0.9}
-                            cy={startY + drawH * 0.5}
-                            r={2}
-                            fill="#555"
+                        <path
+                            d={`M${startX + drawW * 0.75} ${
+                                startY + drawH / 2
+                            } l3 0 l-2 -2 m2 2 l-2 2`}
+                            stroke="#94a3b8"
+                            strokeWidth="1"
+                            fill="none"
                         />
                     </>
                 ) : (
@@ -130,81 +207,27 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                             y1={startY}
                             x2={startX + drawW / 2}
                             y2={startY + drawH}
-                            stroke="#ccc"
-                            strokeWidth="0.5"
-                            strokeDasharray="3 2"
+                            stroke="#cbd5e1"
+                            strokeWidth="1"
+                            strokeDasharray="4 2"
                         />
                         <line
                             x1={startX}
                             y1={startY + drawH / 2}
                             x2={startX + drawW}
                             y2={startY + drawH / 2}
-                            stroke="#ccc"
-                            strokeWidth="0.5"
-                            strokeDasharray="3 2"
+                            stroke="#cbd5e1"
+                            strokeWidth="1"
+                            strokeDasharray="4 2"
                         />
                     </>
                 )}
-
-                {/* --- Dimension Lines (Visual) --- */}
-
-                {/* Horizontal (Width) Dimension Line */}
-                <line
-                    x1={startX}
-                    y1={startY + drawH + 10}
-                    x2={startX + drawW}
-                    y2={startY + drawH + 10}
-                    stroke="#555"
-                    strokeWidth="0.5"
-                />
-                <line
-                    x1={startX}
-                    y1={startY + drawH}
-                    x2={startX}
-                    y2={startY + drawH + 15}
-                    stroke="#555"
-                    strokeWidth="0.5"
-                />
-                <line
-                    x1={startX + drawW}
-                    y1={startY + drawH}
-                    x2={startX + drawW}
-                    y2={startY + drawH + 15}
-                    stroke="#555"
-                    strokeWidth="0.5"
-                />
-
-                {/* Vertical (Height) Dimension Line */}
-                <line
-                    x1={startX - 10}
-                    y1={startY}
-                    x2={startX - 10}
-                    y2={startY + drawH}
-                    stroke="#555"
-                    strokeWidth="0.5"
-                />
-                <line
-                    x1={startX - 15}
-                    y1={startY}
-                    x2={startX}
-                    y2={startY}
-                    stroke="#555"
-                    strokeWidth="0.5"
-                />
-                <line
-                    x1={startX - 15}
-                    y1={startY + drawH}
-                    x2={startX}
-                    y2={startY + drawH}
-                    stroke="#555"
-                    strokeWidth="0.5"
-                />
             </svg>
         </div>
     );
 };
 
-/* --- 3. Manual Spacer Component (Unchanged) --- */
+/* --- 3. Manual Spacer Component --- */
 const ManualSpacer = ({ id, height, updateHeight, visible, pdfMode }) => {
     if ((pdfMode && height === 0) || (!pdfMode && !visible && height === 0))
         return null;
@@ -284,7 +307,6 @@ export default function QuotePreview() {
     const mainRef = useRef(null);
     const itemRefs = useRef({});
 
-    // --- State ---
     const [windowList, setWindowList] = useState([]);
     const [clientDetails, setClientDetails] = useState({
         clientName: "",
@@ -294,7 +316,6 @@ export default function QuotePreview() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // UI/PDF State
     const [isPDFMode, setIsPDFMode] = useState(false);
     const [scale, setScale] = useState(1);
     const [spacers, setSpacers] = useState({});
@@ -302,7 +323,6 @@ export default function QuotePreview() {
     const [isAdjusting, setIsAdjusting] = useState(false);
     const [pageBreaks, setPageBreaks] = useState([]);
 
-    // Financial State
     const [applyGST, setApplyGST] = useState(true);
     const [cgstPerc, setCgstPerc] = useState(9);
     const [sgstPerc, setSgstPerc] = useState(9);
@@ -347,7 +367,7 @@ export default function QuotePreview() {
     const sgstAmount = applyGST ? (subtotal * sgstPerc) / 100 : 0;
     const grandTotal = subtotal + packingCharges + cgstAmount + sgstAmount;
 
-    // --- Core Layout/Spacer Logic ---
+    // --- Core Layout Logic ---
     const updateSpacer = (key, val) =>
         setSpacers((prev) => ({ ...prev, [key]: val }));
 
@@ -376,29 +396,24 @@ export default function QuotePreview() {
             const pageHeightPx = containerWidth * 1.4142;
             const newSpacers = {};
             let totalAddedMargin = 0;
-
             const keys = ["header"];
             windowList.forEach((_, i) => keys.push(`w-${i}`));
             keys.push("totals");
             keys.push("footer");
-
             keys.forEach((key) => {
                 const el = itemRefs.current[key];
                 if (!el) return;
-
                 const naturalTop = el.offsetTop + totalAddedMargin;
                 const height = el.offsetHeight;
                 const currentBottom = naturalTop + height;
                 const startPage = Math.floor(naturalTop / pageHeightPx);
                 const endPage = Math.floor(currentBottom / pageHeightPx);
-
                 if (startPage !== endPage) {
                     const nextPageStart = (startPage + 1) * pageHeightPx;
                     const spaceNeeded = nextPageStart - naturalTop + 50;
                     let spacerKey = key;
                     if (key === "totals") spacerKey = "spacer-totals";
                     if (key === "footer") spacerKey = "spacer-footer";
-
                     if (key !== "header") {
                         newSpacers[spacerKey] = Math.ceil(spaceNeeded);
                         totalAddedMargin += spaceNeeded;
@@ -411,7 +426,6 @@ export default function QuotePreview() {
         }, 200);
     };
 
-    // --- Effects for Scale and Auto-Adjust ---
     useEffect(() => {
         const handleResize = () => {
             const w = window.innerWidth - 32;
@@ -505,7 +519,6 @@ export default function QuotePreview() {
             >
                 <h1 className="text-xl font-bold text-gray-800">Preview</h1>
                 <div className="flex flex-wrap justify-center gap-2">
-                    {/* AUTO ADJUST BUTTON */}
                     <button
                         onClick={handleAutoAdjust}
                         disabled={isAdjusting}
@@ -518,7 +531,6 @@ export default function QuotePreview() {
                         )}{" "}
                         Auto-Layout
                     </button>
-
                     <button
                         onClick={() => setShowSpacers(!showSpacers)}
                         className={`px-3 py-1.5 border rounded text-xs font-medium flex items-center gap-1 ${
@@ -555,7 +567,6 @@ export default function QuotePreview() {
                     }}
                 >
                     <div className="relative">
-                        {/* Red Page Break Lines (Visual Aid) */}
                         {!isPDFMode &&
                             showSpacers &&
                             pageBreaks.map((y, i) => (
@@ -574,24 +585,24 @@ export default function QuotePreview() {
                             ref={mainRef}
                             className="bg-white shadow-2xl w-full min-h-[297mm] p-10 relative text-gray-900"
                         >
-                            {/* 1. HEADER (REVISED) */}
+                            {/* 1. HEADER (Refined) */}
                             <header
                                 ref={(el) => (itemRefs.current["header"] = el)}
                                 className="flex justify-between items-start pb-6 border-b-2 border-gray-900 mb-8"
                             >
-                                {/* Left Side: Company Details (Left Aligned) */}
-                                <div className="flex flex-col items-start text-left">
-                                    <h1 className="text-3xl font-extrabold tracking-wide text-gray-900 mb-1">
+                                {/* Left Side */}
+                                <div className="flex flex-col items-start text-left w-2/3">
+                                    <h1 className="text-4xl font-extrabold tracking-wide text-gray-900 mb-1">
                                         TEKNA WINDOW SYSTEM
                                     </h1>
-                                    <p className="text-sm text-gray-700">
+                                    <p className="text-sm text-gray-600 font-medium">
                                         VAVDI INDUSTRY AREA, VAVDI MAIN ROAD
                                     </p>
-                                    <p className="text-sm text-gray-700 mb-4">
+                                    <p className="text-sm text-gray-600 mb-4">
                                         RAJKOT, GUJARAT
                                     </p>
 
-                                    <div className="text-sm space-y-1">
+                                    <div className="text-sm space-y-1 text-gray-700">
                                         <p>
                                             <strong>Mobile:</strong> 9825256525
                                         </p>
@@ -605,57 +616,68 @@ export default function QuotePreview() {
                                         </p>
                                     </div>
                                 </div>
-
-                                {/* Right Side: Logo and Date (Right Aligned) */}
-                                <div className="flex flex-col items-end text-right">
-                                    {/* Logo Placeholder (FIXED ASPECT RATIO + LARGER) */}
-                                    <div className="h-24 w-24 mb-1 relative">
+                                {/* Right Side: Logo & Date */}
+                                <div className="flex flex-col items-end text-right w-1/3">
+                                    <div className="h-28 w-32 mb-2 relative flex items-start justify-end">
                                         {logo ? (
                                             <img
                                                 src={logo}
                                                 alt="Logo"
-                                                className="h-full w-full object-contain"
+                                                className="h-full w-full object-contain object-right-top"
                                             />
                                         ) : (
-                                            <div className="h-full w-full bg-red-100 border border-red-300 text-red-500 flex items-center justify-center text-sm">
-                                                TWS
+                                            <div className="h-24 w-24 bg-red-50 border border-red-200 text-red-400 flex items-center justify-center text-sm font-bold">
+                                                LOGO
                                             </div>
                                         )}
                                     </div>
-
-                                    {/* Date Block */}
-                                    <div className="mt-8 bg-gray-100 px-3 py-1.5 text-sm font-semibold text-gray-700 shadow-sm border border-gray-300">
+                                    <div className="mt-4 bg-gray-100 border border-gray-300 px-4 py-2 text-sm font-bold text-gray-800">
                                         Date:{" "}
                                         {new Date().toLocaleDateString("en-IN")}
                                     </div>
                                 </div>
                             </header>
 
-                            {/* 2. CLIENT INFO (Simple block) */}
-                            <section className="mb-8 text-sm text-gray-700">
-                                <h3 className="font-bold text-lg mb-4 border-b border-gray-200 pb-2">
-                                    Client Details
-                                </h3>
-                                <p>
-                                    <strong>Client:</strong>{" "}
-                                    {clientDetails.clientName || "—"}
-                                </p>
-                                <p>
-                                    <strong>Project:</strong>{" "}
-                                    {clientDetails.project || "—"}
-                                </p>
-                                <p>
-                                    <strong>Quotation No:</strong>{" "}
-                                    {id || "Q-0000"}
-                                </p>
-                                <p>
-                                    <strong>Finish:</strong>{" "}
-                                    {clientDetails.finish || "—"}
-                                </p>
+                            {/* 2. CLIENT INFO GRID (Clean, Modern Blocks) */}
+                            <section className="mb-10">
+                                <div className="grid grid-cols-4 gap-4 text-sm bg-slate-50 p-4 rounded border border-slate-200">
+                                    <div>
+                                        <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1 flex items-center gap-1">
+                                            <User size={10} /> Client
+                                        </span>
+                                        <span className="font-bold text-gray-900 break-words">
+                                            {clientDetails.clientName || "—"}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1 flex items-center gap-1">
+                                            <Briefcase size={10} /> Project
+                                        </span>
+                                        <span className="font-bold text-gray-900 break-words">
+                                            {clientDetails.project || "—"}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1 flex items-center gap-1">
+                                            <FileText size={10} /> Quote No
+                                        </span>
+                                        <span className="font-bold text-indigo-700 font-mono">
+                                            {id || "—"}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1 flex items-center gap-1">
+                                            <Calendar size={10} /> Finish
+                                        </span>
+                                        <span className="font-bold text-gray-900 break-words">
+                                            {clientDetails.finish || "—"}
+                                        </span>
+                                    </div>
+                                </div>
                             </section>
 
-                            {/* 3. WINDOWS LIST (Traditional Layout) */}
-                            <section className="mb-10 space-y-8">
+                            {/* 3. WINDOWS LIST */}
+                            <section className="mb-10 space-y-6">
                                 {windowList.map((win, index) => (
                                     <React.Fragment key={index}>
                                         <ManualSpacer
@@ -672,94 +694,118 @@ export default function QuotePreview() {
                                                     `w-${index}`
                                                 ] = el)
                                             }
-                                            className="break-inside-avoid border border-gray-300 p-4"
+                                            className="break-inside-avoid border border-gray-300 rounded-sm overflow-hidden flex"
                                         >
-                                            <h4 className="font-bold text-md mb-3 border-b border-gray-200 pb-2">
-                                                Window {index + 1} (
-                                                {win.windowType || "NORMAL"})
-                                            </h4>
+                                            {/* Left: Sketch */}
+                                            <div className="w-[200px] border-r border-gray-300 p-2 flex items-center justify-center bg-white">
+                                                <WindowSketch
+                                                    width={win.width}
+                                                    height={win.height}
+                                                    type={win.windowType}
+                                                />
+                                            </div>
 
-                                            <div className="flex">
-                                                {/* Left: Sketch */}
-                                                <div className="w-1/3 flex items-center justify-center p-2">
-                                                    <WindowSketch
-                                                        width={win.width}
-                                                        height={win.height}
-                                                        type={win.windowType}
-                                                    />
+                                            {/* Middle: Specs */}
+                                            <div className="flex-1 p-4 text-xs text-gray-800 flex flex-col">
+                                                <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-3">
+                                                    <span className="font-extrabold text-sm bg-slate-800 text-white px-2 py-0.5 rounded-sm">
+                                                        Window {index + 1}
+                                                    </span>
+                                                    <span className="font-bold text-slate-600 uppercase tracking-wider">
+                                                        {win.windowType}
+                                                    </span>
                                                 </div>
 
-                                                {/* Middle: Specs (Vertical List) */}
-                                                <div className="w-1/3 p-2 space-y-1.5 text-sm text-gray-700">
-                                                    <p>
-                                                        <strong>Size:</strong> W{" "}
-                                                        {win.width}" x H{" "}
+                                                <div className="grid grid-cols-[85px_1fr] gap-y-1.5 leading-tight">
+                                                    <span className="font-bold text-slate-500">
+                                                        Size:
+                                                    </span>
+                                                    <span>
+                                                        W {win.width}" x H{" "}
                                                         {win.height}"
-                                                    </p>
-                                                    <p>
-                                                        <strong>
-                                                            Profile System:
-                                                        </strong>{" "}
+                                                    </span>
+                                                    <span className="font-bold text-slate-500">
+                                                        Profile:
+                                                    </span>
+                                                    <span className="uppercase">
                                                         {win.profileSystem ||
-                                                            "—"}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Design:</strong>{" "}
-                                                        {win.design || "—"}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Glass:</strong>{" "}
-                                                        {win.glassType || "—"}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Grill:</strong>{" "}
-                                                        {win.grill || "—"}
-                                                    </p>
-                                                    <p>
-                                                        <strong>
-                                                            Locking:
-                                                        </strong>{" "}
-                                                        {win.locking || "—"}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Mess:</strong>{" "}
-                                                        {win.mess || "—"}
-                                                    </p>
-                                                    <p>
-                                                        <strong>
-                                                            Hardware:
-                                                        </strong>{" "}
-                                                        {win.hardware || "—"}
-                                                    </p>
+                                                            "-"}
+                                                    </span>
+                                                    <span className="font-bold text-slate-500">
+                                                        Design:
+                                                    </span>
+                                                    <span className="uppercase">
+                                                        {win.design || "-"}
+                                                    </span>
+                                                    <span className="font-bold text-slate-500">
+                                                        Glass:
+                                                    </span>
+                                                    <span className="uppercase">
+                                                        {win.glassType || "-"}
+                                                    </span>
+                                                    <span className="font-bold text-slate-500">
+                                                        Mesh:
+                                                    </span>
+                                                    <span className="uppercase">
+                                                        {win.mess || "-"}
+                                                    </span>
+                                                    <span className="font-bold text-slate-500">
+                                                        Locking:
+                                                    </span>
+                                                    <span className="uppercase">
+                                                        {win.locking || "-"}
+                                                    </span>
+                                                    <span className="font-bold text-slate-500">
+                                                        Grill:
+                                                    </span>
+                                                    <span className="uppercase">
+                                                        {win.grill || "-"}
+                                                    </span>
+                                                    <span className="font-bold text-slate-500">
+                                                        Hardware:
+                                                    </span>
+                                                    <span className="uppercase">
+                                                        {win.hardware || "-"}
+                                                    </span>
                                                 </div>
+                                            </div>
 
-                                                {/* Right: Financials (COMPUTED VALUES BLOCK) */}
-                                                <div className="w-1/3 p-2 border-l border-gray-200 text-sm">
-                                                    <h5 className="font-bold text-gray-800 mb-2 border-b border-gray-300 pb-1">
-                                                        COMPUTED VALUES
-                                                    </h5>
-                                                    <div className="space-y-3">
-                                                        <div className="text-lg font-bold text-gray-900">
-                                                            Value:{" "}
-                                                            {formatINR(
-                                                                win.amount
-                                                            )}
-                                                        </div>
-                                                        <div className="text-sm text-gray-700">
-                                                            Sq.ft:{" "}
-                                                            {Number(
-                                                                win.sqFt
-                                                            ).toFixed(2)}
-                                                        </div>
-                                                        <div className="text-sm text-gray-700">
-                                                            Rate:{" "}
-                                                            {win.pricePerFt}
-                                                        </div>
-                                                        <div className="text-sm text-gray-700">
-                                                            Qty: {win.quantity}{" "}
-                                                            pcs
-                                                        </div>
-                                                    </div>
+                                            {/* Right: Financials */}
+                                            <div className="w-[150px] border-l border-gray-300 bg-slate-50 p-4 flex flex-col justify-center gap-2 text-right">
+                                                <div>
+                                                    <span className="block text-[10px] font-bold text-slate-400 uppercase">
+                                                        Area
+                                                    </span>
+                                                    <span className="font-bold text-slate-800">
+                                                        {Number(
+                                                            win.sqFt
+                                                        ).toFixed(2)}{" "}
+                                                        sq.ft
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <span className="block text-[10px] font-bold text-slate-400 uppercase">
+                                                        Rate
+                                                    </span>
+                                                    <span className="font-bold text-slate-800">
+                                                        ₹{win.pricePerFt}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <span className="block text-[10px] font-bold text-slate-400 uppercase">
+                                                        Qty
+                                                    </span>
+                                                    <span className="font-bold text-slate-800">
+                                                        {win.quantity} pcs
+                                                    </span>
+                                                </div>
+                                                <div className="mt-2 pt-2 border-t border-slate-300">
+                                                    <span className="block text-[10px] font-bold text-indigo-600 uppercase">
+                                                        Amount
+                                                    </span>
+                                                    <span className="font-bold text-lg text-indigo-900">
+                                                        {formatINR(win.amount)}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -775,52 +821,53 @@ export default function QuotePreview() {
                                 updateHeight={updateSpacer}
                             />
 
-                            {/* 4. SUMMARY & GRAND TOTAL */}
+                            {/* 4. SUMMARY */}
                             <section
                                 ref={(el) => (itemRefs.current["totals"] = el)}
-                                className="break-inside-avoid flex justify-end mb-12"
+                                className="break-inside-avoid flex justify-end mb-10"
                             >
-                                <div className="w-full md:w-2/3 lg:w-1/2 p-4 border border-gray-400">
-                                    <h5 className="font-bold text-gray-800 mb-3 border-b border-gray-400 pb-1">
+                                <div className="w-1/2 border border-slate-900 p-0">
+                                    <div className="bg-slate-900 text-white px-4 py-2 text-sm font-bold uppercase tracking-wider">
                                         Quote Summary
-                                    </h5>
-
-                                    <div className="space-y-1.5 text-sm">
+                                    </div>
+                                    <div className="p-4 space-y-2 text-sm">
                                         <div className="flex justify-between">
                                             <span>Total Windows</span>
-                                            <span>{windowList.length} pcs</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>Total Sq.ft</span>
-                                            <span>
-                                                {Number(totalSqFt).toFixed(2)}{" "}
-                                                Sq.ft.
+                                            <span className="font-bold">
+                                                {windowList.length} pcs
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span>Subtotal Amount</span>
+                                            <span>Total Area</span>
+                                            <span className="font-bold">
+                                                {Number(totalSqFt).toFixed(2)}{" "}
+                                                Sq.ft
+                                            </span>
+                                        </div>
+                                        <div className="border-t border-slate-200 my-2"></div>
+                                        <div className="flex justify-between">
+                                            <span>Subtotal</span>
                                             <span>{formatINR(subtotal)}</span>
                                         </div>
-                                        <div className="flex justify-between">
-                                            <span>Packing & Forwarding</span>
+                                        <div className="flex justify-between text-slate-600">
+                                            <span>Packing</span>
                                             <span>
                                                 {formatINR(packingCharges)}
                                             </span>
                                         </div>
-
                                         {applyGST && (
                                             <>
-                                                <div className="flex justify-between">
+                                                <div className="flex justify-between text-slate-600">
                                                     <span>
-                                                        CGST (@{cgstPerc}%)
+                                                        CGST ({cgstPerc}%)
                                                     </span>
                                                     <span>
                                                         {formatINR(cgstAmount)}
                                                     </span>
                                                 </div>
-                                                <div className="flex justify-between">
+                                                <div className="flex justify-between text-slate-600">
                                                     <span>
-                                                        SGST (@{sgstPerc}%)
+                                                        SGST ({sgstPerc}%)
                                                     </span>
                                                     <span>
                                                         {formatINR(sgstAmount)}
@@ -828,23 +875,13 @@ export default function QuotePreview() {
                                                 </div>
                                             </>
                                         )}
-
-                                        <div className="pt-3 flex justify-between items-baseline border-t border-gray-900">
-                                            <span className="font-bold text-md">
-                                                GRAND TOTAL
+                                        <div className="border-t-2 border-slate-900 pt-2 mt-2 flex justify-between items-center">
+                                            <span className="font-bold text-lg">
+                                                Total
                                             </span>
-                                            <span className="text-xl font-extrabold text-gray-900">
+                                            <span className="font-bold text-xl text-indigo-700">
                                                 {formatINR(grandTotal)}
                                             </span>
-                                        </div>
-                                        <div className="text-right text-xs text-gray-500">
-                                            Avg Rate:{" "}
-                                            {totalSqFt > 0
-                                                ? formatINR(
-                                                      grandTotal / totalSqFt
-                                                  )
-                                                : formatINR(0)}
-                                            /sq.ft
                                         </div>
                                     </div>
                                 </div>
@@ -858,104 +895,96 @@ export default function QuotePreview() {
                                 updateHeight={updateSpacer}
                             />
 
-                            {/* 5. FOOTER (Traditional Blocks) */}
+                            {/* 5. FOOTER */}
                             <section
                                 ref={(el) => (itemRefs.current["footer"] = el)}
-                                className="break-inside-avoid pt-8 space-y-8"
+                                className="break-inside-avoid pt-4 border-t border-gray-200"
                             >
-                                {/* Terms & Conditions */}
-                                <div className="text-xs text-gray-700">
-                                    <h5 className="font-bold text-gray-800 mb-2 border-b border-gray-400 pb-1">
-                                        TERMS & CONDITIONS
-                                    </h5>
-                                    <ul className="list-disc pl-4 space-y-1">
-                                        <li>
-                                            QUOTATION VALID UPTO 1 WEEK (RATES
-                                            MAY CHANGE).
-                                        </li>
-                                        <li>
-                                            SIZE CALCULATED IN WIDTH/HEIGHT IN 3
-                                            INCH STEPS.
-                                        </li>
-                                        <li>
-                                            DESIGN/STYLE REMAINS UNCHANGED;
-                                            CHANGES CHARGEABLE.
-                                        </li>
-                                        <li>
-                                            NO WARRANTY FOR GLASS
-                                            POST-INSTALLATION.
-                                        </li>
-                                        <li>
-                                            MANUFACTURING DEFECTS: REPORT WITHIN
-                                            48 HOURS.
-                                        </li>
-                                        <li>
-                                            SCAFFOLDING/CRANE/ELECTRICITY/CLEANING:
-                                            CUSTOMER SCOPE.
-                                        </li>
-                                        <li>
-                                            STONE DAMAGE/BREAKAGE: NOT OUR
-                                            RESPONSIBILITY.
-                                        </li>
-                                        <li>
-                                            POST-HANDOVER SERVICE IS CHARGEABLE.
-                                        </li>
-                                        <li>
-                                            INSTALLATION: 40-45 DAYS FROM
-                                            ADVANCE PAYMENT.
-                                        </li>
-                                        <li>
-                                            PAYMENT: 70% ADVANCE, 20% BEFORE
-                                            DISPATCH, 10% AFTER INSTALL.
-                                        </li>
-                                        <li>
-                                            DISPUTES SUBJECT TO RAJKOT
-                                            JURISDICTION ONLY.
-                                        </li>
-                                        <li>TRANSPORTATION AND GST EXTRA.</li>
-                                    </ul>
-                                </div>
-
-                                {/* Bank Details */}
-                                <div className="text-xs">
-                                    <h5 className="font-bold text-gray-800 mb-2 border-b border-gray-400 pb-1">
-                                        BANK DETAILS
-                                    </h5>
-                                    <div className="grid grid-cols-2 gap-y-1">
-                                        <p>
-                                            <strong>BANK NAME:</strong> STATE
-                                            BANK OF INDIA
-                                        </p>
-                                        <p>
-                                            <strong>BRANCH:</strong> CHANDRESH
-                                            NAGAR, MAVDI PLOT
-                                        </p>
-                                        <p>
-                                            <strong>CURRENT A/C:</strong>{" "}
-                                            34200993101
-                                        </p>
-                                        <p>
-                                            <strong>IFSC CODE:</strong>{" "}
-                                            SBIN0060314
-                                        </p>
+                                <div className="grid grid-cols-2 gap-8">
+                                    <div className="text-[10px] text-gray-600 leading-relaxed">
+                                        <h5 className="font-bold text-gray-900 mb-2 border-b border-gray-300 pb-1 uppercase">
+                                            Terms & Conditions
+                                        </h5>
+                                        <ul className="list-disc pl-4 space-y-0.5">
+                                            <li>
+                                                Quotation valid for 1 week.
+                                                Rates subject to change.
+                                            </li>
+                                            <li>
+                                                Size calculated in 3-inch steps
+                                                (Width/Height).
+                                            </li>
+                                            <li>
+                                                Design changes post-confirmation
+                                                charged extra.
+                                            </li>
+                                            <li>
+                                                No warranty on glass after
+                                                installation.
+                                            </li>
+                                            <li>
+                                                Defects to be reported within 48
+                                                hours.
+                                            </li>
+                                            <li>
+                                                Scaffolding/Electricity/Cleaning
+                                                in customer scope.
+                                            </li>
+                                            <li>
+                                                Payment: 70% Advance, 20%
+                                                Dispatch, 10% Install.
+                                            </li>
+                                            <li>
+                                                Subject to Rajkot Jurisdiction.
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <div className="bg-slate-50 p-3 border border-slate-200 rounded mb-6 text-xs">
+                                            <h5 className="font-bold text-gray-900 mb-2 border-b border-slate-200 pb-1 uppercase">
+                                                Bank Details
+                                            </h5>
+                                            <div className="grid grid-cols-[70px_1fr] gap-y-1">
+                                                <span className="text-slate-500">
+                                                    Bank:
+                                                </span>
+                                                <span className="font-bold">
+                                                    STATE BANK OF INDIA
+                                                </span>
+                                                <span className="text-slate-500">
+                                                    Branch:
+                                                </span>
+                                                <span>
+                                                    CHANDRESH NAGAR, MAVDI
+                                                </span>
+                                                <span className="text-slate-500">
+                                                    A/C:
+                                                </span>
+                                                <span className="font-mono font-bold">
+                                                    34200993101
+                                                </span>
+                                                <span className="text-slate-500">
+                                                    IFSC:
+                                                </span>
+                                                <span className="font-mono font-bold">
+                                                    SBIN0060314
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between items-end gap-4 text-xs font-bold text-center">
+                                            <div className="flex-1">
+                                                <div className="h-10 border-b border-gray-400 mb-1"></div>
+                                                <p>TEKNA WINDOWS</p>
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="h-10 border-b border-gray-400 mb-1"></div>
+                                                <p>CUSTOMER SIGN</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-
-                                {/* Signatures */}
-                                <div className="pt-8 flex justify-between text-xs font-bold">
-                                    <div className="text-center">
-                                        <div className="h-12 border-b border-gray-600 w-40 mb-1 mx-auto"></div>
-                                        <p>TEKNA WINDOW SYSTEM</p>
-                                        <p>Authorised Signatory</p>
-                                    </div>
-                                    <div className="text-center">
-                                        <div className="h-12 border-b border-gray-600 w-40 mb-1 mx-auto"></div>
-                                        <p>I ACCEPT THE ESTIMATE & TERMS</p>
-                                        <p>Signature of Customer</p>
-                                    </div>
-                                </div>
-                                <div className="text-right text-[10px] text-gray-400 italic mt-4">
-                                    .
+                                <div className="text-center text-[10px] text-gray-400 mt-8">
+                                    Generated by TEKNA Window Systems
                                 </div>
                             </section>
                         </div>
