@@ -29,11 +29,11 @@ const formatINR = (val) => {
     }).format(val || 0);
 };
 
-/* --- 2. Window Sketch Component (FIXED DIMENSION LOOK) --- */
+/* --- 2. Window Sketch Component (FINAL FIX: Width Centering) --- */
 const WindowSketch = ({ width, height, type = "normal" }) => {
     const boxSize = 150;
     const strokeColor = "#000000";
-    const glassColor = "#f5faff"; // Slightly off-white blue
+    const glassColor = "#ffffff";
 
     const w = Math.max(1, Number(width));
     const h = Math.max(1, Number(height));
@@ -48,12 +48,34 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
         drawW = boxSize * aspect;
     }
 
-    // Position the drawing slightly inward to make space for dimension lines
     const startX = 25;
     const startY = 25;
 
+    // Calculate the horizontal center position of the window frame relative to the container
+    const windowCenterX = startX + drawW / 2;
+
     return (
         <div className="relative flex flex-col items-start justify-start p-2 w-full h-full">
+            {/* Height Label (Left - Aligned to Dimension Line) */}
+            <div
+                className="absolute left-1 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm font-semibold text-gray-800 whitespace-nowrap"
+                style={{ transformOrigin: "center" }}
+            >
+                {height}"
+            </div>
+
+            {/* Width Label (Bottom - FINAL CENTERING FIX) */}
+            <div
+                className="absolute bottom-3 text-sm font-semibold text-gray-800"
+                // Positioned directly using the calculated center of the SVG element, then translating the text's width back by 50%
+                style={{
+                    left: `${windowCenterX}px`,
+                    transform: "translateX(-50%)",
+                }}
+            >
+                {width}"
+            </div>
+
             <svg width="200" height="200" viewBox="0 0 200 200">
                 {/* --- WINDOW FRAME --- */}
                 <rect
@@ -66,7 +88,7 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                     strokeWidth="2"
                 />
 
-                {/* --- Glass Highlight (Simulated Glare) --- */}
+                {/* --- Glass Highlight --- */}
                 <line
                     x1={startX}
                     y1={startY}
@@ -77,7 +99,7 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                     opacity="0.5"
                 />
 
-                {/* --- Inner Window Details (Crosshair/Divider) --- */}
+                {/* --- Inner Window Details --- */}
                 {type.toLowerCase().includes("slider") ? (
                     <>
                         <line
@@ -88,7 +110,6 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                             stroke="#555"
                             strokeWidth="1"
                         />
-                        {/* Simplified handle indicators */}
                         <circle
                             cx={startX + drawW * 0.1}
                             cy={startY + drawH * 0.5}
@@ -104,7 +125,6 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                     </>
                 ) : (
                     <>
-                        {/* Simple Fixed Crosshair */}
                         <line
                             x1={startX + drawW / 2}
                             y1={startY}
@@ -126,7 +146,7 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                     </>
                 )}
 
-                {/* --- Dimension Lines (Visual ONLY, not interactive) --- */}
+                {/* --- Dimension Lines (Visual) --- */}
 
                 {/* Horizontal (Width) Dimension Line */}
                 <line
@@ -180,17 +200,6 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                     strokeWidth="0.5"
                 />
             </svg>
-
-            {/* --- Dimension Text --- */}
-            <div className="absolute left-1/2 bottom-3 transform -translate-x-1/2 text-sm font-semibold text-gray-800">
-                {width}"
-            </div>
-            <div
-                className="absolute left-1 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm font-semibold text-gray-800 whitespace-nowrap"
-                style={{ transformOrigin: "center" }}
-            >
-                {height}"
-            </div>
         </div>
     );
 };
@@ -597,7 +606,7 @@ export default function QuotePreview() {
                                     </div>
                                 </div>
 
-                                {/* Right Side: Logo and Date (Right Aligned - FIX STRETCHING/SIZE) */}
+                                {/* Right Side: Logo and Date (Right Aligned) */}
                                 <div className="flex flex-col items-end text-right">
                                     {/* Logo Placeholder (FIXED ASPECT RATIO + LARGER) */}
                                     <div className="h-24 w-24 mb-1 relative">
@@ -608,7 +617,7 @@ export default function QuotePreview() {
                                                 className="h-full w-full object-contain"
                                             />
                                         ) : (
-                                            <div className="h-full w-full bg-red-100 border border-red-300 text-red-500 flex items-center justify-center text-xs">
+                                            <div className="h-full w-full bg-red-100 border border-red-300 text-red-500 flex items-center justify-center text-sm">
                                                 TWS
                                             </div>
                                         )}
