@@ -544,8 +544,7 @@ export default function QuotePreview() {
                                         </p>
                                         <div className="mt-3 space-y-1">
                                             <p>
-                                                <strong>Mobile:</strong>{" "}
-                                                9825256525
+                                                <strong>Mobile:</strong> 87588 02598{" "}
                                             </p>
                                             <p>
                                                 <strong>Email:</strong>{" "}
