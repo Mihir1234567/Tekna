@@ -109,8 +109,10 @@ export default function Dashboard() {
     const navigate = useNavigate();
     const [recentQuotes, setRecentQuotes] = useState([]);
     const [loading, setLoading] = useState(true);
-    // Added 'approved' to stats state
     const [stats, setStats] = useState({ pending: 0, approved: 0, total: 0 });
+
+    // --- NEW: State for Username ---
+    const [userName, setUserName] = useState("User");
 
     const apiBaseUrl =
         import.meta.env.REACT_APP_API_BASE || "https://tekna-ryyc.onrender.com";
@@ -119,14 +121,26 @@ export default function Dashboard() {
         const fetchDashboardData = async () => {
             try {
                 const token = localStorage.getItem("token");
+
+                // --- NEW: Get User Name from Local Storage ---
+                const storedUser = localStorage.getItem("user");
+                if (storedUser) {
+                    try {
+                        const parsedUser = JSON.parse(storedUser);
+                        // Tries to find 'name' or 'username', defaults to 'User'
+                        setUserName(
+                            parsedUser.name || parsedUser.username || "User"
+                        );
+                    } catch (e) {
+                        console.error("Error parsing user data", e);
+                    }
+                }
+
                 if (!token) {
                     navigate("/login");
                     return;
                 }
 
-                // Note: ideally you should have a separate endpoint for stats (e.g., /api/stats)
-                // or fetch all quotes to calculate accurate totals if pagination is used.
-                // For now, we calculate based on the fetched items.
                 const res = await fetch(`${apiBaseUrl}/api/quotes`, {
                     headers: {
                         "Content-Type": "application/json",
@@ -139,14 +153,12 @@ export default function Dashboard() {
                 const data = await res.json();
                 const items = data.items || [];
 
-                // We take the first 5 for the "Recent Quotes" table
                 setRecentQuotes(items.slice(0, 5));
 
-                // Calculate stats based on ALL items returned
                 setStats({
                     pending: items.filter((q) => q.status === "pending").length,
                     approved: items.filter((q) => q.status === "approved")
-                        .length, // New Metric
+                        .length,
                     total: items.length,
                 });
             } catch (err) {
@@ -185,8 +197,9 @@ export default function Dashboard() {
             {/* --- Header Section --- */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
+                    {/* --- UPDATED: Display Dynamic User Name --- */}
                     <h2 className="text-2xl font-bold text-gray-900">
-                        Hello, User
+                        Hello, {userName}
                     </h2>
                     <p className="text-gray-500 text-sm mt-1">
                         Here's what's happening with your quotes today.
@@ -201,9 +214,9 @@ export default function Dashboard() {
                 </button>
             </div>
 
-            {/* --- Stats Grid (Updated to 3 Columns) --- */}
+            {/* --- Stats Grid --- */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* 1. Pending Card (Action Required) */}
+                {/* Pending Card */}
                 <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-start justify-between hover:shadow-md transition-shadow">
                     <div>
                         <p className="text-sm font-medium text-gray-500">
@@ -218,7 +231,7 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* 2. Approved Card (Success - NEW) */}
+                {/* Approved Card */}
                 <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-start justify-between hover:shadow-md transition-shadow">
                     <div>
                         <p className="text-sm font-medium text-gray-500">
@@ -233,7 +246,7 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* 3. Total Card (Volume) */}
+                {/* Total Card */}
                 <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-start justify-between hover:shadow-md transition-shadow sm:col-span-2 lg:col-span-1">
                     <div>
                         <p className="text-sm font-medium text-gray-500">

@@ -123,8 +123,8 @@ export default function ForgotPassword() {
 
     return (
         <div className="min-h-screen flex bg-white">
-            {/* --- Left Side: Image --- */}
-            <div className="hidden lg:flex lg:w-1/2 relative bg-gray-900">
+            {/* --- Left Side: Image (Added m-4 rounded-2xl overflow-hidden) --- */}
+            <div className="hidden lg:flex lg:w-1/2 relative bg-gray-900 m-4 rounded-2xl overflow-hidden">
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-60"></div>
                 <div className="relative z-10 flex flex-col justify-center px-12 text-white">
                     <h1 className="text-5xl font-bold mb-6">
