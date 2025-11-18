@@ -1,7 +1,8 @@
 // src/pages/Configurator.jsx
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import Window3D from "../components/Window3D"; // Restored import
+import Window3D from "../components/Window3D";
+
 // --- Inline Icons ---
 const Icons = {
     RotateCcw: () => (
@@ -159,7 +160,7 @@ export default function Configurator() {
         grill: "",
         locking: "",
         hardware: "",
-        mess: "", // Field Added
+        mess: "",
         pricePerFt: "",
     });
     const [errors, setErrors] = useState({});
@@ -181,7 +182,7 @@ export default function Configurator() {
         ["grill", "Grill"],
         ["locking", "Locking"],
         ["hardware", "Hardware"],
-        ["mess", "Mess"], // Field Added
+        ["mess", "Mess"],
     ];
 
     const validateFields = () => {
@@ -280,10 +281,8 @@ export default function Configurator() {
         setBannerError("");
     };
 
-    // --- DUPLICATE HANDLER ---
     const duplicateWindow = (i) => {
         const w = windowList[i];
-        // Fill the form with the selected window's data
         setWidth(w.width);
         setHeight(w.height);
         setQuantity(w.quantity);
@@ -298,7 +297,6 @@ export default function Configurator() {
             mess: w.mess || "",
             pricePerFt: w.pricePerFt,
         });
-        // Ensure we are in "Add" mode (not edit mode) so we create a new entry
         setEditIndex(null);
         setBannerError("");
     };
@@ -368,24 +366,26 @@ export default function Configurator() {
         .toFixed(2);
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 pb-24 lg:pb-4">
-            <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="min-h-screen bg-gray-50 p-2 md:p-4 pb-24 lg:pb-4 font-sans">
+            <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
                 {/* --- CENTER PANEL (3D Preview) --- */}
+                {/* Order 1 on Mobile, Order 2 on Desktop */}
                 <div className="lg:col-span-6 lg:col-start-4 order-1 lg:order-2">
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm h-[350px] lg:h-[calc(100vh-5rem)] flex flex-col overflow-hidden">
-                        <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <h2 className="font-semibold text-gray-700 flex items-center gap-2">
+                    {/* Mobile Height: 40vh, Desktop Height: Full calculation */}
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm h-[40vh] min-h-[300px] lg:h-[calc(100vh-5rem)] flex flex-col overflow-hidden">
+                        <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                            <h2 className="font-semibold text-gray-700 flex items-center gap-2 text-sm md:text-base">
                                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                                 Live Preview
                             </h2>
-                            <span className="text-xs text-gray-400 font-mono">
+                            <span className="text-xs text-gray-400 font-mono bg-white px-2 py-1 rounded border">
                                 {width}" x {height}"
                             </span>
                         </div>
 
-                        {/* 3D PREVIEW CONTAINER */}
-                        <div className="flex-1 relative bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-gray-100 flex items-center justify-center w-full h-full">
-                            <div className="w-full h-full">
+                        {/* 3D PREVIEW CONTAINER - Fixed for Mobile */}
+                        <div className="flex-1 relative bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-gray-100 flex items-center justify-center w-full h-full overflow-hidden">
+                            <div className="w-full h-full flex items-center justify-center">
                                 <Window3D
                                     width={width || 0}
                                     height={height || 0}
@@ -397,18 +397,19 @@ export default function Configurator() {
                 </div>
 
                 {/* --- LEFT PANEL (Controls) --- */}
+                {/* Order 2 on Mobile, Order 1 on Desktop */}
                 <div className="lg:col-span-3 lg:col-start-1 order-2 lg:order-1 space-y-4">
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 md:p-5">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="font-bold text-gray-800">
+                            <h2 className="font-bold text-gray-800 text-lg">
                                 {editIndex !== null
-                                    ? "Edit Configuration"
+                                    ? "Edit Config"
                                     : "New Window"}
                             </h2>
                             {editIndex !== null && (
                                 <button
                                     onClick={cancelEdit}
-                                    className="text-xs text-red-500 flex items-center gap-1 hover:bg-red-50 px-2 py-1 rounded"
+                                    className="text-xs text-red-500 flex items-center gap-1 hover:bg-red-50 px-2 py-1 rounded font-medium"
                                 >
                                     <Icons.X /> Cancel
                                 </button>
@@ -421,7 +422,7 @@ export default function Configurator() {
                                 <button
                                     key={type}
                                     onClick={() => setWindowType(type)}
-                                    className={`py-1.5 text-sm font-medium rounded-md transition-all duration-200 capitalize ${
+                                    className={`py-2 text-sm font-medium rounded-md transition-all duration-200 capitalize ${
                                         windowType === type
                                             ? "bg-white text-blue-600 shadow-sm ring-1 ring-gray-200"
                                             : "text-gray-500 hover:text-gray-700"
@@ -433,7 +434,7 @@ export default function Configurator() {
                         </div>
 
                         {/* Dimensions */}
-                        <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="grid grid-cols-2 gap-3 mb-4">
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">
                                     Width (in)
@@ -442,7 +443,7 @@ export default function Configurator() {
                                     type="number"
                                     value={width}
                                     onChange={(e) => setWidth(e.target.value)}
-                                    className={`w-full p-2 rounded-lg border text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                                    className={`w-full p-3 md:p-2 rounded-lg border text-base md:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
                                         errors.width
                                             ? "border-red-500 bg-red-50"
                                             : "border-gray-200"
@@ -457,7 +458,7 @@ export default function Configurator() {
                                     type="number"
                                     value={height}
                                     onChange={(e) => setHeight(e.target.value)}
-                                    className={`w-full p-2 rounded-lg border text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                                    className={`w-full p-3 md:p-2 rounded-lg border text-base md:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
                                         errors.height
                                             ? "border-red-500 bg-red-50"
                                             : "border-gray-200"
@@ -483,7 +484,7 @@ export default function Configurator() {
                                             })
                                         }
                                         placeholder={`Enter ${label}`}
-                                        className={`w-full p-2 rounded-lg border text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-colors ${
+                                        className={`w-full p-3 md:p-2 rounded-lg border text-base md:text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-colors ${
                                             errors[key]
                                                 ? "border-red-500 bg-red-50"
                                                 : "border-gray-200"
@@ -491,13 +492,14 @@ export default function Configurator() {
                                     />
                                 </div>
                             ))}
+
                             {/* Price per Ft */}
                             <div>
                                 <label className="block text-xs font-medium text-gray-600 mb-1">
                                     Price / sq.ft
                                 </label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-2 text-gray-400 text-sm">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
                                         ₹
                                     </span>
                                     <input
@@ -509,7 +511,7 @@ export default function Configurator() {
                                                 pricePerFt: e.target.value,
                                             })
                                         }
-                                        className={`w-full pl-7 p-2 rounded-lg border text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-colors ${
+                                        className={`w-full pl-8 p-3 md:p-2 rounded-lg border text-base md:text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-colors ${
                                             errors.pricePerFt
                                                 ? "border-red-500 bg-red-50"
                                                 : "border-gray-200"
@@ -520,19 +522,19 @@ export default function Configurator() {
                         </div>
 
                         {/* Quantity & Add Button */}
-                        <div className="flex gap-3 items-end">
-                            <div className="w-1/3">
+                        <div className="flex gap-3 items-stretch">
+                            <div className="w-1/3 flex flex-col justify-end">
                                 <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">
                                     Qty
                                 </label>
-                                <div className="flex items-center border border-gray-200 rounded-lg bg-white">
+                                <div className="flex items-center border border-gray-200 rounded-lg bg-white h-[42px] md:h-auto">
                                     <button
                                         onClick={() =>
                                             setQuantity(
                                                 Math.max(1, quantity - 1)
                                             )
                                         }
-                                        className="px-2 py-2 hover:bg-gray-50 text-gray-500"
+                                        className="px-2 h-full hover:bg-gray-50 text-gray-500 text-lg"
                                     >
                                         -
                                     </button>
@@ -543,27 +545,31 @@ export default function Configurator() {
                                         onClick={() =>
                                             setQuantity(quantity + 1)
                                         }
-                                        className="px-2 py-2 hover:bg-gray-50 text-gray-500"
+                                        className="px-2 h-full hover:bg-gray-50 text-gray-500 text-lg"
                                     >
                                         +
                                     </button>
                                 </div>
                             </div>
-                            <button
-                                onClick={handleAddOrUpdateWindow}
-                                className={`flex-1 py-2.5 rounded-lg text-sm font-medium shadow-sm flex items-center justify-center gap-2 transition-all ${
-                                    editIndex !== null
-                                        ? "bg-amber-500 hover:bg-amber-600 text-white"
-                                        : "bg-blue-600 hover:bg-blue-700 text-white"
-                                }`}
-                            >
-                                {editIndex !== null ? (
-                                    <Icons.Check />
-                                ) : (
-                                    <Icons.Plus />
-                                )}
-                                {editIndex !== null ? "Update" : "Add"}
-                            </button>
+                            <div className="flex-1 flex flex-col justify-end">
+                                <button
+                                    onClick={handleAddOrUpdateWindow}
+                                    className={`w-full h-[42px] md:h-auto py-2.5 rounded-lg text-sm font-bold shadow-md flex items-center justify-center gap-2 transition-all ${
+                                        editIndex !== null
+                                            ? "bg-amber-500 hover:bg-amber-600 text-white"
+                                            : "bg-blue-600 hover:bg-blue-700 text-white"
+                                    }`}
+                                >
+                                    {editIndex !== null ? (
+                                        <Icons.Check />
+                                    ) : (
+                                        <Icons.Plus />
+                                    )}
+                                    {editIndex !== null
+                                        ? "Update Window"
+                                        : "Add Window"}
+                                </button>
+                            </div>
                         </div>
 
                         {bannerError && (
@@ -575,8 +581,9 @@ export default function Configurator() {
                 </div>
 
                 {/* --- RIGHT PANEL (List & Summary) --- */}
-                <div className="lg:col-span-3 lg:col-start-10 order-3 space-y-4">
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col h-full max-h-[calc(100vh-5rem)]">
+                {/* Order 3 on Mobile */}
+                <div className="lg:col-span-3 lg:col-start-10 order-3 space-y-4 pb-20 md:pb-0">
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 md:p-5 flex flex-col h-full max-h-[calc(100vh-5rem)]">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="font-bold text-gray-800">
                                 Window List
@@ -586,7 +593,7 @@ export default function Configurator() {
                             </span>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto space-y-3 pr-1 mb-4 min-h-[200px]">
+                        <div className="flex-1 overflow-y-auto space-y-3 pr-1 mb-4 min-h-[200px] max-h-[400px] lg:max-h-none">
                             {windowList.length === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-100 rounded-xl p-8">
                                     <Icons.Plus />
@@ -623,11 +630,10 @@ export default function Configurator() {
                                             </p>
                                         </div>
 
-                                        {/* ACTIONS (With Dupe Button) */}
-                                        <div className="mt-2 pt-2 border-t border-gray-100 grid grid-cols-3 gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="mt-3 pt-2 border-t border-gray-200/60 grid grid-cols-3 gap-2">
                                             <button
                                                 onClick={() => editWindow(i)}
-                                                className="flex items-center justify-center gap-1 py-1 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+                                                className="flex items-center justify-center gap-1 py-1.5 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
                                             >
                                                 <Icons.Edit /> Edit
                                             </button>
@@ -635,15 +641,15 @@ export default function Configurator() {
                                                 onClick={() =>
                                                     duplicateWindow(i)
                                                 }
-                                                className="flex items-center justify-center gap-1 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+                                                className="flex items-center justify-center gap-1 py-1.5 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
                                             >
                                                 <Icons.Copy /> Dupe
                                             </button>
                                             <button
                                                 onClick={() => removeWindow(i)}
-                                                className="flex items-center justify-center gap-1 py-1 text-xs bg-red-50 text-red-600 rounded hover:bg-red-100"
+                                                className="flex items-center justify-center gap-1 py-1.5 text-xs bg-red-50 text-red-600 rounded hover:bg-red-100"
                                             >
-                                                <Icons.Trash /> Remove
+                                                <Icons.Trash /> Del
                                             </button>
                                         </div>
                                     </div>
@@ -651,8 +657,8 @@ export default function Configurator() {
                             )}
                         </div>
 
-                        {/* Summary Footer */}
-                        <div className="border-t border-gray-100 pt-4 bg-white">
+                        {/* Desktop Summary Footer */}
+                        <div className="hidden lg:block border-t border-gray-100 pt-4 bg-white">
                             <div className="space-y-2 mb-4">
                                 <div className="flex justify-between text-sm text-gray-500">
                                     <span>Total Sq.Ft</span>
@@ -674,6 +680,30 @@ export default function Configurator() {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* --- MOBILE STICKY FOOTER --- */}
+            <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 pb-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] lg:hidden z-50">
+                <div className="flex items-center justify-between mb-3">
+                    <div>
+                        <p className="text-xs text-gray-500">Total Amount</p>
+                        <p className="text-lg font-bold text-gray-900">
+                            ₹{Number(totalAmount).toLocaleString()}
+                        </p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-xs text-gray-500">Total Sq.Ft</p>
+                        <p className="text-sm font-medium text-gray-700">
+                            {totalSqFt}
+                        </p>
+                    </div>
+                </div>
+                <button
+                    onClick={handleGenerateQuote}
+                    className="w-full bg-green-600 text-white py-3 rounded-lg font-bold shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2"
+                >
+                    <Icons.Check /> Generate Quote ({windowList.length})
+                </button>
             </div>
         </div>
     );
