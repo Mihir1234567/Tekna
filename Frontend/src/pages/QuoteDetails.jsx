@@ -10,6 +10,7 @@ import {
     RotateCcw,
     ChevronsUp,
     ChevronsDown,
+    Loader2,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -236,7 +237,6 @@ export default function QuotePreview() {
     const { id } = useParams();
 
     const [windowList, setWindowList] = useState([]);
-    // Client Details State
     const [clientDetails, setClientDetails] = useState({
         clientName: "",
         project: "",
@@ -244,6 +244,7 @@ export default function QuotePreview() {
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isAdjusting, setIsAdjusting] = useState(false);
 
     const [spacers, setSpacers] = useState({});
     const [showSpacers, setShowSpacers] = useState(false);
@@ -300,8 +301,8 @@ export default function QuotePreview() {
     /* --- SCREEN SCALING LOGIC --- */
     useEffect(() => {
         const handleResize = () => {
-            const availableWidth = window.innerWidth - 32; // 32px for padding (p-4)
-            const desiredWidth = 1024; // Fixed width of our document container
+            const availableWidth = window.innerWidth - 32;
+            const desiredWidth = 1024;
 
             if (availableWidth < desiredWidth) {
                 const newScale = availableWidth / desiredWidth;
@@ -311,10 +312,7 @@ export default function QuotePreview() {
             }
         };
 
-        // Initial calculation
         handleResize();
-
-        // Update on resize
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
     }, []);
@@ -327,42 +325,61 @@ export default function QuotePreview() {
     const grandTotal = subtotal + packingCharges + cgstAmount + sgstAmount;
     const avgRate = totalSqFt > 0 ? (grandTotal / totalSqFt).toFixed(2) : 0;
 
-    /* --- Layout & Lines --- */
-    const calculateAutoLayout = () => {
+    /* --- ROBUST AUTO ADJUST LOGIC --- */
+    const handleAutoAdjust = () => {
         if (!mainRef.current) return;
+        setIsAdjusting(true);
 
-        const containerWidth = mainRef.current.offsetWidth;
-        const pageHeightPx = containerWidth * 1.4142;
-        let currentY = 0;
-        const newMargins = {};
+        // 1. Reset existing margins to 0 to get natural flow
+        setAutoMargins({});
 
-        const keysToProcess = ["header"];
-        windowList.forEach((_, i) => keysToProcess.push(`w-${i}`));
-        keysToProcess.push("totals");
-        keysToProcess.push("footer");
+        // 2. Wait for React to render the reset state
+        setTimeout(() => {
+            const containerWidth = mainRef.current.offsetWidth;
+            // A4 Ratio 1:1.4142. 1024px width -> ~1448px height per page
+            const pageHeightPx = containerWidth * 1.4142;
 
-        keysToProcess.forEach((key) => {
-            const el = itemRefs.current[key];
-            if (!el) return;
+            const newMargins = {};
+            let totalAddedMargin = 0;
 
-            const manualSpace = spacers[key] || 0;
-            currentY += manualSpace;
-            const height = el.offsetHeight;
-            const startOnPage = currentY % pageHeightPx;
-            const endOnPage = startOnPage + height;
+            const keys = ["header"];
+            windowList.forEach((_, i) => keys.push(`w-${i}`));
+            keys.push("totals");
+            keys.push("footer");
 
-            if (endOnPage > pageHeightPx && height < pageHeightPx) {
-                const marginNeeded = pageHeightPx - startOnPage + 20;
-                newMargins[key] = marginNeeded;
-                currentY += marginNeeded + height;
-            } else {
-                newMargins[key] = 0;
-                currentY += height;
-            }
-        });
+            keys.forEach((key) => {
+                const el = itemRefs.current[key];
+                if (!el) return;
 
-        setAutoMargins(newMargins);
-        setTimeout(calculatePageBreaks, 100);
+                // Get natural position relative to container top
+                // We add 'totalAddedMargin' because we are processing sequentially
+                // and pushing subsequent items down.
+                const naturalTop = el.offsetTop + totalAddedMargin;
+                const height = el.offsetHeight;
+                const currentBottom = naturalTop + height;
+
+                // Check which page start/end falls on (0-indexed)
+                const startPage = Math.floor(naturalTop / pageHeightPx);
+                const endPage = Math.floor(currentBottom / pageHeightPx);
+
+                // If item starts on one page but ends on another, it crosses the line
+                if (startPage !== endPage) {
+                    // Calculate how much to push down to start fresh on the next page
+                    const nextPageStart = (startPage + 1) * pageHeightPx;
+                    // Add a buffer (e.g., 40px) for clean look
+                    const marginNeeded = nextPageStart - naturalTop + 40;
+
+                    newMargins[key] = marginNeeded;
+                    totalAddedMargin += marginNeeded;
+                } else {
+                    newMargins[key] = 0;
+                }
+            });
+
+            setAutoMargins(newMargins);
+            setIsAdjusting(false);
+            setTimeout(calculatePageBreaks, 100); // Update red lines
+        }, 100);
     };
 
     const calculatePageBreaks = () => {
@@ -380,11 +397,12 @@ export default function QuotePreview() {
         setPageBreaks(breaks);
     };
 
+    // Run adjust once on load after data is ready
     useLayoutEffect(() => {
         if (!loading && windowList.length > 0) {
-            setTimeout(calculateAutoLayout, 500);
+            setTimeout(handleAutoAdjust, 500);
         }
-    }, [loading, windowList, applyGST, clientDetails]);
+    }, [loading, windowList]);
 
     useEffect(() => {
         window.addEventListener("resize", calculatePageBreaks);
@@ -399,7 +417,6 @@ export default function QuotePreview() {
         const container = mainRef.current;
         if (!container) return;
 
-        // Temporarily reset scale to 1 for crystal clear PDF generation
         const oldScale = scale;
         setScale(1);
         setShowSpacers(false);
@@ -443,7 +460,7 @@ export default function QuotePreview() {
 
             pdf.save(`Quotation-${id || "Draft"}.pdf`);
             setIsPDFMode(false);
-            setScale(oldScale); // Restore mobile scaling
+            setScale(oldScale);
         }, 500);
     };
 
@@ -464,10 +481,16 @@ export default function QuotePreview() {
                 </h1>
                 <div className="flex flex-wrap justify-center gap-2 md:gap-3">
                     <button
-                        onClick={calculateAutoLayout}
-                        className="px-3 py-2 border border-purple-300 bg-purple-50 text-purple-700 rounded flex gap-1 items-center text-xs md:text-sm font-medium hover:bg-purple-100 transition-colors shadow-sm"
+                        onClick={handleAutoAdjust}
+                        disabled={isAdjusting}
+                        className="px-3 py-2 border border-purple-300 bg-purple-50 text-purple-700 rounded flex gap-1 items-center text-xs md:text-sm font-medium hover:bg-purple-100 transition-colors shadow-sm disabled:opacity-50"
                     >
-                        <Wand2 size={14} /> Auto Adjust
+                        {isAdjusting ? (
+                            <Loader2 className="animate-spin" size={14} />
+                        ) : (
+                            <Wand2 size={14} />
+                        )}
+                        {isAdjusting ? "Adjusting..." : "Auto Adjust"}
                     </button>
 
                     <button
@@ -510,14 +533,13 @@ export default function QuotePreview() {
                 </div>
             </div>
 
-            {/* --- DOCUMENT STAGE (Handles centering) --- */}
+            {/* --- DOCUMENT STAGE --- */}
             <div className="flex justify-center">
-                {/* --- TRANSFORM WRAPPER (Handles Scaling) --- */}
                 <div
                     style={{
                         transform: `scale(${scale})`,
                         transformOrigin: "top center",
-                        width: "1024px", // The physical width of the document
+                        width: "1024px",
                     }}
                 >
                     <div className="relative">
@@ -544,6 +566,7 @@ export default function QuotePreview() {
                             <div
                                 ref={(el) => (itemRefs.current["header"] = el)}
                                 style={{
+                                    // Use '||' to default to 1.5rem if no extra margin is calculated
                                     marginBottom: autoMargins["header"]
                                         ? `${autoMargins["header"]}px`
                                         : "1.5rem",
@@ -596,12 +619,10 @@ export default function QuotePreview() {
                                     </div>
                                 </div>
 
-                                {/* --- NEW CLIENT DETAILS SECTION (Redesigned) --- */}
+                                {/* --- CLIENT DETAILS SECTION --- */}
                                 <div className="mt-8 mb-4">
-                                    {/* The "Card" Design */}
                                     <div className="bg-stone-50 border-t-4 border-amber-600 p-5 shadow-sm">
                                         <div className="grid grid-cols-2 gap-y-5 gap-x-8">
-                                            {/* Row 1 */}
                                             <div className="flex flex-col">
                                                 <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">
                                                     Client Name
@@ -621,8 +642,6 @@ export default function QuotePreview() {
                                                         : "QE/TK/--"}
                                                 </span>
                                             </div>
-
-                                            {/* Row 2 (with separators) */}
                                             <div className="flex flex-col border-t border-gray-200 pt-3">
                                                 <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">
                                                     Project
@@ -644,7 +663,6 @@ export default function QuotePreview() {
                                         </div>
                                     </div>
                                 </div>
-                                {/* ---------------------------------------------- */}
                             </div>
 
                             {/* Windows Loop */}
@@ -672,7 +690,6 @@ export default function QuotePreview() {
                                             }}
                                             className="transition-all duration-500"
                                         >
-                                            {/* Window Item */}
                                             <div className="border border-gray-300 rounded p-4 flex flex-row gap-6 mb-8 break-inside-avoid bg-white">
                                                 <div className="w-1/3 border border-gray-200 bg-gray-50 flex items-center justify-center p-4">
                                                     <WindowSketch
@@ -689,8 +706,6 @@ export default function QuotePreview() {
                                                                 ({w.windowType})
                                                             </span>
                                                         </h3>
-
-                                                        {/* Details Grid */}
                                                         <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
                                                             <div>
                                                                 <strong>
@@ -846,7 +861,6 @@ export default function QuotePreview() {
                                                 {formatINR(subtotal)}
                                             </span>
                                         </div>
-
                                         <div className="flex justify-between items-center">
                                             <span className="text-gray-600">
                                                 Packing & Forwarding
@@ -876,7 +890,6 @@ export default function QuotePreview() {
                                                 </div>
                                             )}
                                         </div>
-
                                         {applyGST && (
                                             <>
                                                 <div className="flex justify-between items-center">
@@ -937,7 +950,6 @@ export default function QuotePreview() {
                                                 </div>
                                             </>
                                         )}
-
                                         <div className="mt-4 pt-3 border-t-2 border-gray-300 flex justify-between items-end">
                                             <div className="text-xs text-gray-500 mb-1">
                                                 Avg Rate: ₹{avgRate} / sq.ft
@@ -962,7 +974,7 @@ export default function QuotePreview() {
                                 updateHeight={updateSpacer}
                             />
 
-                            {/* Footer (Modernized Layout) */}
+                            {/* Footer */}
                             <div
                                 ref={(el) => (itemRefs.current["footer"] = el)}
                                 style={{
@@ -973,14 +985,12 @@ export default function QuotePreview() {
                                 className="break-inside-avoid"
                             >
                                 <div className="grid grid-cols-2 gap-8">
-                                    {/* Left Column: Terms & Conditions */}
                                     <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
                                         <div className="flex items-center gap-2 mb-4 border-b border-gray-300 pb-2">
                                             <h4 className="font-bold text-gray-800 uppercase tracking-wider text-sm">
                                                 Terms & Conditions
                                             </h4>
                                         </div>
-
                                         <ul className="list-disc pl-4 space-y-2 text-[11px] leading-relaxed text-gray-600 text-justify">
                                             <li>
                                                 QUOTATION ARE VALID UPTO 1 WEEK
@@ -1003,82 +1013,43 @@ export default function QuotePreview() {
                                             <li>
                                                 FOR MANUFACTURING DEFECT, CLIENT
                                                 HAS TO INFORM US WITHIN 48 HOURS
-                                                AFTER INSTALLATION. AFTER THE
-                                                TIME PERIOD, TEKNA WINDOW SYSTEM
-                                                WILL BE NOT LIABLE FOR ANY
-                                                DEFECTS.
+                                                AFTER INSTALLATION.
                                             </li>
                                             <li>
                                                 SCAFFOLDING/CRANE SERVICE,
                                                 ELECTRICITY, STORAGE FOR
-                                                MATERIAL AND CLEANING OF GLASS &
-                                                WINDOW WILL BE UNDER CUSTOMER'S
-                                                SCOPE.
+                                                MATERIAL AND CLEANING IS UNDER
+                                                CUSTOMER SCOPE.
                                             </li>
-                                            <li>
-                                                ANY DAMAGE OR BREAKAGE OF STONE
-                                                WILL NOT BE OUR RESPONSIBILITY.
-                                            </li>
-                                            <li>
-                                                AFTER HANDOVERING WINDOWS, IF
-                                                ANY SERVICE REQUIRE RELATED TO
-                                                WINDOWS & DOORS, THAT SHOULD BE
-                                                CHARGEABLE.
-                                            </li>
-
-                                            {/* Nested Terms */}
                                             <li className="bg-white p-2 rounded border border-gray-100">
                                                 <strong className="text-gray-800">
                                                     INSTALLATION TIME:
                                                 </strong>
                                                 <ul className="list-circle pl-4 mt-1 text-gray-500">
-                                                    <li>
-                                                        40 - 45 DAYS (DELIVERY
-                                                        TIME WILL BE SCHEDULED
-                                                        AT THE TIME OF ADVANCE
-                                                        PAYMENT RECEIVED).
-                                                    </li>
+                                                    <li>40 - 45 DAYS.</li>
                                                 </ul>
                                             </li>
-
                                             <li className="bg-white p-2 rounded border border-gray-100">
                                                 <strong className="text-gray-800">
                                                     PAYMENT TERMS:
                                                 </strong>
                                                 <ul className="list-circle pl-4 mt-1 text-gray-500">
+                                                    <li>70 % ADVANCE.</li>
                                                     <li>
-                                                        70 % ADVANCE TO CONFIRM
-                                                        ORDER.
+                                                        20 % AGAINST MATERIAL.
                                                     </li>
                                                     <li>
-                                                        20 % AGAINST MATERIAL AT
-                                                        READY TO DISPATCH.
-                                                    </li>
-                                                    <li>
-                                                        10 % AFTER SUCCESSFUL
-                                                        INSTALLATION.
+                                                        10 % AFTER INSTALLATION.
                                                     </li>
                                                 </ul>
                                             </li>
-
-                                            <li className="font-semibold text-gray-800">
-                                                ALL DISPUTES SHALL BE SUBJECT
-                                                RAJKOT CITY JURISDICTION ONLY.
-                                            </li>
-                                            <li className="font-semibold text-gray-800">
-                                                TRANSPORTATION AND GST EXTRA.
-                                            </li>
                                         </ul>
                                     </div>
-
-                                    {/* Right Column: Bank Details & Signatures */}
                                     <div className="flex flex-col justify-between">
-                                        {/* Bank Details Card */}
                                         <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 mb-6">
                                             <h3 className="font-bold text-blue-900 border-b border-blue-200 mb-4 pb-2 text-sm uppercase tracking-wider">
                                                 Bank Details
                                             </h3>
-
                                             <div className="text-sm text-blue-900">
                                                 <div className="grid grid-cols-[140px_auto] gap-y-2">
                                                     <div className="font-semibold text-blue-700">
@@ -1087,7 +1058,6 @@ export default function QuotePreview() {
                                                     <div>
                                                         STATE BANK OF INDIA
                                                     </div>
-
                                                     <div className="font-semibold text-blue-700">
                                                         BRANCH
                                                     </div>
@@ -1095,14 +1065,12 @@ export default function QuotePreview() {
                                                         CHANDRESH NAGAR, MAVDI
                                                         PLOT
                                                     </div>
-
                                                     <div className="font-semibold text-blue-700">
                                                         CURRENT A/C NO.
                                                     </div>
                                                     <div className="font-mono font-bold text-lg tracking-wide">
                                                         34200993101
                                                     </div>
-
                                                     <div className="font-semibold text-blue-700">
                                                         IFSC CODE
                                                     </div>
@@ -1112,30 +1080,21 @@ export default function QuotePreview() {
                                                 </div>
                                             </div>
                                         </div>
-
-                                        {/* Acceptance & Signatures */}
                                         <div>
                                             <div className="bg-gray-100 p-3 rounded text-[10px] text-gray-600 text-center font-medium italic leading-tight mb-8 border border-dashed border-gray-300">
                                                 I HEREBY ACCEPT THE ESTIMATE AS
                                                 PER ABOVE MENTIONED PRICE AND
-                                                SPECIFICATIONS. I HAVE READ AND
-                                                UNDERSTOOD THE TERMS &
-                                                CONDITIONS AND AGREE TO THEM.
+                                                SPECIFICATIONS.
                                             </div>
-
                                             <div className="flex justify-between items-end gap-8">
                                                 <div className="text-center w-1/2">
-                                                    <div className="h-12 mb-2">
-                                                        {/* Space for Stamp/Sign */}
-                                                    </div>
+                                                    <div className="h-12 mb-2"></div>
                                                     <div className="border-t border-gray-400 pt-2 text-xs font-bold text-gray-700">
                                                         Authorised Signatory
                                                     </div>
                                                 </div>
                                                 <div className="text-center w-1/2">
-                                                    <div className="h-12 mb-2">
-                                                        {/* Space for Manual Sign */}
-                                                    </div>
+                                                    <div className="h-12 mb-2"></div>
                                                     <div className="border-t border-gray-400 pt-2 text-xs font-bold text-gray-700">
                                                         Signature of Customer
                                                     </div>
