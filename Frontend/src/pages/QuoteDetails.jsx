@@ -236,7 +236,7 @@ export default function QuotePreview() {
     const { id } = useParams();
 
     const [windowList, setWindowList] = useState([]);
-    // --- NEW: Client Details State ---
+    // Client Details State
     const [clientDetails, setClientDetails] = useState({
         clientName: "",
         project: "",
@@ -265,9 +265,7 @@ export default function QuotePreview() {
     useEffect(() => {
         const fetchData = async () => {
             if (state?.windowList) {
-                // Came from Configurator (Preview Mode)
                 setWindowList(state.windowList);
-                // Extract client info from state
                 if (state.clientInfo) {
                     setClientDetails({
                         clientName: state.clientInfo.clientName,
@@ -277,12 +275,10 @@ export default function QuotePreview() {
                 }
                 setLoading(false);
             } else if (id) {
-                // Came from URL/DB (Saved Quote)
                 try {
                     const token = getToken();
                     const data = await apiGet(`/quotes/${id}`, token);
                     setWindowList(data.quote.windows || []);
-                    // Extract client info from DB response
                     setClientDetails({
                         clientName: data.quote.clientName || "",
                         project: data.quote.project || "",
@@ -388,7 +384,7 @@ export default function QuotePreview() {
         if (!loading && windowList.length > 0) {
             setTimeout(calculateAutoLayout, 500);
         }
-    }, [loading, windowList, applyGST, clientDetails]); // Re-calc layout if client details change height
+    }, [loading, windowList, applyGST, clientDetails]);
 
     useEffect(() => {
         window.addEventListener("resize", calculatePageBreaks);
@@ -540,7 +536,6 @@ export default function QuotePreview() {
                             ))}
 
                         {/* --- THE A4 PAPER --- */}
-                        {/* Notice: min-w-[1024px] enforces Desktop Width even on mobile */}
                         <div
                             ref={mainRef}
                             className="bg-white shadow-2xl border border-gray-200 p-12 min-w-[1024px] min-h-[297mm] relative"
@@ -553,9 +548,8 @@ export default function QuotePreview() {
                                         ? `${autoMargins["header"]}px`
                                         : "1.5rem",
                                 }}
-                                className="border-b-2 border-gray-800 pb-6"
                             >
-                                <div className="flex justify-between">
+                                <div className="flex justify-between border-b-2 border-gray-800 pb-6">
                                     <div>
                                         <h2 className="text-3xl font-extrabold tracking-wide">
                                             TEKNA WINDOW SYSTEM
@@ -602,46 +596,55 @@ export default function QuotePreview() {
                                     </div>
                                 </div>
 
-                                {/* --- NEW: Client Details Section --- */}
-                                <div className="mt-6 pt-2 border-t border-gray-300">
-                                    <div className="grid grid-cols-2 gap-x-12 gap-y-2 text-sm font-semibold text-gray-800">
-                                        <div className="flex">
-                                            <span className="w-28 text-gray-500 font-bold">
-                                                Client Name :
-                                            </span>
-                                            <span className="uppercase">
-                                                {clientDetails.clientName || ""}
-                                            </span>
-                                        </div>
-                                        <div className="flex">
-                                            <span className="w-32 text-gray-500 font-bold">
-                                                Quotation No. :
-                                            </span>
-                                            <span>
-                                                {id && id !== "undefined"
-                                                    ? id
-                                                    : "QE/TK/--"}
-                                            </span>
-                                        </div>
-                                        <div className="flex">
-                                            <span className="w-28 text-gray-500 font-bold">
-                                                Project :
-                                            </span>
-                                            <span className="uppercase">
-                                                {clientDetails.project || ""}
-                                            </span>
-                                        </div>
-                                        <div className="flex">
-                                            <span className="w-32 text-gray-500 font-bold">
-                                                Finish :
-                                            </span>
-                                            <span className="uppercase">
-                                                {clientDetails.finish || ""}
-                                            </span>
+                                {/* --- NEW CLIENT DETAILS SECTION (Redesigned) --- */}
+                                <div className="mt-8 mb-4">
+                                    {/* The "Card" Design */}
+                                    <div className="bg-stone-50 border-t-4 border-amber-600 p-5 shadow-sm">
+                                        <div className="grid grid-cols-2 gap-y-5 gap-x-8">
+                                            {/* Row 1 */}
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">
+                                                    Client Name
+                                                </span>
+                                                <span className="text-base font-bold text-gray-900 uppercase tracking-wide">
+                                                    {clientDetails.clientName ||
+                                                        "—"}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col text-right">
+                                                <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">
+                                                    Quotation No.
+                                                </span>
+                                                <span className="text-base font-bold text-gray-900 tracking-wide font-mono">
+                                                    {id && id !== "undefined"
+                                                        ? id
+                                                        : "QE/TK/--"}
+                                                </span>
+                                            </div>
+
+                                            {/* Row 2 (with separators) */}
+                                            <div className="flex flex-col border-t border-gray-200 pt-3">
+                                                <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">
+                                                    Project
+                                                </span>
+                                                <span className="text-sm font-semibold text-gray-800 uppercase">
+                                                    {clientDetails.project ||
+                                                        "—"}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col text-right border-t border-gray-200 pt-3">
+                                                <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">
+                                                    Finish
+                                                </span>
+                                                <span className="text-sm font-semibold text-gray-800 uppercase">
+                                                    {clientDetails.finish ||
+                                                        "—"}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                {/* ----------------------------------- */}
+                                {/* ---------------------------------------------- */}
                             </div>
 
                             {/* Windows Loop */}
@@ -669,7 +672,7 @@ export default function QuotePreview() {
                                             }}
                                             className="transition-all duration-500"
                                         >
-                                            {/* Fixed to flex-row (Removed md: prefixes) */}
+                                            {/* Window Item */}
                                             <div className="border border-gray-300 rounded p-4 flex flex-row gap-6 mb-8 break-inside-avoid bg-white">
                                                 <div className="w-1/3 border border-gray-200 bg-gray-50 flex items-center justify-center p-4">
                                                     <WindowSketch
@@ -687,7 +690,7 @@ export default function QuotePreview() {
                                                             </span>
                                                         </h3>
 
-                                                        {/* RESTORED GRID FIELDS */}
+                                                        {/* Details Grid */}
                                                         <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
                                                             <div>
                                                                 <strong>
@@ -813,7 +816,6 @@ export default function QuotePreview() {
                                 }}
                                 className="break-inside-avoid flex justify-end"
                             >
-                                {/* Fixed width classes (Removed md:w-1/2 etc) */}
                                 <div className="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-6 shadow-sm">
                                     <h3 className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-300 pb-2">
                                         Quote Summary
