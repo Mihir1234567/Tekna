@@ -125,13 +125,11 @@ function WindowSketch({ width = 36, height = 48, type = "normal" }) {
     );
 }
 
-/* ---------- Mobile-Optimized Spacer Component (FIXED) ---------- */
+/* ---------- Mobile-Optimized Spacer Component ---------- */
 const ManualSpacer = ({ id, height, updateHeight, visible, pdfMode }) => {
-    // In PDF mode, if height is 0, render nothing. If height > 0, render invisible div.
-    if (pdfMode && height === 0) return null;
-
-    // In Edit mode, if hidden and height is 0, render nothing.
-    if (!pdfMode && !visible && height === 0) return null;
+    // Hide if in PDF mode with 0 height, or Edit mode but hidden
+    if ((pdfMode && height === 0) || (!pdfMode && !visible && height === 0))
+        return null;
 
     const SMALL_STEP = 20;
     const BIG_STEP = 100;
@@ -141,7 +139,7 @@ const ManualSpacer = ({ id, height, updateHeight, visible, pdfMode }) => {
             className="transition-all duration-200 ease-in-out my-2"
             style={{ height: `${height}px` }}
         >
-            {/* Only show the UI controls if NOT in PDF mode */}
+            {/* Only render controls if NOT in PDF mode */}
             {!pdfMode && (
                 <div className="h-14 sm:h-10 bg-blue-50 border border-dashed border-blue-300 rounded-lg flex items-center justify-center gap-3 sm:gap-2 text-blue-700 select-none relative shadow-sm group">
                     <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden shadow-sm">
@@ -285,20 +283,16 @@ export default function QuotePreview() {
         fetchData();
     }, [id, state]);
 
-    /* --- SCREEN SCALING LOGIC --- */
     useEffect(() => {
         const handleResize = () => {
             const availableWidth = window.innerWidth - 32;
             const desiredWidth = 1024;
-
             if (availableWidth < desiredWidth) {
-                const newScale = availableWidth / desiredWidth;
-                setScale(newScale);
+                setScale(availableWidth / desiredWidth);
             } else {
                 setScale(1);
             }
         };
-
         handleResize();
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
@@ -311,21 +305,16 @@ export default function QuotePreview() {
     const grandTotal = subtotal + packingCharges + cgstAmount + sgstAmount;
     const avgRate = totalSqFt > 0 ? (grandTotal / totalSqFt).toFixed(2) : 0;
 
-    /* --- AUTO ADJUST LOGIC --- */
     const handleAutoAdjust = () => {
         if (!mainRef.current) return;
         setIsAdjusting(true);
         setShowSpacers(true);
-
         setSpacers({});
-
         setTimeout(() => {
             const containerWidth = mainRef.current.offsetWidth;
             const pageHeightPx = containerWidth * 1.4142;
-
             const newSpacers = {};
             let totalAddedMargin = 0;
-
             const keys = ["header"];
             windowList.forEach((_, i) => keys.push(`w-${i}`));
             keys.push("totals");
@@ -334,29 +323,23 @@ export default function QuotePreview() {
             keys.forEach((key) => {
                 const el = itemRefs.current[key];
                 if (!el) return;
-
                 const naturalTop = el.offsetTop + totalAddedMargin;
                 const height = el.offsetHeight;
                 const currentBottom = naturalTop + height;
-
                 const startPage = Math.floor(naturalTop / pageHeightPx);
                 const endPage = Math.floor(currentBottom / pageHeightPx);
-
                 if (startPage !== endPage) {
                     const nextPageStart = (startPage + 1) * pageHeightPx;
                     const spaceNeeded = nextPageStart - naturalTop + 50;
-
                     let spacerKey = key;
                     if (key === "totals") spacerKey = "spacer-totals";
                     if (key === "footer") spacerKey = "spacer-footer";
-
                     if (key !== "header") {
                         newSpacers[spacerKey] = Math.ceil(spaceNeeded);
                         totalAddedMargin += spaceNeeded;
                     }
                 }
             });
-
             setSpacers(newSpacers);
             setIsAdjusting(false);
             setTimeout(calculatePageBreaks, 100);
@@ -368,7 +351,6 @@ export default function QuotePreview() {
         const containerHeight = mainRef.current.scrollHeight;
         const containerWidth = mainRef.current.offsetWidth;
         const pageHeightPx = containerWidth * 1.4142;
-
         const breaks = [];
         let currentH = pageHeightPx;
         while (currentH < containerHeight + 2000) {
@@ -396,35 +378,28 @@ export default function QuotePreview() {
     const downloadPDF = async () => {
         const container = mainRef.current;
         if (!container) return;
-
         const oldScale = scale;
         setScale(1);
-        setShowSpacers(false); // Hide edit controls in state
-        setIsPDFMode(true); // Trigger PDF Mode
+        setShowSpacers(false);
+        setIsPDFMode(true);
 
-        // Wait for React to render the "PDF Mode" state (which hides buttons inside Spacer)
         setTimeout(async () => {
             const pdf = new jsPDF("p", "mm", "a4");
             const pdfW = pdf.internal.pageSize.getWidth();
             const pdfH = pdf.internal.pageSize.getHeight();
-
             const canvas = await html2canvas(container, {
                 scale: 2,
                 useCORS: true,
                 windowWidth: 1200,
                 scrollY: -window.scrollY,
             });
-
             const imgData = canvas.toDataURL("image/png");
             const imgProps = pdf.getImageProperties(imgData);
             const imgHeight = (imgProps.height * pdfW) / imgProps.width;
-
             let heightLeft = imgHeight;
             let position = 0;
-
             pdf.addImage(imgData, "PNG", 0, position, pdfW, imgHeight);
             heightLeft -= pdfH;
-
             while (heightLeft >= 0) {
                 position = heightLeft - imgHeight;
                 pdf.addPage();
@@ -438,7 +413,6 @@ export default function QuotePreview() {
                 );
                 heightLeft -= pdfH;
             }
-
             pdf.save(`Quotation-${id || "Draft"}.pdf`);
             setIsPDFMode(false);
             setScale(oldScale);
@@ -457,7 +431,6 @@ export default function QuotePreview() {
                     : "h-screen overflow-y-auto overflow-x-hidden w-full"
             }`}
         >
-            {/* --- HEADER TOOLBAR --- */}
             <div
                 className={`max-w-5xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4 ${
                     isPDFMode ? "hidden" : ""
@@ -479,7 +452,6 @@ export default function QuotePreview() {
                         )}
                         {isAdjusting ? "Adjusting..." : "Auto Adjust"}
                     </button>
-
                     <button
                         onClick={() => setShowSpacers(!showSpacers)}
                         className={`px-3 py-2 border rounded flex gap-1 items-center text-xs md:text-sm font-medium shadow-sm transition-colors ${
@@ -491,7 +463,6 @@ export default function QuotePreview() {
                         <Ruler size={14} />{" "}
                         {showSpacers ? "Hide Tools" : "Spacing"}
                     </button>
-
                     <div className="flex items-center bg-white border rounded px-2 shadow-sm">
                         <label className="flex items-center gap-2 text-xs md:text-sm cursor-pointer select-none">
                             <input
@@ -503,14 +474,12 @@ export default function QuotePreview() {
                             GST
                         </label>
                     </div>
-
                     <button
                         onClick={() => navigate(-1)}
                         className="px-3 py-2 border rounded bg-white hover:bg-gray-50 shadow-sm text-xs md:text-sm"
                     >
                         Back
                     </button>
-
                     <button
                         onClick={downloadPDF}
                         className="px-3 py-2 bg-gray-800 text-white rounded flex gap-1 items-center hover:bg-gray-900 shadow-sm text-xs md:text-sm"
@@ -520,7 +489,6 @@ export default function QuotePreview() {
                 </div>
             </div>
 
-            {/* --- DOCUMENT STAGE --- */}
             <div className="flex justify-center pb-10">
                 <div
                     style={{
@@ -530,7 +498,6 @@ export default function QuotePreview() {
                     }}
                 >
                     <div className="relative">
-                        {/* Page Cut Lines - Hidden in PDF Mode */}
                         {!isPDFMode &&
                             (showSpacers || true) &&
                             pageBreaks.map((y, i) => (
@@ -545,7 +512,6 @@ export default function QuotePreview() {
                                 </div>
                             ))}
 
-                        {/* --- THE A4 PAPER --- */}
                         <div
                             ref={mainRef}
                             className="bg-white shadow-2xl border border-gray-200 p-12 min-w-[1024px] min-h-[297mm] relative text-gray-900"
@@ -602,8 +568,7 @@ export default function QuotePreview() {
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* --- CLIENT DETAILS SECTION --- */}
+                                {/* Client Details */}
                                 <div className="mt-8 mb-8">
                                     <div className="border-y-2 border-gray-100 py-5 bg-gray-50/50">
                                         <div className="grid grid-cols-2 gap-y-6 gap-x-12 px-2">
@@ -649,18 +614,16 @@ export default function QuotePreview() {
                                 </div>
                             </div>
 
-                            {/* Windows Loop (TECHNICAL TABLE LAYOUT) */}
                             <div className="space-y-6 border-t border-gray-200 pt-6">
                                 {windowList.map((w, i) => (
                                     <React.Fragment key={i}>
                                         <ManualSpacer
                                             id={`w-${i}`}
                                             visible={showSpacers}
-                                            pdfMode={isPDFMode} // Passed prop
+                                            pdfMode={isPDFMode}
                                             height={spacers[`w-${i}`] || 0}
                                             updateHeight={updateSpacer}
                                         />
-
                                         <div
                                             ref={(el) =>
                                                 (itemRefs.current[`w-${i}`] =
@@ -668,9 +631,7 @@ export default function QuotePreview() {
                                             }
                                             className="transition-all duration-500"
                                         >
-                                            {/* Main Box Container */}
                                             <div className="border border-gray-300 flex flex-col bg-white break-inside-avoid">
-                                                {/* 1. Header Bar */}
                                                 <div className="flex justify-between bg-gray-100 border-b border-gray-300 px-3 py-2 text-sm font-bold text-gray-800">
                                                     <span>
                                                         Location : Window{" "}
@@ -680,12 +641,9 @@ export default function QuotePreview() {
                                                         Code : {w.windowType}
                                                     </span>
                                                 </div>
-
-                                                {/* 2. Content Area */}
                                                 <div className="flex flex-row">
-                                                    {/* Left: Drawing with Dimension Lines */}
                                                     <div className="w-1/3 border-r border-gray-300 p-10 flex items-center justify-center relative bg-white">
-                                                        {/* Top Dimension Text */}
+                                                        {/* Top Dimension */}
                                                         <div className="absolute top-3 left-0 w-full text-center text-xs font-semibold text-gray-600">
                                                             <div className="flex items-center justify-center gap-2">
                                                                 <div className="h-px w-12 bg-gray-400"></div>
@@ -700,21 +658,11 @@ export default function QuotePreview() {
                                                                 <div className="h-px w-12 bg-gray-400"></div>
                                                             </div>
                                                         </div>
-
-                                                        {/* Left Dimension Text */}
-                                                        <div className="absolute left-3 top-0 h-full flex flex-col justify-center text-xs font-semibold text-gray-600">
-                                                            <div
-                                                                className="flex flex-col items-center gap-2"
-                                                                style={{
-                                                                    writingMode:
-                                                                        "vertical-rl",
-                                                                    textOrientation:
-                                                                        "mixed",
-                                                                    transform:
-                                                                        "rotate(180deg)",
-                                                                }}
-                                                            >
-                                                                <div className="h-12 w-px bg-gray-400"></div>
+                                                        {/* Left Dimension (FIXED ROTATION) */}
+                                                        <div className="absolute left-0 top-0 h-full flex items-center justify-center w-10 text-xs font-semibold text-gray-600">
+                                                            <div className="flex items-center gap-2 transform -rotate-90 whitespace-nowrap">
+                                                                {/* Lines are horizontal in code (w-12 h-px), vertical on screen after rotation */}
+                                                                <div className="w-12 h-px bg-gray-400"></div>
                                                                 <span>
                                                                     H x{" "}
                                                                     {Number(
@@ -723,21 +671,17 @@ export default function QuotePreview() {
                                                                         2
                                                                     )}
                                                                 </span>
-                                                                <div className="h-12 w-px bg-gray-400"></div>
+                                                                <div className="w-12 h-px bg-gray-400"></div>
                                                             </div>
                                                         </div>
 
-                                                        {/* The Window Itself */}
                                                         <WindowSketch
                                                             width={w.width}
                                                             height={w.height}
                                                             type={w.windowType}
                                                         />
                                                     </div>
-
-                                                    {/* Right: Data Table */}
                                                     <div className="w-2/3 flex flex-col text-xs text-gray-800">
-                                                        {/* Specs Section */}
                                                         <div className="flex-grow p-4 space-y-1.5 leading-relaxed">
                                                             <div className="grid grid-cols-[100px_auto]">
                                                                 <span className="font-bold">
@@ -813,8 +757,6 @@ export default function QuotePreview() {
                                                                 </span>
                                                             </div>
                                                         </div>
-
-                                                        {/* Computed Values Section */}
                                                         <div>
                                                             <div className="bg-gray-100 border-y border-gray-300 px-3 py-1 font-bold text-gray-700">
                                                                 Computed Values
@@ -892,8 +834,6 @@ export default function QuotePreview() {
                                                                 </div>
                                                             </div>
                                                         </div>
-
-                                                        {/* Hardware Footer */}
                                                         <div>
                                                             <div className="bg-gray-100 border-y border-gray-300 px-3 py-1 font-bold text-gray-700">
                                                                 Hardware Brand
@@ -914,12 +854,11 @@ export default function QuotePreview() {
                             <ManualSpacer
                                 id="spacer-totals"
                                 visible={showSpacers}
-                                pdfMode={isPDFMode} // Passed prop
+                                pdfMode={isPDFMode}
                                 height={spacers["spacer-totals"] || 0}
                                 updateHeight={updateSpacer}
                             />
 
-                            {/* Totals Section (Clean Document Style) */}
                             <div
                                 ref={(el) => (itemRefs.current["totals"] = el)}
                                 className="break-inside-avoid flex justify-end pt-8"
@@ -1052,18 +991,16 @@ export default function QuotePreview() {
                             <ManualSpacer
                                 id="spacer-footer"
                                 visible={showSpacers}
-                                pdfMode={isPDFMode} // Passed prop
+                                pdfMode={isPDFMode}
                                 height={spacers["spacer-footer"] || 0}
                                 updateHeight={updateSpacer}
                             />
 
-                            {/* Footer (Clean Columns) */}
                             <div
                                 ref={(el) => (itemRefs.current["footer"] = el)}
                                 className="break-inside-avoid mt-12 border-t-2 border-gray-100 pt-8"
                             >
                                 <div className="grid grid-cols-2 gap-12 text-xs leading-relaxed text-gray-600">
-                                    {/* Terms */}
                                     <div>
                                         <h4 className="font-bold text-gray-900 uppercase tracking-wider mb-3 text-sm">
                                             Terms & Conditions
@@ -1111,8 +1048,6 @@ export default function QuotePreview() {
                                             </li>
                                         </ul>
                                     </div>
-
-                                    {/* Bank & Sign */}
                                     <div className="flex flex-col justify-between">
                                         <div>
                                             <h4 className="font-bold text-gray-900 uppercase tracking-wider mb-3 text-sm">
@@ -1145,7 +1080,6 @@ export default function QuotePreview() {
                                                 </span>
                                             </div>
                                         </div>
-
                                         <div className="mt-8">
                                             <div className="italic text-gray-400 text-[10px] mb-6 text-center border-t border-dashed border-gray-200 pt-2">
                                                 "I hereby accept the estimate as
