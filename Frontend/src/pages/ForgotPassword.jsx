@@ -89,7 +89,7 @@ export default function ForgotPassword() {
 
         try {
             // --- FIX IS HERE: Changed /api/users/ to /api/auth/ ---
-            const res = await fetch(`${apiBaseUrl}/api/auth/forgot-Password`, {
+            const res = await fetch(`${apiBaseUrl}/api/auth/forgot-password`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),

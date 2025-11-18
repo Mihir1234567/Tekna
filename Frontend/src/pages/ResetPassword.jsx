@@ -124,7 +124,7 @@ export default function ResetPassword() {
             // Using Native Fetch to avoid import errors
             // Adjust the path based on your routes (e.g., /api/users/resetPassword or /api/auth/resetPassword)
             const res = await fetch(
-                `${apiBaseUrl}/api/auth/reset-Password/${token}`,
+                `${apiBaseUrl}/api/auth/reset-password/${token}`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
