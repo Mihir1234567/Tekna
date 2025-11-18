@@ -148,7 +148,6 @@ function WindowSketch({ width = 36, height = 48, type = "normal" }) {
 
 /* ---------- Enhanced Spacer Component ---------- */
 const ManualSpacer = ({ id, height, updateHeight, visible }) => {
-    // Logic update: If height > 0, we force visibility so the user can see/edit the auto-added space
     const isVisible = visible || height > 0;
 
     if (!isVisible) return null;
@@ -162,7 +161,6 @@ const ManualSpacer = ({ id, height, updateHeight, visible }) => {
             style={{ height: `${height}px` }}
         >
             <div className="h-full min-h-[40px] bg-blue-50 border border-dashed border-blue-300 rounded-lg flex items-center justify-center gap-2 text-blue-700 text-xs select-none relative shadow-sm group">
-                {/* Controls container */}
                 <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden shadow-sm">
                     <button
                         onClick={() =>
@@ -239,7 +237,6 @@ export default function QuotePreview() {
     const [error, setError] = useState(null);
     const [isAdjusting, setIsAdjusting] = useState(false);
 
-    // Unified Spacing State (Used by both Manual and Auto)
     const [spacers, setSpacers] = useState({});
     const [showSpacers, setShowSpacers] = useState(false);
     const [pageBreaks, setPageBreaks] = useState([]);
@@ -322,20 +319,18 @@ export default function QuotePreview() {
     const handleAutoAdjust = () => {
         if (!mainRef.current) return;
         setIsAdjusting(true);
-        setShowSpacers(true); // Enable tools so user can see what happened
+        setShowSpacers(true);
 
-        // 1. Reset ALL spacers to 0 to measure "natural" flow
         setSpacers({});
 
-        // 2. Wait for render to clear spacers, then measure
         setTimeout(() => {
             const containerWidth = mainRef.current.offsetWidth;
-            const pageHeightPx = containerWidth * 1.4142; // A4 Aspect Ratio
+            const pageHeightPx = containerWidth * 1.4142;
 
             const newSpacers = {};
             let totalAddedMargin = 0;
 
-            const keys = ["header"]; // Header usually safe, but included for offset calc
+            const keys = ["header"];
             windowList.forEach((_, i) => keys.push(`w-${i}`));
             keys.push("totals");
             keys.push("footer");
@@ -344,7 +339,6 @@ export default function QuotePreview() {
                 const el = itemRefs.current[key];
                 if (!el) return;
 
-                // Current Top relative to container + any margin we already added to previous items
                 const naturalTop = el.offsetTop + totalAddedMargin;
                 const height = el.offsetHeight;
                 const currentBottom = naturalTop + height;
@@ -352,19 +346,14 @@ export default function QuotePreview() {
                 const startPage = Math.floor(naturalTop / pageHeightPx);
                 const endPage = Math.floor(currentBottom / pageHeightPx);
 
-                // If element crosses a page boundary
                 if (startPage !== endPage) {
-                    // Push to next page
                     const nextPageStart = (startPage + 1) * pageHeightPx;
-                    // Add slight buffer (50px) for aesthetics
                     const spaceNeeded = nextPageStart - naturalTop + 50;
 
-                    // Map element ID to Spacer ID
                     let spacerKey = key;
                     if (key === "totals") spacerKey = "spacer-totals";
                     if (key === "footer") spacerKey = "spacer-footer";
 
-                    // Don't add spacer for header (it's always top)
                     if (key !== "header") {
                         newSpacers[spacerKey] = Math.ceil(spaceNeeded);
                         totalAddedMargin += spaceNeeded;
@@ -386,7 +375,6 @@ export default function QuotePreview() {
 
         const breaks = [];
         let currentH = pageHeightPx;
-        // Draw lines further than current height to allow for expansion
         while (currentH < containerHeight + 2000) {
             breaks.push(currentH);
             currentH += pageHeightPx;
@@ -394,12 +382,16 @@ export default function QuotePreview() {
         setPageBreaks(breaks);
     };
 
-    // Initial Line Draw
+    useLayoutEffect(() => {
+        if (!loading && windowList.length > 0) {
+            setTimeout(handleAutoAdjust, 500);
+        }
+    }, [loading, windowList]);
+
     useEffect(() => {
-        setTimeout(calculatePageBreaks, 500);
         window.addEventListener("resize", calculatePageBreaks);
         return () => window.removeEventListener("resize", calculatePageBreaks);
-    }, [spacers]); // Re-calc lines when spacers change
+    }, [spacers]);
 
     const updateSpacer = (key, val) => {
         setSpacers((prev) => ({ ...prev, [key]: val }));
@@ -411,7 +403,7 @@ export default function QuotePreview() {
 
         const oldScale = scale;
         setScale(1);
-        setShowSpacers(false); // Hide tools for clean PDF
+        setShowSpacers(false);
         setIsPDFMode(true);
 
         setTimeout(async () => {
@@ -552,23 +544,23 @@ export default function QuotePreview() {
                         {/* --- THE A4 PAPER --- */}
                         <div
                             ref={mainRef}
-                            className="bg-white shadow-2xl border border-gray-200 p-12 min-w-[1024px] min-h-[297mm] relative"
+                            className="bg-white shadow-2xl border border-gray-200 p-12 min-w-[1024px] min-h-[297mm] relative text-gray-900"
                         >
                             {/* Header */}
                             <div
                                 ref={(el) => (itemRefs.current["header"] = el)}
                             >
-                                <div className="flex justify-between border-b-2 border-gray-800 pb-6">
+                                <div className="flex justify-between border-b-2 border-gray-900 pb-6">
                                     <div>
-                                        <h2 className="text-3xl font-extrabold tracking-wide">
+                                        <h2 className="text-3xl font-extrabold tracking-wide text-gray-900">
                                             TEKNA WINDOW SYSTEM
                                         </h2>
-                                        <div className="text-sm font-medium mt-2 text-gray-700">
+                                        <div className="text-sm font-medium mt-3 text-gray-600 leading-relaxed">
                                             <p>
                                                 VAVDI INDUSTRY AREA, VAVDI MAIN
                                                 ROAD, RAJKOT
                                             </p>
-                                            <div className="mt-3 space-y-1">
+                                            <div className="mt-2">
                                                 <p>
                                                     <strong>Mobile:</strong>{" "}
                                                     87588 02598{" "}
@@ -592,44 +584,46 @@ export default function QuotePreview() {
                                                 className="h-32 w-auto object-contain mb-2"
                                             />
                                         ) : (
-                                            <div className="h-24 w-40 bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
+                                            <div className="h-24 w-40 bg-gray-50 flex items-center justify-center text-gray-300 text-xs italic border border-dashed border-gray-200">
                                                 No Logo
                                             </div>
                                         )}
-                                        <div className="bg-gray-100 px-3 py-1 rounded text-sm font-bold mt-2">
+                                        <div className="text-sm font-bold mt-2 text-gray-500">
                                             Date:{" "}
-                                            {new Date().toLocaleDateString(
-                                                "en-IN"
-                                            )}
+                                            <span className="text-gray-900">
+                                                {new Date().toLocaleDateString(
+                                                    "en-IN"
+                                                )}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* --- CLIENT DETAILS SECTION --- */}
-                                <div className="mt-8 mb-4">
-                                    <div className="bg-stone-50 border-t-4 border-amber-600 p-5 shadow-sm">
-                                        <div className="grid grid-cols-2 gap-y-5 gap-x-8">
+                                {/* --- CLIENT DETAILS SECTION (Unified Doc Style) --- */}
+                                <div className="mt-8 mb-8">
+                                    <div className="border-y-2 border-gray-100 py-5 bg-gray-50/50">
+                                        <div className="grid grid-cols-2 gap-y-6 gap-x-12 px-2">
                                             <div className="flex flex-col">
-                                                <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">
+                                                <span className="text-[11px] uppercase tracking-widest text-amber-600 font-bold mb-1">
                                                     Client Name
                                                 </span>
-                                                <span className="text-base font-bold text-gray-900 uppercase tracking-wide">
+                                                <span className="text-lg font-bold text-gray-900 uppercase tracking-tight">
                                                     {clientDetails.clientName ||
                                                         "—"}
                                                 </span>
                                             </div>
                                             <div className="flex flex-col text-right">
-                                                <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">
+                                                <span className="text-[11px] uppercase tracking-widest text-amber-600 font-bold mb-1">
                                                     Quotation No.
                                                 </span>
-                                                <span className="text-base font-bold text-gray-900 tracking-wide font-mono">
+                                                <span className="text-lg font-bold text-gray-900 tracking-tight font-mono">
                                                     {id && id !== "undefined"
                                                         ? id
                                                         : "QE/TK/--"}
                                                 </span>
                                             </div>
-                                            <div className="flex flex-col border-t border-gray-200 pt-3">
-                                                <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">
+                                            <div className="flex flex-col">
+                                                <span className="text-[11px] uppercase tracking-widest text-amber-600 font-bold mb-1">
                                                     Project
                                                 </span>
                                                 <span className="text-sm font-semibold text-gray-800 uppercase">
@@ -637,8 +631,8 @@ export default function QuotePreview() {
                                                         "—"}
                                                 </span>
                                             </div>
-                                            <div className="flex flex-col text-right border-t border-gray-200 pt-3">
-                                                <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">
+                                            <div className="flex flex-col text-right">
+                                                <span className="text-[11px] uppercase tracking-widest text-amber-600 font-bold mb-1">
                                                     Finish
                                                 </span>
                                                 <span className="text-sm font-semibold text-gray-800 uppercase">
@@ -652,7 +646,7 @@ export default function QuotePreview() {
                             </div>
 
                             {/* Windows Loop */}
-                            <div className="space-y-0">
+                            <div className="space-y-0 border-t border-gray-200">
                                 {windowList.map((w, i) => (
                                     <React.Fragment key={i}>
                                         <ManualSpacer
@@ -669,121 +663,130 @@ export default function QuotePreview() {
                                             }
                                             className="transition-all duration-500"
                                         >
-                                            <div className="border border-gray-300 rounded p-4 flex flex-row gap-6 mb-8 break-inside-avoid bg-white">
-                                                <div className="w-1/3 border border-gray-200 bg-gray-50 flex items-center justify-center p-4">
+                                            {/* Unified Row Design */}
+                                            <div className="border-b border-gray-200 py-6 flex flex-row gap-8 break-inside-avoid bg-white">
+                                                <div className="w-[220px] flex-shrink-0 flex items-center justify-center p-2">
                                                     <WindowSketch
                                                         width={w.width}
                                                         height={w.height}
                                                         type={w.windowType}
                                                     />
                                                 </div>
-                                                <div className="w-2/3 flex flex-col justify-between">
+                                                <div className="flex-grow flex flex-col justify-between">
                                                     <div>
-                                                        <h3 className="text-lg font-bold border-b pb-2 mb-3">
-                                                            Window {i + 1}{" "}
-                                                            <span className="text-sm font-normal text-gray-500">
-                                                                ({w.windowType})
+                                                        <div className="flex justify-between items-baseline mb-3">
+                                                            <h3 className="text-lg font-bold text-gray-900">
+                                                                Window {i + 1}
+                                                            </h3>
+                                                            <span className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+                                                                {w.windowType}
                                                             </span>
-                                                        </h3>
-                                                        <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                                                            <div>
-                                                                <strong>
-                                                                    Size:
-                                                                </strong>{" "}
-                                                                W {w.width}" × H{" "}
-                                                                {w.height}"
+                                                        </div>
+
+                                                        {/* Data Grid - Clean Table Look */}
+                                                        <div className="grid grid-cols-2 gap-x-10 gap-y-2 text-sm text-gray-700">
+                                                            <div className="flex justify-between border-b border-dashed border-gray-100 pb-1">
+                                                                <span className="text-gray-400">
+                                                                    Size
+                                                                </span>
+                                                                <span className="font-semibold">
+                                                                    W {w.width}"
+                                                                    × H{" "}
+                                                                    {w.height}"
+                                                                </span>
                                                             </div>
-                                                            <div>
-                                                                <strong>
-                                                                    Profile:
-                                                                </strong>{" "}
-                                                                {w.profileSystem ||
-                                                                    "-"}
+                                                            <div className="flex justify-between border-b border-dashed border-gray-100 pb-1">
+                                                                <span className="text-gray-400">
+                                                                    Profile
+                                                                </span>
+                                                                <span className="font-semibold">
+                                                                    {w.profileSystem ||
+                                                                        "-"}
+                                                                </span>
                                                             </div>
-                                                            <div>
-                                                                <strong>
-                                                                    Design:
-                                                                </strong>{" "}
-                                                                {w.design ||
-                                                                    "-"}
+                                                            <div className="flex justify-between border-b border-dashed border-gray-100 pb-1">
+                                                                <span className="text-gray-400">
+                                                                    Glass
+                                                                </span>
+                                                                <span className="font-semibold">
+                                                                    {w.glassType ||
+                                                                        "-"}
+                                                                </span>
                                                             </div>
-                                                            <div>
-                                                                <strong>
-                                                                    Glass:
-                                                                </strong>{" "}
-                                                                {w.glassType ||
-                                                                    "-"}
+                                                            <div className="flex justify-between border-b border-dashed border-gray-100 pb-1">
+                                                                <span className="text-gray-400">
+                                                                    Design
+                                                                </span>
+                                                                <span className="font-semibold">
+                                                                    {w.design ||
+                                                                        "-"}
+                                                                </span>
                                                             </div>
-                                                            <div>
-                                                                <strong>
-                                                                    Locking:
-                                                                </strong>{" "}
-                                                                {w.locking ||
-                                                                    "-"}
+                                                            <div className="flex justify-between border-b border-dashed border-gray-100 pb-1">
+                                                                <span className="text-gray-400">
+                                                                    Hardware
+                                                                </span>
+                                                                <span className="font-semibold">
+                                                                    {w.hardware ||
+                                                                        "-"}
+                                                                </span>
                                                             </div>
-                                                            <div>
-                                                                <strong>
-                                                                    Grill:
-                                                                </strong>{" "}
-                                                                {w.grill || "-"}
-                                                            </div>
-                                                            <div>
-                                                                <strong>
-                                                                    Mess:
-                                                                </strong>{" "}
-                                                                {w.mess || "-"}
-                                                            </div>
-                                                            <div>
-                                                                <strong>
-                                                                    Hardware:
-                                                                </strong>{" "}
-                                                                {w.hardware ||
-                                                                    "-"}
+                                                            <div className="flex justify-between border-b border-dashed border-gray-100 pb-1">
+                                                                <span className="text-gray-400">
+                                                                    Mesh
+                                                                </span>
+                                                                <span className="font-semibold">
+                                                                    {w.mess ||
+                                                                        "-"}
+                                                                </span>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div className="mt-4 bg-gray-100 p-3 rounded border border-gray-200">
-                                                        <div className="grid grid-cols-4 gap-4 text-sm">
-                                                            <div>
-                                                                <span className="block text-xs text-gray-500">
-                                                                    Sq.ft
-                                                                </span>
-                                                                <span className="font-medium">
+
+                                                    {/* Pricing Strip */}
+                                                    <div className="mt-5 pt-3 flex justify-between items-end text-sm text-gray-800">
+                                                        <div className="space-x-6">
+                                                            <span>
+                                                                <span className="text-gray-400 text-xs uppercase mr-1">
+                                                                    Area
+                                                                </span>{" "}
+                                                                <strong>
                                                                     {Number(
                                                                         w.sqFt
                                                                     ).toFixed(
                                                                         2
                                                                     )}
-                                                                </span>
-                                                            </div>
-                                                            <div>
-                                                                <span className="block text-xs text-gray-500">
+                                                                </strong>{" "}
+                                                                sq.ft
+                                                            </span>
+                                                            <span>
+                                                                <span className="text-gray-400 text-xs uppercase mr-1">
                                                                     Rate
-                                                                </span>
-                                                                <span className="font-medium">
+                                                                </span>{" "}
+                                                                <strong>
                                                                     {formatINR(
                                                                         w.pricePerFt
                                                                     )}
-                                                                </span>
-                                                            </div>
-                                                            <div>
-                                                                <span className="block text-xs text-gray-500">
+                                                                </strong>
+                                                            </span>
+                                                            <span>
+                                                                <span className="text-gray-400 text-xs uppercase mr-1">
                                                                     Qty
-                                                                </span>
-                                                                <span className="font-medium">
+                                                                </span>{" "}
+                                                                <strong>
                                                                     {w.quantity}
-                                                                </span>
-                                                            </div>
-                                                            <div className="text-right">
-                                                                <span className="block text-xs text-gray-500">
-                                                                    Value
-                                                                </span>
-                                                                <span className="font-bold text-blue-700">
-                                                                    {formatINR(
-                                                                        w.amount
-                                                                    )}
-                                                                </span>
-                                                            </div>
+                                                                </strong>
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <span className="text-gray-400 text-xs uppercase mr-2">
+                                                                Total
+                                                            </span>
+                                                            <span className="text-lg font-bold text-gray-900">
+                                                                {formatINR(
+                                                                    w.amount
+                                                                )}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -800,52 +803,41 @@ export default function QuotePreview() {
                                 updateHeight={updateSpacer}
                             />
 
-                            {/* Totals Section */}
+                            {/* Totals Section (Clean Document Style) */}
                             <div
                                 ref={(el) => (itemRefs.current["totals"] = el)}
-                                className="break-inside-avoid flex justify-end"
+                                className="break-inside-avoid flex justify-end pt-4"
                             >
-                                <div className="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-6 shadow-sm">
-                                    <h3 className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-300 pb-2">
-                                        Quote Summary
-                                    </h3>
-                                    <div className="space-y-2 text-sm">
+                                <div className="w-1/2 pl-8">
+                                    <div className="space-y-3 text-sm text-gray-700">
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600">
-                                                Total Windows
-                                            </span>
-                                            <span className="font-medium">
+                                            <span>Total Windows</span>
+                                            <span className="font-semibold">
                                                 {windowList.length} pcs
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600">
-                                                Total Sq.ft
-                                            </span>
-                                            <span className="font-medium">
+                                            <span>Total Area</span>
+                                            <span className="font-semibold">
                                                 {Number(totalSqFt).toFixed(2)}{" "}
-                                                Sq.ft.
+                                                sq.ft
                                             </span>
                                         </div>
-                                        <div className="flex justify-between pt-2 border-t border-gray-200 mt-2">
-                                            <span className="text-gray-800 font-semibold">
-                                                Subtotal
-                                            </span>
-                                            <span className="font-bold">
+                                        <div className="flex justify-between pt-2 border-t border-gray-200">
+                                            <span>Subtotal</span>
+                                            <span className="font-bold text-gray-900">
                                                 {formatINR(subtotal)}
                                             </span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-gray-600">
-                                                Packing & Forwarding
-                                            </span>
+                                            <span>Packing & Forwarding</span>
                                             {isPDFMode ? (
-                                                <span className="font-medium">
+                                                <span className="font-semibold">
                                                     {formatINR(packingCharges)}
                                                 </span>
                                             ) : (
-                                                <div className="flex items-center">
-                                                    <span className="text-gray-500 mr-1">
+                                                <div className="flex items-center border-b border-gray-300">
+                                                    <span className="text-gray-400 mr-1">
                                                         ₹
                                                     </span>
                                                     <input
@@ -859,7 +851,7 @@ export default function QuotePreview() {
                                                                 )
                                                             )
                                                         }
-                                                        className="w-20 text-right border-b border-gray-300 bg-transparent text-sm"
+                                                        className="w-20 text-right outline-none bg-transparent font-semibold"
                                                     />
                                                 </div>
                                             )}
@@ -867,16 +859,16 @@ export default function QuotePreview() {
                                         {applyGST && (
                                             <>
                                                 <div className="flex justify-between items-center">
-                                                    <div className="flex items-center gap-1 text-gray-600">
+                                                    <div className="flex items-center gap-1 text-gray-500">
                                                         <span>CGST</span>
                                                         {isPDFMode ? (
-                                                            <span className="text-xs text-gray-400">
+                                                            <span className="text-xs">
                                                                 (@{cgstPerc}%)
                                                             </span>
                                                         ) : (
                                                             <input
                                                                 type="number"
-                                                                className="w-8 text-center border-b text-xs"
+                                                                className="w-6 text-center border-b border-gray-300 text-xs ml-1"
                                                                 value={cgstPerc}
                                                                 onChange={(e) =>
                                                                     setCgstPerc(
@@ -890,21 +882,21 @@ export default function QuotePreview() {
                                                             />
                                                         )}
                                                     </div>
-                                                    <span className="font-medium">
+                                                    <span>
                                                         {formatINR(cgstAmount)}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between items-center">
-                                                    <div className="flex items-center gap-1 text-gray-600">
+                                                    <div className="flex items-center gap-1 text-gray-500">
                                                         <span>SGST</span>
                                                         {isPDFMode ? (
-                                                            <span className="text-xs text-gray-400">
+                                                            <span className="text-xs">
                                                                 (@{sgstPerc}%)
                                                             </span>
                                                         ) : (
                                                             <input
                                                                 type="number"
-                                                                className="w-8 text-center border-b text-xs"
+                                                                className="w-6 text-center border-b border-gray-300 text-xs ml-1"
                                                                 value={sgstPerc}
                                                                 onChange={(e) =>
                                                                     setSgstPerc(
@@ -918,21 +910,21 @@ export default function QuotePreview() {
                                                             />
                                                         )}
                                                     </div>
-                                                    <span className="font-medium">
+                                                    <span>
                                                         {formatINR(sgstAmount)}
                                                     </span>
                                                 </div>
                                             </>
                                         )}
-                                        <div className="mt-4 pt-3 border-t-2 border-gray-300 flex justify-between items-end">
-                                            <div className="text-xs text-gray-500 mb-1">
-                                                Avg Rate: ₹{avgRate} / sq.ft
-                                            </div>
+                                        <div className="pt-4 border-t-2 border-gray-900 flex justify-between items-baseline mt-2">
+                                            <span className="text-xs text-gray-400">
+                                                Rate: ₹{avgRate}/sq.ft
+                                            </span>
                                             <div className="text-right">
-                                                <span className="block text-xs text-gray-500 uppercase tracking-wide">
+                                                <span className="block text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">
                                                     Grand Total
                                                 </span>
-                                                <span className="block text-xl font-extrabold text-blue-700">
+                                                <span className="block text-2xl font-extrabold text-gray-900">
                                                     {formatINR(grandTotal)}
                                                 </span>
                                             </div>
@@ -948,124 +940,112 @@ export default function QuotePreview() {
                                 updateHeight={updateSpacer}
                             />
 
-                            {/* Footer */}
+                            {/* Footer (Clean Columns) */}
                             <div
                                 ref={(el) => (itemRefs.current["footer"] = el)}
-                                className="break-inside-avoid"
+                                className="break-inside-avoid mt-12 border-t-2 border-gray-100 pt-8"
                             >
-                                <div className="grid grid-cols-2 gap-8">
-                                    <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                                        <div className="flex items-center gap-2 mb-4 border-b border-gray-300 pb-2">
-                                            <h4 className="font-bold text-gray-800 uppercase tracking-wider text-sm">
-                                                Terms & Conditions
-                                            </h4>
-                                        </div>
-                                        <ul className="list-disc pl-4 space-y-2 text-[11px] leading-relaxed text-gray-600 text-justify">
+                                <div className="grid grid-cols-2 gap-12 text-xs leading-relaxed text-gray-600">
+                                    {/* Terms */}
+                                    <div>
+                                        <h4 className="font-bold text-gray-900 uppercase tracking-wider mb-3 text-sm">
+                                            Terms & Conditions
+                                        </h4>
+                                        <ul className="list-disc pl-4 space-y-1.5 text-justify">
                                             <li>
-                                                QUOTATION ARE VALID UPTO 1 WEEK
-                                                (RATE MAY CHANGE DEPENDING ON
-                                                MATERIAL PRICE CHANGE).
-                                            </li>
-                                            <li>
-                                                SIZE IS CALCULATED IN WIDTH AND
-                                                HEIGHT IN 3 INCH STEPS.
+                                                Quotation valid for{" "}
+                                                <strong>1 week</strong> (Rates
+                                                subject to material price
+                                                change).
                                             </li>
                                             <li>
-                                                THE DESIGN AND STYLE OF PRODUCT
-                                                REMAINS UNCHANGED. THE CUSTOMER
-                                                WILL BE CHARGED FOR THAT.
+                                                Size calculated in{" "}
+                                                <strong>3-inch steps</strong>.
                                             </li>
                                             <li>
-                                                THERE IS NO WARRANTY FOR GLASS
-                                                ONCE INSTALLATION IS DONE.
+                                                Design changes post-confirmation
+                                                will be charged extra.
                                             </li>
                                             <li>
-                                                FOR MANUFACTURING DEFECT, CLIENT
-                                                HAS TO INFORM US WITHIN 48 HOURS
-                                                AFTER INSTALLATION.
+                                                No warranty on glass after
+                                                installation.
                                             </li>
                                             <li>
-                                                SCAFFOLDING/CRANE SERVICE,
-                                                ELECTRICITY, STORAGE FOR
-                                                MATERIAL AND CLEANING IS UNDER
-                                                CUSTOMER SCOPE.
+                                                Report manufacturing defects
+                                                within <strong>48 hours</strong>{" "}
+                                                of installation.
                                             </li>
-                                            <li className="bg-white p-2 rounded border border-gray-100">
-                                                <strong className="text-gray-800">
-                                                    INSTALLATION TIME:
-                                                </strong>
-                                                <ul className="list-circle pl-4 mt-1 text-gray-500">
-                                                    <li>40 - 45 DAYS.</li>
-                                                </ul>
+                                            <li>
+                                                Scaffolding, electricity, and
+                                                storage provided by client.
                                             </li>
-                                            <li className="bg-white p-2 rounded border border-gray-100">
-                                                <strong className="text-gray-800">
-                                                    PAYMENT TERMS:
-                                                </strong>
-                                                <ul className="list-circle pl-4 mt-1 text-gray-500">
-                                                    <li>70 % ADVANCE.</li>
-                                                    <li>
-                                                        20 % AGAINST MATERIAL.
-                                                    </li>
-                                                    <li>
-                                                        10 % AFTER INSTALLATION.
-                                                    </li>
-                                                </ul>
+                                            <li>
+                                                <strong>Payment:</strong> 70%
+                                                Advance, 20% Before Dispatch,
+                                                10% After Installation.
+                                            </li>
+                                            <li>
+                                                <strong>Installation:</strong>{" "}
+                                                40-45 Days from advance payment.
+                                            </li>
+                                            <li>
+                                                Subject to Rajkot Jurisdiction.
+                                                Transportation & GST Extra.
                                             </li>
                                         </ul>
                                     </div>
+
+                                    {/* Bank & Sign */}
                                     <div className="flex flex-col justify-between">
-                                        <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 mb-6">
-                                            <h3 className="font-bold text-blue-900 border-b border-blue-200 mb-4 pb-2 text-sm uppercase tracking-wider">
+                                        <div>
+                                            <h4 className="font-bold text-gray-900 uppercase tracking-wider mb-3 text-sm">
                                                 Bank Details
-                                            </h3>
-                                            <div className="text-sm text-blue-900">
-                                                <div className="grid grid-cols-[140px_auto] gap-y-2">
-                                                    <div className="font-semibold text-blue-700">
-                                                        BANK NAME
-                                                    </div>
-                                                    <div>
-                                                        STATE BANK OF INDIA
-                                                    </div>
-                                                    <div className="font-semibold text-blue-700">
-                                                        BRANCH
-                                                    </div>
-                                                    <div>
-                                                        CHANDRESH NAGAR, MAVDI
-                                                        PLOT
-                                                    </div>
-                                                    <div className="font-semibold text-blue-700">
-                                                        CURRENT A/C NO.
-                                                    </div>
-                                                    <div className="font-mono font-bold text-lg tracking-wide">
-                                                        34200993101
-                                                    </div>
-                                                    <div className="font-semibold text-blue-700">
-                                                        IFSC CODE
-                                                    </div>
-                                                    <div className="font-mono font-bold">
-                                                        SBIN0060314
-                                                    </div>
-                                                </div>
+                                            </h4>
+                                            <div className="grid grid-cols-[100px_auto] gap-y-1">
+                                                <span className="text-gray-400 font-medium">
+                                                    Bank
+                                                </span>
+                                                <span className="font-semibold text-gray-800">
+                                                    STATE BANK OF INDIA
+                                                </span>
+                                                <span className="text-gray-400 font-medium">
+                                                    Branch
+                                                </span>
+                                                <span className="font-semibold text-gray-800">
+                                                    CHANDRESH NAGAR, MAVDI
+                                                </span>
+                                                <span className="text-gray-400 font-medium">
+                                                    Account
+                                                </span>
+                                                <span className="font-bold text-gray-900">
+                                                    34200993101
+                                                </span>
+                                                <span className="text-gray-400 font-medium">
+                                                    IFSC
+                                                </span>
+                                                <span className="font-bold text-gray-900">
+                                                    SBIN0060314
+                                                </span>
                                             </div>
                                         </div>
-                                        <div>
-                                            <div className="bg-gray-100 p-3 rounded text-[10px] text-gray-600 text-center font-medium italic leading-tight mb-8 border border-dashed border-gray-300">
-                                                I HEREBY ACCEPT THE ESTIMATE AS
-                                                PER ABOVE MENTIONED PRICE AND
-                                                SPECIFICATIONS.
+
+                                        <div className="mt-8">
+                                            <div className="italic text-gray-400 text-[10px] mb-6 text-center border-t border-dashed border-gray-200 pt-2">
+                                                "I hereby accept the estimate as
+                                                per above specifications and
+                                                agree to the terms."
                                             </div>
-                                            <div className="flex justify-between items-end gap-8">
-                                                <div className="text-center w-1/2">
-                                                    <div className="h-12 mb-2"></div>
-                                                    <div className="border-t border-gray-400 pt-2 text-xs font-bold text-gray-700">
+                                            <div className="flex justify-between items-end gap-4">
+                                                <div className="flex-1 text-center">
+                                                    <div className="h-12"></div>
+                                                    <div className="border-t border-gray-300 pt-2 font-bold text-gray-900">
                                                         Authorised Signatory
                                                     </div>
                                                 </div>
-                                                <div className="text-center w-1/2">
-                                                    <div className="h-12 mb-2"></div>
-                                                    <div className="border-t border-gray-400 pt-2 text-xs font-bold text-gray-700">
-                                                        Signature of Customer
+                                                <div className="flex-1 text-center">
+                                                    <div className="h-12"></div>
+                                                    <div className="border-t border-gray-300 pt-2 font-bold text-gray-900">
+                                                        Customer Signature
                                                     </div>
                                                 </div>
                                             </div>
