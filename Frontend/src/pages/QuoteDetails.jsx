@@ -146,8 +146,9 @@ function WindowSketch({ width = 36, height = 48, type = "normal" }) {
     );
 }
 
-/* ---------- Enhanced Spacer Component ---------- */
+/* ---------- Mobile-Optimized Spacer Component ---------- */
 const ManualSpacer = ({ id, height, updateHeight, visible }) => {
+    // Logic update: If height > 0, we force visibility
     const isVisible = visible || height > 0;
 
     if (!isVisible) return null;
@@ -160,59 +161,66 @@ const ManualSpacer = ({ id, height, updateHeight, visible }) => {
             className="transition-all duration-200 ease-in-out my-2"
             style={{ height: `${height}px` }}
         >
-            <div className="h-full min-h-[40px] bg-blue-50 border border-dashed border-blue-300 rounded-lg flex items-center justify-center gap-2 text-blue-700 text-xs select-none relative shadow-sm group">
+            {/* Container is taller (h-14) on mobile for easier tapping, compact (h-10) on desktop */}
+            <div className="h-14 sm:h-10 bg-blue-50 border border-dashed border-blue-300 rounded-lg flex items-center justify-center gap-3 sm:gap-2 text-blue-700 select-none relative shadow-sm group">
+                {/* Left Controls (Minus) */}
                 <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden shadow-sm">
+                    {/* P-3 on mobile (large touch target), P-1.5 on desktop */}
                     <button
                         onClick={() =>
                             updateHeight(id, Math.max(0, height - BIG_STEP))
                         }
-                        className="p-1.5 hover:bg-blue-100 border-r border-blue-100 active:bg-blue-200"
+                        className="p-3 sm:p-1.5 hover:bg-blue-100 border-r border-blue-100 active:bg-blue-200"
                         title="-100px"
                     >
-                        <ChevronsUp size={14} />
+                        <ChevronsUp size={18} className="sm:w-3.5 sm:h-3.5" />
                     </button>
                     <button
                         onClick={() =>
                             updateHeight(id, Math.max(0, height - SMALL_STEP))
                         }
-                        className="p-1.5 hover:bg-blue-100 active:bg-blue-200"
+                        className="p-3 sm:p-1.5 hover:bg-blue-100 active:bg-blue-200"
                         title="-20px"
                     >
-                        <Minus size={14} />
+                        <Minus size={18} className="sm:w-3.5 sm:h-3.5" />
                     </button>
                 </div>
 
-                <span className="font-mono font-bold min-w-[60px] text-center bg-white px-2 py-1 rounded border border-blue-200 shadow-sm text-blue-800">
+                {/* Value Display */}
+                <span className="font-mono font-bold min-w-[70px] sm:min-w-[60px] text-center bg-white px-2 py-1.5 sm:py-1 rounded border border-blue-200 shadow-sm text-blue-800 text-sm sm:text-xs">
                     {height}px
                 </span>
 
+                {/* Right Controls (Plus) */}
                 <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden shadow-sm">
                     <button
                         onClick={() => updateHeight(id, height + SMALL_STEP)}
-                        className="p-1.5 hover:bg-blue-100 border-r border-blue-100 active:bg-blue-200"
+                        className="p-3 sm:p-1.5 hover:bg-blue-100 border-r border-blue-100 active:bg-blue-200"
                         title="+20px"
                     >
-                        <Plus size={14} />
+                        <Plus size={18} className="sm:w-3.5 sm:h-3.5" />
                     </button>
                     <button
                         onClick={() => updateHeight(id, height + BIG_STEP)}
-                        className="p-1.5 hover:bg-blue-100 active:bg-blue-200"
+                        className="p-3 sm:p-1.5 hover:bg-blue-100 active:bg-blue-200"
                         title="+100px (Push Down)"
                     >
-                        <ChevronsDown size={14} />
+                        <ChevronsDown size={18} className="sm:w-3.5 sm:h-3.5" />
                     </button>
                 </div>
 
+                {/* Reset Button */}
                 {height > 0 && (
                     <button
                         onClick={() => updateHeight(id, 0)}
-                        className="absolute right-2 p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
+                        className="absolute right-2 p-2 sm:p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
                         title="Reset to 0"
                     >
-                        <RotateCcw size={14} />
+                        <RotateCcw size={18} className="sm:w-3.5 sm:h-3.5" />
                     </button>
                 )}
 
+                {/* Label only visible on desktop to save space on mobile */}
                 <div className="absolute left-3 text-[10px] uppercase tracking-wider opacity-40 font-bold hidden sm:block">
                     Spacer
                 </div>
@@ -663,7 +671,7 @@ export default function QuotePreview() {
                                             }
                                             className="transition-all duration-500"
                                         >
-                                            {/* Unified Row Design */}
+                                            {/* Unified Row Design - Table Style */}
                                             <div className="border-b border-gray-200 py-6 flex flex-row gap-8 break-inside-avoid bg-white">
                                                 <div className="w-[220px] flex-shrink-0 flex items-center justify-center p-2">
                                                     <WindowSketch
