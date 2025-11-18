@@ -3,14 +3,22 @@ import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
     Download,
+    Phone,
+    Mail,
+    FileText,
+    Calendar,
+    User,
+    Briefcase,
+    CreditCard,
+    Printer,
     Ruler,
-    Plus,
-    Minus,
     Wand2,
-    RotateCcw,
+    Loader2,
     ChevronsUp,
     ChevronsDown,
-    Loader2,
+    Plus,
+    Minus,
+    RotateCcw,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -18,116 +26,124 @@ import logo from "../assets/logo.png";
 import { apiGet } from "../utils/api";
 import { getToken } from "../utils/auth";
 
-/* ---------- Helpers ---------- */
-function formatINR(v) {
-    const n = Number(v) || 0;
-    return (
-        "₹" +
-        n.toLocaleString("en-IN", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        })
-    );
-}
+/* --- 1. Helper Functions --- */
+const formatINR = (val) => {
+    return new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(val || 0);
+};
 
-/* ---------- Window Sketch SVG ---------- */
-function WindowSketch({ width = 36, height = 48, type = "normal" }) {
-    const W = Math.max(1, Number(width));
-    const H = Math.max(1, Number(height));
-    const boxW = 200;
-    const boxH = 200;
-    const padding = 20;
-    const aspect = W / H;
-    let drawW = boxW;
-    let drawH = boxH;
+/* --- 2. Window Sketch Component --- */
+const WindowSketch = ({ width, height, type = "normal" }) => {
+    const boxSize = 120;
+    const strokeColor = "#334155"; // Slate-700
+    const glassColor = "#eff6ff"; // Blue-50
 
+    const w = Math.max(1, Number(width));
+    const h = Math.max(1, Number(height));
+    const aspect = w / h;
+
+    let drawW, drawH;
     if (aspect > 1) {
-        drawH = boxW / aspect;
+        drawW = boxSize;
+        drawH = boxSize / aspect;
     } else {
-        drawW = boxH * aspect;
+        drawH = boxSize;
+        drawW = boxSize * aspect;
     }
 
-    const offsetX = (boxW - drawW) / 2 + padding;
-    const offsetY = (boxH - drawH) / 2 + padding;
-
-    const styles = {
-        frame: "#374151",
-        glass: "#eff6ff",
-        sashFrame: "#4b5563",
-        strokeWidth: 2,
-    };
+    const startX = (160 - drawW) / 2;
+    const startY = (160 - drawH) / 2;
 
     return (
-        <svg
-            width={boxW + padding * 2}
-            height={boxH + padding * 2}
-            viewBox={`0 0 ${boxW + padding * 2} ${boxH + padding * 2}`}
-            xmlns="http://www.w3.org/2000/svg"
-        >
-            {type === "slider" ? (
-                <>
-                    <rect
-                        x={offsetX}
-                        y={offsetY}
-                        width={drawW}
-                        height={drawH}
-                        fill="none"
-                        stroke={styles.frame}
-                        strokeWidth={styles.strokeWidth}
-                    />
-                    <rect
-                        x={offsetX + 2}
-                        y={offsetY + 2}
-                        width={drawW / 2 + 4}
-                        height={drawH - 4}
-                        fill={styles.glass}
-                        stroke={styles.sashFrame}
-                        strokeWidth="2"
-                    />
-                    <rect
-                        x={offsetX + drawW / 2 - 4}
-                        y={offsetY + 2}
-                        width={drawW / 2 + 2}
-                        height={drawH - 4}
-                        fill={styles.glass}
-                        stroke={styles.sashFrame}
-                        strokeWidth="2"
-                    />
-                    <path
-                        d={`M${offsetX + drawW * 0.75} ${
-                            offsetY + drawH * 0.5
-                        } L${offsetX + drawW * 0.85} ${offsetY + drawH * 0.5}`}
-                        stroke="#9ca3af"
-                        strokeWidth="1.5"
-                        opacity="0.6"
-                    />
-                </>
-            ) : (
-                <>
-                    <rect
-                        x={offsetX}
-                        y={offsetY}
-                        width={drawW}
-                        height={drawH}
-                        fill={styles.glass}
-                        stroke={styles.frame}
-                        strokeWidth={styles.strokeWidth}
-                    />
-                    <path
-                        d={`M${offsetX + 5} ${offsetY + drawH} L${
-                            offsetX + drawW
-                        } ${offsetY + 5}`}
-                        fill="rgba(255,255,255,0.5)"
-                    />
-                </>
-            )}
-        </svg>
-    );
-}
+        <div className="relative flex flex-col items-center justify-center p-4 bg-white border border-slate-200 rounded-lg shadow-sm w-full h-full">
+            {/* Dimensions Labels */}
+            <div className="absolute top-1 text-[10px] font-bold text-slate-500">
+                W: {width}"
+            </div>
+            <div
+                className="absolute left-1 h-full flex items-center text-[10px] font-bold text-slate-500"
+                style={{
+                    writingMode: "vertical-rl",
+                    transform: "rotate(180deg)",
+                }}
+            >
+                H: {height}"
+            </div>
 
-/* ---------- Mobile-Optimized Spacer Component ---------- */
+            <svg width="160" height="160" viewBox="0 0 160 160">
+                <rect
+                    x={startX}
+                    y={startY}
+                    width={drawW}
+                    height={drawH}
+                    fill={glassColor}
+                    stroke={strokeColor}
+                    strokeWidth="2.5"
+                />
+                {type.toLowerCase().includes("slider") ||
+                type.toLowerCase().includes("sliding") ? (
+                    <>
+                        <line
+                            x1={startX + drawW / 2}
+                            y1={startY}
+                            x2={startX + drawW / 2}
+                            y2={startY + drawH}
+                            stroke={strokeColor}
+                            strokeWidth="2"
+                        />
+                        <path
+                            d={`M${startX + drawW * 0.25} ${
+                                startY + drawH / 2
+                            } l-5 0 l2 -2 m-2 2 l2 2`}
+                            stroke="#94a3b8"
+                            strokeWidth="1.5"
+                            fill="none"
+                        />
+                        <path
+                            d={`M${startX + drawW * 0.75} ${
+                                startY + drawH / 2
+                            } l5 0 l-2 -2 m2 2 l-2 2`}
+                            stroke="#94a3b8"
+                            strokeWidth="1.5"
+                            fill="none"
+                        />
+                    </>
+                ) : (
+                    <>
+                        <line
+                            x1={startX + drawW / 2}
+                            y1={startY + 10}
+                            x2={startX + drawW / 2}
+                            y2={startY + drawH - 10}
+                            stroke="#cbd5e1"
+                            strokeWidth="1"
+                            strokeDasharray="4 2"
+                        />
+                        <line
+                            x1={startX + 10}
+                            y1={startY + drawH / 2}
+                            x2={startX + drawW - 10}
+                            y2={startY + drawH / 2}
+                            stroke="#cbd5e1"
+                            strokeWidth="1"
+                            strokeDasharray="4 2"
+                        />
+                    </>
+                )}
+            </svg>
+            <div className="mt-2 text-[10px] uppercase font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-600 truncate max-w-full">
+                {type}
+            </div>
+        </div>
+    );
+};
+
+/* --- 3. Manual Spacer Component --- */
 const ManualSpacer = ({ id, height, updateHeight, visible, pdfMode }) => {
-    // Hide if in PDF mode with 0 height, or Edit mode but hidden
     if ((pdfMode && height === 0) || (!pdfMode && !visible && height === 0))
         return null;
 
@@ -139,21 +155,16 @@ const ManualSpacer = ({ id, height, updateHeight, visible, pdfMode }) => {
             className="transition-all duration-200 ease-in-out my-2"
             style={{ height: `${height}px` }}
         >
-            {/* Only render controls if NOT in PDF mode */}
             {!pdfMode && (
-                <div className="h-14 sm:h-10 bg-blue-50 border border-dashed border-blue-300 rounded-lg flex items-center justify-center gap-3 sm:gap-2 text-blue-700 select-none relative shadow-sm group">
-                    <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden shadow-sm">
+                <div className="h-10 bg-indigo-50 border border-dashed border-indigo-300 rounded flex items-center justify-center gap-2 text-indigo-700 select-none relative opacity-70 hover:opacity-100">
+                    <div className="flex items-center bg-white rounded border border-indigo-200 overflow-hidden">
                         <button
                             onClick={() =>
                                 updateHeight(id, Math.max(0, height - BIG_STEP))
                             }
-                            className="p-3 sm:p-1.5 hover:bg-blue-100 border-r border-blue-100 active:bg-blue-200"
-                            title="-100px"
+                            className="p-1 hover:bg-indigo-100 border-r border-indigo-100"
                         >
-                            <ChevronsUp
-                                size={18}
-                                className="sm:w-3.5 sm:h-3.5"
-                            />
+                            <ChevronsUp size={14} />
                         </button>
                         <button
                             onClick={() =>
@@ -162,54 +173,40 @@ const ManualSpacer = ({ id, height, updateHeight, visible, pdfMode }) => {
                                     Math.max(0, height - SMALL_STEP)
                                 )
                             }
-                            className="p-3 sm:p-1.5 hover:bg-blue-100 active:bg-blue-200"
-                            title="-20px"
+                            className="p-1 hover:bg-indigo-100"
                         >
-                            <Minus size={18} className="sm:w-3.5 sm:h-3.5" />
+                            <Minus size={14} />
                         </button>
                     </div>
-
-                    <span className="font-mono font-bold min-w-[70px] sm:min-w-[60px] text-center bg-white px-2 py-1.5 sm:py-1 rounded border border-blue-200 shadow-sm text-blue-800 text-sm sm:text-xs">
+                    <span className="font-mono font-bold text-xs bg-white px-2 py-0.5 rounded border border-indigo-200">
                         {height}px
                     </span>
-
-                    <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden shadow-sm">
+                    <div className="flex items-center bg-white rounded border border-indigo-200 overflow-hidden">
                         <button
                             onClick={() =>
                                 updateHeight(id, height + SMALL_STEP)
                             }
-                            className="p-3 sm:p-1.5 hover:bg-blue-100 border-r border-blue-100 active:bg-blue-200"
-                            title="+20px"
+                            className="p-1 hover:bg-indigo-100 border-r border-indigo-100"
                         >
-                            <Plus size={18} className="sm:w-3.5 sm:h-3.5" />
+                            <Plus size={14} />
                         </button>
                         <button
                             onClick={() => updateHeight(id, height + BIG_STEP)}
-                            className="p-3 sm:p-1.5 hover:bg-blue-100 active:bg-blue-200"
-                            title="+100px (Push Down)"
+                            className="p-1 hover:bg-indigo-100"
                         >
-                            <ChevronsDown
-                                size={18}
-                                className="sm:w-3.5 sm:h-3.5"
-                            />
+                            <ChevronsDown size={14} />
                         </button>
                     </div>
-
                     {height > 0 && (
                         <button
                             onClick={() => updateHeight(id, 0)}
-                            className="absolute right-2 p-2 sm:p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
-                            title="Reset to 0"
+                            className="absolute right-2 text-red-400 hover:text-red-600"
                         >
-                            <RotateCcw
-                                size={18}
-                                className="sm:w-3.5 sm:h-3.5"
-                            />
+                            <RotateCcw size={14} />
                         </button>
                     )}
-
-                    <div className="absolute left-3 text-[10px] uppercase tracking-wider opacity-40 font-bold hidden sm:block">
-                        Spacer
+                    <div className="absolute left-2 text-[9px] uppercase tracking-wider font-bold opacity-50">
+                        Page Break Spacer
                     </div>
                 </div>
             )}
@@ -217,12 +214,15 @@ const ManualSpacer = ({ id, height, updateHeight, visible, pdfMode }) => {
     );
 };
 
-/* ---------- Main Component ---------- */
+/* --- 4. Main Component --- */
 export default function QuotePreview() {
     const { state } = useLocation();
     const navigate = useNavigate();
     const { id } = useParams();
+    const mainRef = useRef(null);
+    const itemRefs = useRef({});
 
+    // --- State ---
     const [windowList, setWindowList] = useState([]);
     const [clientDetails, setClientDetails] = useState({
         clientName: "",
@@ -231,33 +231,28 @@ export default function QuotePreview() {
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [isAdjusting, setIsAdjusting] = useState(false);
 
+    // UI/PDF State
+    const [isPDFMode, setIsPDFMode] = useState(false);
+    const [scale, setScale] = useState(1);
     const [spacers, setSpacers] = useState({});
     const [showSpacers, setShowSpacers] = useState(false);
+    const [isAdjusting, setIsAdjusting] = useState(false);
     const [pageBreaks, setPageBreaks] = useState([]);
 
-    const [scale, setScale] = useState(1);
-
-    const itemRefs = useRef({});
+    // Financial State
     const [applyGST, setApplyGST] = useState(true);
     const [cgstPerc, setCgstPerc] = useState(9);
     const [sgstPerc, setSgstPerc] = useState(9);
     const [packingCharges, setPackingCharges] = useState(0);
-    const [isPDFMode, setIsPDFMode] = useState(false);
 
-    const mainRef = useRef(null);
-
+    // --- Fetch Data ---
     useEffect(() => {
         const fetchData = async () => {
             if (state?.windowList) {
                 setWindowList(state.windowList);
                 if (state.clientInfo) {
-                    setClientDetails({
-                        clientName: state.clientInfo.clientName,
-                        project: state.clientInfo.project,
-                        finish: state.clientInfo.finish,
-                    });
+                    setClientDetails(state.clientInfo);
                 }
                 setLoading(false);
             } else if (id) {
@@ -270,6 +265,7 @@ export default function QuotePreview() {
                         project: data.quote.project || "",
                         finish: data.quote.finish || "",
                     });
+                    // Optional: Load stored pricing config here if API supports it
                 } catch (err) {
                     console.error(err);
                     setError("Failed to load data");
@@ -283,38 +279,79 @@ export default function QuotePreview() {
         fetchData();
     }, [id, state]);
 
-    useEffect(() => {
-        const handleResize = () => {
-            const availableWidth = window.innerWidth - 32;
-            const desiredWidth = 1024;
-            if (availableWidth < desiredWidth) {
-                setScale(availableWidth / desiredWidth);
-            } else {
-                setScale(1);
-            }
-        };
-        handleResize();
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
-
+    // --- Calculations ---
     const subtotal = windowList.reduce((s, w) => s + Number(w.amount || 0), 0);
     const totalSqFt = windowList.reduce((s, w) => s + Number(w.sqFt || 0), 0);
     const cgstAmount = applyGST ? (subtotal * cgstPerc) / 100 : 0;
     const sgstAmount = applyGST ? (subtotal * sgstPerc) / 100 : 0;
     const grandTotal = subtotal + packingCharges + cgstAmount + sgstAmount;
-    const avgRate = totalSqFt > 0 ? (grandTotal / totalSqFt).toFixed(2) : 0;
+
+    // --- PDF Logic ---
+    const downloadPDF = async () => {
+        const container = mainRef.current;
+        if (!container) return;
+
+        setIsPDFMode(true);
+        setShowSpacers(false);
+        await new Promise((r) => setTimeout(r, 200)); // Wait for re-render
+
+        const pdf = new jsPDF("p", "mm", "a4");
+        const pdfW = pdf.internal.pageSize.getWidth();
+        const pdfH = pdf.internal.pageSize.getHeight();
+
+        const canvas = await html2canvas(container, {
+            scale: 2,
+            useCORS: true,
+            windowWidth: 1200,
+            scrollY: -window.scrollY,
+        });
+
+        const imgData = canvas.toDataURL("image/png");
+        const imgProps = pdf.getImageProperties(imgData);
+        const imgHeight = (imgProps.height * pdfW) / imgProps.width;
+
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, "PNG", 0, position, pdfW, imgHeight);
+        heightLeft -= pdfH;
+
+        while (heightLeft >= 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(
+                imgData,
+                "PNG",
+                0,
+                -pdfH * (pdf.getNumberOfPages() - 1),
+                pdfW,
+                imgHeight
+            );
+            heightLeft -= pdfH;
+        }
+
+        pdf.save(
+            `${clientDetails.clientName || "Quotation"}_${id || "Draft"}.pdf`
+        );
+        setIsPDFMode(false);
+    };
+
+    // --- Spacer Logic ---
+    const updateSpacer = (key, val) =>
+        setSpacers((prev) => ({ ...prev, [key]: val }));
 
     const handleAutoAdjust = () => {
         if (!mainRef.current) return;
         setIsAdjusting(true);
         setShowSpacers(true);
-        setSpacers({});
+        setSpacers({}); // Reset
+
         setTimeout(() => {
             const containerWidth = mainRef.current.offsetWidth;
             const pageHeightPx = containerWidth * 1.4142;
             const newSpacers = {};
             let totalAddedMargin = 0;
+
             const keys = ["header"];
             windowList.forEach((_, i) => keys.push(`w-${i}`));
             keys.push("totals");
@@ -323,17 +360,20 @@ export default function QuotePreview() {
             keys.forEach((key) => {
                 const el = itemRefs.current[key];
                 if (!el) return;
+
                 const naturalTop = el.offsetTop + totalAddedMargin;
                 const height = el.offsetHeight;
                 const currentBottom = naturalTop + height;
                 const startPage = Math.floor(naturalTop / pageHeightPx);
                 const endPage = Math.floor(currentBottom / pageHeightPx);
+
                 if (startPage !== endPage) {
                     const nextPageStart = (startPage + 1) * pageHeightPx;
                     const spaceNeeded = nextPageStart - naturalTop + 50;
                     let spacerKey = key;
                     if (key === "totals") spacerKey = "spacer-totals";
                     if (key === "footer") spacerKey = "spacer-footer";
+
                     if (key !== "header") {
                         newSpacers[spacerKey] = Math.ceil(spaceNeeded);
                         totalAddedMargin += spaceNeeded;
@@ -342,7 +382,7 @@ export default function QuotePreview() {
             });
             setSpacers(newSpacers);
             setIsAdjusting(false);
-            setTimeout(calculatePageBreaks, 100);
+            calculatePageBreaks();
         }, 200);
     };
 
@@ -353,143 +393,108 @@ export default function QuotePreview() {
         const pageHeightPx = containerWidth * 1.4142;
         const breaks = [];
         let currentH = pageHeightPx;
-        while (currentH < containerHeight + 2000) {
+        while (currentH < containerHeight + 500) {
             breaks.push(currentH);
             currentH += pageHeightPx;
         }
         setPageBreaks(breaks);
     };
 
-    useLayoutEffect(() => {
-        if (!loading && windowList.length > 0) {
-            setTimeout(handleAutoAdjust, 500);
-        }
-    }, [loading, windowList]);
+    useEffect(() => {
+        // Initial Scale for screen
+        const handleResize = () => {
+            const w = window.innerWidth - 32;
+            const target = 1024; // A4 px width rough equivalent
+            setScale(w < target ? w / target : 1);
+        };
+        handleResize();
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     useEffect(() => {
-        window.addEventListener("resize", calculatePageBreaks);
-        return () => window.removeEventListener("resize", calculatePageBreaks);
-    }, [spacers]);
+        if (!loading && windowList.length > 0)
+            setTimeout(handleAutoAdjust, 500);
+    }, [loading, windowList]);
 
-    const updateSpacer = (key, val) => {
-        setSpacers((prev) => ({ ...prev, [key]: val }));
-    };
-
-    const downloadPDF = async () => {
-        const container = mainRef.current;
-        if (!container) return;
-        const oldScale = scale;
-        setScale(1);
-        setShowSpacers(false);
-        setIsPDFMode(true);
-
-        setTimeout(async () => {
-            const pdf = new jsPDF("p", "mm", "a4");
-            const pdfW = pdf.internal.pageSize.getWidth();
-            const pdfH = pdf.internal.pageSize.getHeight();
-            const canvas = await html2canvas(container, {
-                scale: 2,
-                useCORS: true,
-                windowWidth: 1200,
-                scrollY: -window.scrollY,
-            });
-            const imgData = canvas.toDataURL("image/png");
-            const imgProps = pdf.getImageProperties(imgData);
-            const imgHeight = (imgProps.height * pdfW) / imgProps.width;
-            let heightLeft = imgHeight;
-            let position = 0;
-            pdf.addImage(imgData, "PNG", 0, position, pdfW, imgHeight);
-            heightLeft -= pdfH;
-            while (heightLeft >= 0) {
-                position = heightLeft - imgHeight;
-                pdf.addPage();
-                pdf.addImage(
-                    imgData,
-                    "PNG",
-                    0,
-                    -pdfH * (pdf.getNumberOfPages() - 1),
-                    pdfW,
-                    imgHeight
-                );
-                heightLeft -= pdfH;
-            }
-            pdf.save(`Quotation-${id || "Draft"}.pdf`);
-            setIsPDFMode(false);
-            setScale(oldScale);
-        }, 500);
-    };
-
-    if (loading) return <div className="p-10 text-center">Loading...</div>;
+    if (loading)
+        return (
+            <div className="h-screen flex items-center justify-center">
+                <Loader2 className="animate-spin" /> Loading...
+            </div>
+        );
     if (error)
-        return <div className="p-10 text-center text-red-500">{error}</div>;
+        return (
+            <div className="h-screen flex items-center justify-center text-red-500">
+                {error}
+            </div>
+        );
 
     return (
         <div
-            className={`bg-gray-100 p-4 font-sans text-gray-900 ${
-                isPDFMode
-                    ? "min-h-screen"
-                    : "h-screen overflow-y-auto overflow-x-hidden w-full"
+            className={`bg-slate-100 p-4 font-sans text-slate-800 ${
+                isPDFMode ? "min-h-screen" : "h-screen overflow-y-auto w-full"
             }`}
         >
+            {/* --- Toolbar (Hidden in PDF) --- */}
             <div
-                className={`max-w-5xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4 ${
+                className={`max-w-[1024px] mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4 ${
                     isPDFMode ? "hidden" : ""
                 }`}
             >
-                <h1 className="text-2xl font-bold text-center md:text-left">
-                    Quotation Preview
-                </h1>
-                <div className="flex flex-wrap justify-center gap-2 md:gap-3">
-                    <button
-                        onClick={handleAutoAdjust}
-                        disabled={isAdjusting}
-                        className="px-3 py-2 border border-purple-300 bg-purple-50 text-purple-700 rounded flex gap-1 items-center text-xs md:text-sm font-medium hover:bg-purple-100 transition-colors shadow-sm disabled:opacity-50"
-                    >
-                        {isAdjusting ? (
-                            <Loader2 className="animate-spin" size={14} />
-                        ) : (
-                            <Wand2 size={14} />
-                        )}
-                        {isAdjusting ? "Adjusting..." : "Auto Adjust"}
-                    </button>
-                    <button
-                        onClick={() => setShowSpacers(!showSpacers)}
-                        className={`px-3 py-2 border rounded flex gap-1 items-center text-xs md:text-sm font-medium shadow-sm transition-colors ${
-                            showSpacers
-                                ? "bg-blue-600 text-white border-blue-600"
-                                : "bg-white hover:bg-gray-50 text-gray-700"
-                        }`}
-                    >
-                        <Ruler size={14} />{" "}
-                        {showSpacers ? "Hide Tools" : "Spacing"}
-                    </button>
-                    <div className="flex items-center bg-white border rounded px-2 shadow-sm">
-                        <label className="flex items-center gap-2 text-xs md:text-sm cursor-pointer select-none">
+                <h1 className="text-xl font-bold text-slate-800">Preview</h1>
+                <div className="flex flex-wrap justify-center gap-2">
+                    <div className="flex items-center bg-white border rounded px-2 py-1 shadow-sm text-xs">
+                        <label className="flex items-center gap-2 cursor-pointer font-medium">
                             <input
                                 type="checkbox"
                                 checked={applyGST}
                                 onChange={(e) => setApplyGST(e.target.checked)}
-                                className="w-3 h-3 md:w-4 md:h-4"
+                                className="w-3 h-3"
                             />
-                            GST
+                            GST Mode
                         </label>
                     </div>
                     <button
+                        onClick={handleAutoAdjust}
+                        disabled={isAdjusting}
+                        className="px-3 py-1.5 bg-white border border-indigo-200 text-indigo-700 rounded text-xs font-medium hover:bg-indigo-50 flex items-center gap-1"
+                    >
+                        {isAdjusting ? (
+                            <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                            <Wand2 size={14} />
+                        )}{" "}
+                        Auto-Layout
+                    </button>
+                    <button
+                        onClick={() => setShowSpacers(!showSpacers)}
+                        className={`px-3 py-1.5 border rounded text-xs font-medium flex items-center gap-1 ${
+                            showSpacers
+                                ? "bg-indigo-600 text-white"
+                                : "bg-white"
+                        }`}
+                    >
+                        <Ruler size={14} />{" "}
+                        {showSpacers ? "Hide Controls" : "Manual Layout"}
+                    </button>
+                    <button
                         onClick={() => navigate(-1)}
-                        className="px-3 py-2 border rounded bg-white hover:bg-gray-50 shadow-sm text-xs md:text-sm"
+                        className="px-3 py-1.5 bg-white border rounded text-xs font-medium hover:bg-slate-50"
                     >
                         Back
                     </button>
                     <button
                         onClick={downloadPDF}
-                        className="px-3 py-2 bg-gray-800 text-white rounded flex gap-1 items-center hover:bg-gray-900 shadow-sm text-xs md:text-sm"
+                        className="px-4 py-1.5 bg-slate-800 text-white rounded text-xs font-medium hover:bg-slate-900 flex items-center gap-2"
                     >
-                        <Download size={14} /> PDF
+                        <Printer size={14} /> Save PDF
                     </button>
                 </div>
             </div>
 
-            <div className="flex justify-center pb-10">
+            {/* --- A4 Paper Container --- */}
+            <div className="flex justify-center pb-20">
                 <div
                     style={{
                         transform: `scale(${scale})`,
@@ -498,358 +503,258 @@ export default function QuotePreview() {
                     }}
                 >
                     <div className="relative">
+                        {/* Red Page Break Lines (Visual Aid) */}
                         {!isPDFMode &&
-                            (showSpacers || true) &&
+                            showSpacers &&
                             pageBreaks.map((y, i) => (
                                 <div
                                     key={i}
-                                    className="absolute w-full border-t-2 border-dashed border-red-400 z-50 pointer-events-none flex items-start justify-end opacity-60"
+                                    className="absolute w-full border-t-2 border-dashed border-red-300 z-50 pointer-events-none opacity-60"
                                     style={{ top: `${y}px` }}
                                 >
-                                    <span className="bg-red-400 text-white text-[10px] px-2 py-0.5 rounded-b font-bold tracking-wider">
-                                        PAGE CUT {i + 1}
+                                    <span className="bg-red-300 text-white text-[10px] px-2 rounded-b font-bold tracking-wider absolute right-0">
+                                        Page {i + 2} Start
                                     </span>
                                 </div>
                             ))}
 
                         <div
                             ref={mainRef}
-                            className="bg-white shadow-2xl border border-gray-200 p-12 min-w-[1024px] min-h-[297mm] relative text-gray-900"
+                            className="bg-white shadow-2xl w-full min-h-[297mm] p-10 relative"
                         >
-                            {/* Header */}
-                            <div
+                            {/* 1. HEADER */}
+                            <header
                                 ref={(el) => (itemRefs.current["header"] = el)}
+                                className="flex justify-between items-start pb-6 border-b-2 border-slate-800 mb-8"
                             >
-                                <div className="flex justify-between border-b-2 border-gray-900 pb-6">
-                                    <div>
-                                        <h2 className="text-3xl font-extrabold tracking-wide text-gray-900">
-                                            TEKNA WINDOW SYSTEM
-                                        </h2>
-                                        <div className="text-sm font-medium mt-3 text-gray-600 leading-relaxed">
-                                            <p>
-                                                VAVDI INDUSTRY AREA, VAVDI MAIN
-                                                ROAD, RAJKOT
-                                            </p>
-                                            <div className="mt-2">
-                                                <p>
-                                                    <strong>Mobile:</strong>{" "}
-                                                    87588 02598{" "}
-                                                </p>
-                                                <p>
-                                                    <strong>Email:</strong>{" "}
-                                                    TEKNAWIN01@GMAIL.COM
-                                                </p>
-                                                <p>
-                                                    <strong>GSTIN:</strong>{" "}
-                                                    24AMIPS5762R1Z4
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col items-end">
+                                <div className="w-1/2">
+                                    <div className="flex items-center gap-3 mb-2">
                                         {logo ? (
                                             <img
                                                 src={logo}
                                                 alt="Logo"
-                                                className="h-32 w-auto object-contain mb-2"
+                                                className="h-10 w-auto object-contain"
                                             />
                                         ) : (
-                                            <div className="h-24 w-40 bg-gray-50 flex items-center justify-center text-gray-300 text-xs italic border border-dashed border-gray-200">
-                                                No Logo
+                                            <div className="w-10 h-10 bg-indigo-600 rounded flex items-center justify-center text-white font-bold text-xl">
+                                                T
                                             </div>
                                         )}
-                                        <div className="text-sm font-bold mt-2 text-gray-500">
-                                            Date:{" "}
-                                            <span className="text-gray-900">
-                                                {new Date().toLocaleDateString(
-                                                    "en-IN"
-                                                )}
-                                            </span>
-                                        </div>
+                                        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
+                                            TEKNA
+                                        </h1>
+                                    </div>
+                                    <p className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-2">
+                                        Window Systems
+                                    </p>
+                                    <div className="text-xs text-slate-500 leading-relaxed">
+                                        <p>VAVDI INDUSTRY AREA</p>
+                                        <p>VAVDI MAIN ROAD, RAJKOT</p>
+                                        <p className="mt-2 font-semibold text-slate-700">
+                                            GSTIN: 24AMIPS5762R1Z4
+                                        </p>
                                     </div>
                                 </div>
-                                {/* Client Details */}
-                                <div className="mt-8 mb-8">
-                                    <div className="border-y-2 border-gray-100 py-5 bg-gray-50/50">
-                                        <div className="grid grid-cols-2 gap-y-6 gap-x-12 px-2">
-                                            <div className="flex flex-col">
-                                                <span className="text-[11px] uppercase tracking-widest text-amber-600 font-bold mb-1">
-                                                    Client Name
-                                                </span>
-                                                <span className="text-lg font-bold text-gray-900 uppercase tracking-tight">
-                                                    {clientDetails.clientName ||
-                                                        "—"}
-                                                </span>
-                                            </div>
-                                            <div className="flex flex-col text-right">
-                                                <span className="text-[11px] uppercase tracking-widest text-amber-600 font-bold mb-1">
-                                                    Quotation No.
-                                                </span>
-                                                <span className="text-lg font-bold text-gray-900 tracking-tight font-mono">
-                                                    {id && id !== "undefined"
-                                                        ? id
-                                                        : "QE/TK/--"}
-                                                </span>
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-[11px] uppercase tracking-widest text-amber-600 font-bold mb-1">
-                                                    Project
-                                                </span>
-                                                <span className="text-sm font-semibold text-gray-800 uppercase">
-                                                    {clientDetails.project ||
-                                                        "—"}
-                                                </span>
-                                            </div>
-                                            <div className="flex flex-col text-right">
-                                                <span className="text-[11px] uppercase tracking-widest text-amber-600 font-bold mb-1">
-                                                    Finish
-                                                </span>
-                                                <span className="text-sm font-semibold text-gray-800 uppercase">
-                                                    {clientDetails.finish ||
-                                                        "—"}
-                                                </span>
-                                            </div>
-                                        </div>
+                                <div className="w-1/2 flex flex-col items-end text-right space-y-2">
+                                    <div className="inline-flex items-center gap-2 text-xs font-medium text-slate-700 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+                                        <Phone
+                                            size={12}
+                                            className="text-indigo-600"
+                                        />{" "}
+                                        87588 02598
+                                    </div>
+                                    <div className="inline-flex items-center gap-2 text-xs font-medium text-slate-700 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+                                        <Mail
+                                            size={12}
+                                            className="text-indigo-600"
+                                        />{" "}
+                                        TEKNAWIN01@GMAIL.COM
+                                    </div>
+                                    <div className="text-xs text-slate-400 mt-2">
+                                        Date:{" "}
+                                        {new Date().toLocaleDateString("en-IN")}
                                     </div>
                                 </div>
-                            </div>
+                            </header>
 
-                            <div className="space-y-6 border-t border-gray-200 pt-6">
-                                {windowList.map((w, i) => (
-                                    <React.Fragment key={i}>
-                                        <ManualSpacer
-                                            id={`w-${i}`}
-                                            visible={showSpacers}
-                                            pdfMode={isPDFMode}
-                                            height={spacers[`w-${i}`] || 0}
-                                            updateHeight={updateSpacer}
-                                        />
-                                        <div
-                                            ref={(el) =>
-                                                (itemRefs.current[`w-${i}`] =
-                                                    el)
-                                            }
-                                            className="transition-all duration-500"
-                                        >
-                                            <div className="border border-gray-300 flex flex-col bg-white break-inside-avoid">
-                                                <div className="flex justify-between bg-gray-100 border-b border-gray-300 px-3 py-2 text-sm font-bold text-gray-800">
-                                                    <span>
-                                                        Location : Window{" "}
-                                                        {i + 1}
-                                                    </span>
-                                                    <span className="uppercase">
-                                                        Code : {w.windowType}
-                                                    </span>
+                            {/* 2. CLIENT GRID */}
+                            <section className="grid grid-cols-4 gap-4 mb-10 bg-slate-50 p-5 rounded-xl border border-slate-100">
+                                <div className="col-span-1">
+                                    <span className="block text-[10px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
+                                        <User size={10} /> Client
+                                    </span>
+                                    <p className="font-bold text-slate-800 text-sm truncate">
+                                        {clientDetails.clientName || "—"}
+                                    </p>
+                                </div>
+                                <div className="col-span-1">
+                                    <span className="block text-[10px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
+                                        <Briefcase size={10} /> Project
+                                    </span>
+                                    <p className="font-bold text-slate-800 text-sm truncate">
+                                        {clientDetails.project || "—"}
+                                    </p>
+                                </div>
+                                <div className="col-span-1">
+                                    <span className="block text-[10px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
+                                        <FileText size={10} /> Quote No
+                                    </span>
+                                    <p className="font-mono font-bold text-indigo-600 text-sm">
+                                        {id || "DRAFT"}
+                                    </p>
+                                </div>
+                                <div className="col-span-1">
+                                    <span className="block text-[10px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
+                                        <Calendar size={10} /> Finish
+                                    </span>
+                                    <p className="font-bold text-slate-800 text-sm truncate">
+                                        {clientDetails.finish || "—"}
+                                    </p>
+                                </div>
+                            </section>
+
+                            {/* 3. WINDOWS LIST */}
+                            <section className="mb-10">
+                                <div className="flex items-center justify-between mb-4 px-2">
+                                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                                        Window Specifications
+                                    </h3>
+                                </div>
+
+                                <div className="space-y-6">
+                                    {windowList.map((win, index) => (
+                                        <React.Fragment key={index}>
+                                            <ManualSpacer
+                                                id={`w-${index}`}
+                                                visible={showSpacers}
+                                                pdfMode={isPDFMode}
+                                                height={
+                                                    spacers[`w-${index}`] || 0
+                                                }
+                                                updateHeight={updateSpacer}
+                                            />
+
+                                            <div
+                                                ref={(el) =>
+                                                    (itemRefs.current[
+                                                        `w-${index}`
+                                                    ] = el)
+                                                }
+                                                className="break-inside-avoid flex flex-row border border-slate-200 rounded-xl overflow-hidden"
+                                            >
+                                                {/* Left: Sketch */}
+                                                <div className="w-[200px] bg-slate-50 p-4 flex items-center justify-center border-r border-slate-200">
+                                                    <WindowSketch
+                                                        width={win.width}
+                                                        height={win.height}
+                                                        type={win.windowType}
+                                                    />
                                                 </div>
-                                                <div className="flex flex-row">
-                                                    <div className="w-1/3 border-r border-gray-300 p-10 flex items-center justify-center relative bg-white">
-                                                        {/* Top Dimension */}
-                                                        <div className="absolute top-3 left-0 w-full text-center text-xs font-semibold text-gray-600">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <div className="h-px w-12 bg-gray-400"></div>
-                                                                <span>
-                                                                    W x{" "}
-                                                                    {Number(
-                                                                        w.width
-                                                                    ).toFixed(
-                                                                        2
-                                                                    )}
-                                                                </span>
-                                                                <div className="h-px w-12 bg-gray-400"></div>
-                                                            </div>
-                                                        </div>
-                                                        {/* Left Dimension (FIXED ROTATION) */}
-                                                        <div className="absolute left-0 top-0 h-full flex items-center justify-center w-10 text-xs font-semibold text-gray-600">
-                                                            <div className="flex items-center gap-2 transform -rotate-90 whitespace-nowrap">
-                                                                {/* Lines are horizontal in code (w-12 h-px), vertical on screen after rotation */}
-                                                                <div className="w-12 h-px bg-gray-400"></div>
-                                                                <span>
-                                                                    H x{" "}
-                                                                    {Number(
-                                                                        w.height
-                                                                    ).toFixed(
-                                                                        2
-                                                                    )}
-                                                                </span>
-                                                                <div className="w-12 h-px bg-gray-400"></div>
-                                                            </div>
-                                                        </div>
 
-                                                        <WindowSketch
-                                                            width={w.width}
-                                                            height={w.height}
-                                                            type={w.windowType}
-                                                        />
+                                                {/* Middle: Specs */}
+                                                <div className="flex-1 p-5 grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                                                    <div className="col-span-2 flex justify-between items-start mb-2 border-b border-slate-100 pb-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="bg-slate-800 text-white font-bold px-2 py-0.5 rounded text-[10px]">
+                                                                Window{" "}
+                                                                {index + 1}
+                                                            </span>
+                                                            <span className="font-bold text-slate-700 text-sm uppercase">
+                                                                {win.windowType}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <div className="w-2/3 flex flex-col text-xs text-gray-800">
-                                                        <div className="flex-grow p-4 space-y-1.5 leading-relaxed">
-                                                            <div className="grid grid-cols-[100px_auto]">
-                                                                <span className="font-bold">
-                                                                    Size (Inch)
-                                                                </span>
-                                                                <span>
-                                                                    : W x{" "}
-                                                                    {w.width}{" "}
-                                                                    &nbsp;&nbsp;
-                                                                    H x{" "}
-                                                                    {w.height}
-                                                                </span>
-                                                            </div>
-                                                            <div className="grid grid-cols-[100px_auto]">
-                                                                <span className="font-bold">
-                                                                    Profile
-                                                                    System
-                                                                </span>
-                                                                <span className="uppercase">
-                                                                    :{" "}
-                                                                    {w.profileSystem ||
-                                                                        "-"}
-                                                                </span>
-                                                            </div>
-                                                            <div className="grid grid-cols-[100px_auto]">
-                                                                <span className="font-bold">
-                                                                    Design
-                                                                </span>
-                                                                <span className="uppercase">
-                                                                    :{" "}
-                                                                    {w.design ||
-                                                                        "-"}
-                                                                </span>
-                                                            </div>
-                                                            <div className="grid grid-cols-[100px_auto]">
-                                                                <span className="font-bold">
-                                                                    Glass
-                                                                </span>
-                                                                <span className="uppercase">
-                                                                    :{" "}
-                                                                    {w.glassType ||
-                                                                        "-"}
-                                                                </span>
-                                                            </div>
-                                                            <div className="grid grid-cols-[100px_auto]">
-                                                                <span className="font-bold">
-                                                                    Mess
-                                                                </span>
-                                                                <span className="uppercase">
-                                                                    :{" "}
-                                                                    {w.mess ||
-                                                                        "-"}
-                                                                </span>
-                                                            </div>
-                                                            <div className="grid grid-cols-[100px_auto]">
-                                                                <span className="font-bold">
-                                                                    Locking
-                                                                </span>
-                                                                <span className="uppercase">
-                                                                    :{" "}
-                                                                    {w.locking ||
-                                                                        "-"}
-                                                                </span>
-                                                            </div>
-                                                            <div className="grid grid-cols-[100px_auto]">
-                                                                <span className="font-bold">
-                                                                    Grill
-                                                                </span>
-                                                                <span className="uppercase">
-                                                                    :{" "}
-                                                                    {w.grill ||
-                                                                        "-"}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            <div className="bg-gray-100 border-y border-gray-300 px-3 py-1 font-bold text-gray-700">
-                                                                Computed Values
-                                                            </div>
-                                                            <div className="px-3 py-2 space-y-1">
-                                                                <div className="flex justify-between border-b border-dotted border-gray-200 pb-1">
-                                                                    <span>
-                                                                        Sq.ft
-                                                                        per
-                                                                        Window :
-                                                                    </span>
-                                                                    <div className="flex gap-2">
-                                                                        <span className="font-bold">
-                                                                            {Number(
-                                                                                w.sqFt
-                                                                            ).toFixed(
-                                                                                2
-                                                                            )}
-                                                                        </span>
-                                                                        <span className="w-8 text-gray-500">
-                                                                            Sq.ft.
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex justify-between border-b border-dotted border-gray-200 pb-1">
-                                                                    <span>
-                                                                        Rate
-                                                                        sq.ft :
-                                                                    </span>
-                                                                    <div className="flex gap-2">
-                                                                        <span className="font-bold">
-                                                                            {Number(
-                                                                                w.pricePerFt
-                                                                            ).toFixed(
-                                                                                2
-                                                                            )}
-                                                                        </span>
-                                                                        <span className="w-8 text-gray-500">
-                                                                            Rs.
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex justify-between border-b border-dotted border-gray-200 pb-1">
-                                                                    <span>
-                                                                        Quantity
-                                                                        :
-                                                                    </span>
-                                                                    <div className="flex gap-2">
-                                                                        <span className="font-bold">
-                                                                            {
-                                                                                w.quantity
-                                                                            }
-                                                                        </span>
-                                                                        <span className="w-8 text-gray-500">
-                                                                            pcs
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex justify-between">
-                                                                    <span>
-                                                                        Value :
-                                                                    </span>
-                                                                    <div className="flex gap-2">
-                                                                        <span className="font-bold">
-                                                                            {Number(
-                                                                                w.amount
-                                                                            ).toFixed(
-                                                                                2
-                                                                            )}
-                                                                        </span>
-                                                                        <span className="w-8 text-gray-500">
-                                                                            Rs.
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            <div className="bg-gray-100 border-y border-gray-300 px-3 py-1 font-bold text-gray-700">
-                                                                Hardware Brand
-                                                            </div>
-                                                            <div className="px-3 py-2 uppercase font-medium text-gray-600">
-                                                                {w.hardware ||
-                                                                    "PREMIUM QUALITY"}
-                                                            </div>
-                                                        </div>
+
+                                                    <div className="text-slate-500 font-medium">
+                                                        Dimensions
+                                                    </div>
+                                                    <div className="font-bold text-slate-900">
+                                                        W: {win.width}" x H:{" "}
+                                                        {win.height}"
+                                                    </div>
+
+                                                    <div className="text-slate-500 font-medium">
+                                                        Profile
+                                                    </div>
+                                                    <div className="font-semibold text-slate-800 uppercase">
+                                                        {win.profileSystem ||
+                                                            "-"}
+                                                    </div>
+
+                                                    <div className="text-slate-500 font-medium">
+                                                        Glass
+                                                    </div>
+                                                    <div className="font-semibold text-slate-800 uppercase">
+                                                        {win.glassType || "-"}
+                                                    </div>
+
+                                                    <div className="text-slate-500 font-medium">
+                                                        Hardware
+                                                    </div>
+                                                    <div className="font-semibold text-slate-800 uppercase">
+                                                        {win.hardware ||
+                                                            "Premium"}
+                                                    </div>
+
+                                                    <div className="col-span-2 mt-2 text-slate-400 text-[10px] italic pt-2 border-t border-dashed border-slate-100">
+                                                        Additional:{" "}
+                                                        {win.mess
+                                                            ? `Mesh: ${win.mess}, `
+                                                            : ""}{" "}
+                                                        {win.locking
+                                                            ? `Lock: ${win.locking}, `
+                                                            : ""}{" "}
+                                                        {win.grill
+                                                            ? `Grill: ${win.grill}`
+                                                            : ""}
+                                                    </div>
+                                                </div>
+
+                                                {/* Right: Financials */}
+                                                <div className="w-[160px] bg-slate-50 p-4 flex flex-col justify-center gap-3 border-l border-slate-200 text-right">
+                                                    <div>
+                                                        <span className="block text-[10px] text-slate-400 uppercase font-bold">
+                                                            Area
+                                                        </span>
+                                                        <span className="font-bold text-slate-700">
+                                                            {Number(
+                                                                win.sqFt
+                                                            ).toFixed(2)}{" "}
+                                                            sq.ft
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="block text-[10px] text-slate-400 uppercase font-bold">
+                                                            Rate
+                                                        </span>
+                                                        <span className="font-bold text-slate-700">
+                                                            ₹{win.pricePerFt}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="block text-[10px] text-slate-400 uppercase font-bold">
+                                                            Qty
+                                                        </span>
+                                                        <span className="font-bold text-slate-700">
+                                                            {win.quantity} pcs
+                                                        </span>
+                                                    </div>
+                                                    <div className="mt-2 pt-2 border-t border-slate-200">
+                                                        <span className="block text-[10px] text-indigo-600 font-bold uppercase">
+                                                            Total
+                                                        </span>
+                                                        <span className="font-bold text-lg text-indigo-700">
+                                                            {formatINR(
+                                                                win.amount
+                                                            )}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </React.Fragment>
-                                ))}
-                            </div>
+                                        </React.Fragment>
+                                    ))}
+                                </div>
+                            </section>
 
                             <ManualSpacer
                                 id="spacer-totals"
@@ -859,134 +764,131 @@ export default function QuotePreview() {
                                 updateHeight={updateSpacer}
                             />
 
-                            <div
+                            {/* 4. SUMMARY */}
+                            <section
                                 ref={(el) => (itemRefs.current["totals"] = el)}
-                                className="break-inside-avoid flex justify-end pt-8"
+                                className="break-inside-avoid flex justify-end mb-12"
                             >
-                                <div className="w-1/2 pl-8">
-                                    <div className="space-y-3 text-sm text-gray-700">
-                                        <div className="flex justify-between">
-                                            <span>Total Windows</span>
-                                            <span className="font-semibold">
-                                                {windowList.length} pcs
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>Total Area</span>
-                                            <span className="font-semibold">
-                                                {Number(totalSqFt).toFixed(2)}{" "}
-                                                sq.ft
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between pt-2 border-t border-gray-200">
-                                            <span>Subtotal</span>
-                                            <span className="font-bold text-gray-900">
-                                                {formatINR(subtotal)}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span>Packing & Forwarding</span>
+                                <div className="w-1/2 bg-slate-900 text-white rounded-xl p-6 shadow-lg">
+                                    <h4 className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-4 border-b border-slate-700 pb-2">
+                                        Quote Summary
+                                    </h4>
+
+                                    <div className="flex justify-between mb-2 text-sm">
+                                        <span className="text-slate-300">
+                                            Total Windows
+                                        </span>
+                                        <span className="font-bold">
+                                            {windowList.length} Units
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between mb-2 text-sm">
+                                        <span className="text-slate-300">
+                                            Total Area
+                                        </span>
+                                        <span className="font-bold">
+                                            {Number(totalSqFt).toFixed(2)} Sq.ft
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between mb-4 text-sm">
+                                        <span className="text-slate-300">
+                                            Subtotal
+                                        </span>
+                                        <span className="font-bold">
+                                            {formatINR(subtotal)}
+                                        </span>
+                                    </div>
+
+                                    <div className="space-y-1 border-t border-slate-700 pt-2 mb-4">
+                                        <div className="flex justify-between text-xs text-slate-400 items-center">
+                                            <span>Packing Charges</span>
                                             {isPDFMode ? (
-                                                <span className="font-semibold">
+                                                <span>
                                                     {formatINR(packingCharges)}
                                                 </span>
                                             ) : (
-                                                <div className="flex items-center border-b border-gray-300">
-                                                    <span className="text-gray-400 mr-1">
-                                                        ₹
-                                                    </span>
-                                                    <input
-                                                        type="number"
-                                                        value={packingCharges}
-                                                        onChange={(e) =>
-                                                            setPackingCharges(
-                                                                Number(
-                                                                    e.target
-                                                                        .value
-                                                                )
+                                                <input
+                                                    type="number"
+                                                    value={packingCharges}
+                                                    onChange={(e) =>
+                                                        setPackingCharges(
+                                                            Number(
+                                                                e.target.value
                                                             )
-                                                        }
-                                                        className="w-20 text-right outline-none bg-transparent font-semibold"
-                                                    />
-                                                </div>
+                                                        )
+                                                    }
+                                                    className="bg-slate-800 border border-slate-600 rounded w-20 text-right px-1 text-white"
+                                                />
                                             )}
                                         </div>
                                         {applyGST && (
                                             <>
-                                                <div className="flex justify-between items-center">
-                                                    <div className="flex items-center gap-1 text-gray-500">
-                                                        <span>CGST</span>
-                                                        {isPDFMode ? (
-                                                            <span className="text-xs">
-                                                                (@{cgstPerc}%)
-                                                            </span>
-                                                        ) : (
-                                                            <input
-                                                                type="number"
-                                                                className="w-6 text-center border-b border-gray-300 text-xs ml-1"
-                                                                value={cgstPerc}
-                                                                onChange={(e) =>
-                                                                    setCgstPerc(
-                                                                        Number(
-                                                                            e
-                                                                                .target
-                                                                                .value
-                                                                        )
-                                                                    )
-                                                                }
-                                                            />
-                                                        )}
-                                                    </div>
+                                                <div className="flex justify-between text-xs text-slate-400 items-center">
                                                     <span>
-                                                        {formatINR(cgstAmount)}
+                                                        CGST ({cgstPerc}%)
                                                     </span>
+                                                    {isPDFMode ? (
+                                                        <span>
+                                                            {formatINR(
+                                                                cgstAmount
+                                                            )}
+                                                        </span>
+                                                    ) : (
+                                                        <input
+                                                            type="number"
+                                                            value={cgstPerc}
+                                                            onChange={(e) =>
+                                                                setCgstPerc(
+                                                                    Number(
+                                                                        e.target
+                                                                            .value
+                                                                    )
+                                                                )
+                                                            }
+                                                            className="bg-slate-800 border border-slate-600 rounded w-10 text-center text-white"
+                                                        />
+                                                    )}
                                                 </div>
-                                                <div className="flex justify-between items-center">
-                                                    <div className="flex items-center gap-1 text-gray-500">
-                                                        <span>SGST</span>
-                                                        {isPDFMode ? (
-                                                            <span className="text-xs">
-                                                                (@{sgstPerc}%)
-                                                            </span>
-                                                        ) : (
-                                                            <input
-                                                                type="number"
-                                                                className="w-6 text-center border-b border-gray-300 text-xs ml-1"
-                                                                value={sgstPerc}
-                                                                onChange={(e) =>
-                                                                    setSgstPerc(
-                                                                        Number(
-                                                                            e
-                                                                                .target
-                                                                                .value
-                                                                        )
-                                                                    )
-                                                                }
-                                                            />
-                                                        )}
-                                                    </div>
+                                                <div className="flex justify-between text-xs text-slate-400 items-center">
                                                     <span>
-                                                        {formatINR(sgstAmount)}
+                                                        SGST ({sgstPerc}%)
                                                     </span>
+                                                    {isPDFMode ? (
+                                                        <span>
+                                                            {formatINR(
+                                                                sgstAmount
+                                                            )}
+                                                        </span>
+                                                    ) : (
+                                                        <input
+                                                            type="number"
+                                                            value={sgstPerc}
+                                                            onChange={(e) =>
+                                                                setSgstPerc(
+                                                                    Number(
+                                                                        e.target
+                                                                            .value
+                                                                    )
+                                                                )
+                                                            }
+                                                            className="bg-slate-800 border border-slate-600 rounded w-10 text-center text-white"
+                                                        />
+                                                    )}
                                                 </div>
                                             </>
                                         )}
-                                        <div className="pt-4 border-t-2 border-gray-900 flex justify-between items-baseline mt-2">
-                                            <span className="text-xs text-gray-400">
-                                                Rate: ₹{avgRate}/sq.ft
-                                            </span>
-                                            <div className="text-right">
-                                                <span className="block text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">
-                                                    Grand Total
-                                                </span>
-                                                <span className="block text-2xl font-extrabold text-gray-900">
-                                                    {formatINR(grandTotal)}
-                                                </span>
-                                            </div>
-                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-center border-t border-slate-700 pt-4">
+                                        <span className="text-lg font-light">
+                                            Grand Total
+                                        </span>
+                                        <span className="text-2xl font-bold text-indigo-400">
+                                            {formatINR(grandTotal)}
+                                        </span>
                                     </div>
                                 </div>
-                            </div>
+                            </section>
 
                             <ManualSpacer
                                 id="spacer-footer"
@@ -996,113 +898,110 @@ export default function QuotePreview() {
                                 updateHeight={updateSpacer}
                             />
 
-                            <div
+                            {/* 5. FOOTER (Terms & Bank) */}
+                            <section
                                 ref={(el) => (itemRefs.current["footer"] = el)}
-                                className="break-inside-avoid mt-12 border-t-2 border-gray-100 pt-8"
+                                className="break-inside-avoid grid grid-cols-2 gap-8 border-t border-slate-200 pt-8"
                             >
-                                <div className="grid grid-cols-2 gap-12 text-xs leading-relaxed text-gray-600">
-                                    <div>
-                                        <h4 className="font-bold text-gray-900 uppercase tracking-wider mb-3 text-sm">
-                                            Terms & Conditions
-                                        </h4>
-                                        <ul className="list-disc pl-4 space-y-1.5 text-justify">
-                                            <li>
-                                                Quotation valid for{" "}
-                                                <strong>1 week</strong> (Rates
-                                                subject to material price
-                                                change).
-                                            </li>
-                                            <li>
-                                                Size calculated in{" "}
-                                                <strong>3-inch steps</strong>.
-                                            </li>
-                                            <li>
-                                                Design changes post-confirmation
-                                                will be charged extra.
-                                            </li>
-                                            <li>
-                                                No warranty on glass after
-                                                installation.
-                                            </li>
-                                            <li>
-                                                Report manufacturing defects
-                                                within <strong>48 hours</strong>{" "}
-                                                of installation.
-                                            </li>
-                                            <li>
-                                                Scaffolding, electricity, and
-                                                storage provided by client.
-                                            </li>
-                                            <li>
-                                                <strong>Payment:</strong> 70%
-                                                Advance, 20% Before Dispatch,
-                                                10% After Installation.
-                                            </li>
-                                            <li>
-                                                <strong>Installation:</strong>{" "}
-                                                40-45 Days from advance payment.
-                                            </li>
-                                            <li>
-                                                Subject to Rajkot Jurisdiction.
-                                                Transportation & GST Extra.
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div className="flex flex-col justify-between">
-                                        <div>
-                                            <h4 className="font-bold text-gray-900 uppercase tracking-wider mb-3 text-sm">
-                                                Bank Details
-                                            </h4>
-                                            <div className="grid grid-cols-[100px_auto] gap-y-1">
-                                                <span className="text-gray-400 font-medium">
-                                                    Bank
-                                                </span>
-                                                <span className="font-semibold text-gray-800">
-                                                    STATE BANK OF INDIA
-                                                </span>
-                                                <span className="text-gray-400 font-medium">
-                                                    Branch
-                                                </span>
-                                                <span className="font-semibold text-gray-800">
-                                                    CHANDRESH NAGAR, MAVDI
-                                                </span>
-                                                <span className="text-gray-400 font-medium">
-                                                    Account
-                                                </span>
-                                                <span className="font-bold text-gray-900">
-                                                    34200993101
-                                                </span>
-                                                <span className="text-gray-400 font-medium">
-                                                    IFSC
-                                                </span>
-                                                <span className="font-bold text-gray-900">
-                                                    SBIN0060314
-                                                </span>
-                                            </div>
+                                <div className="text-[10px] text-slate-500 leading-relaxed">
+                                    <h5 className="font-bold text-slate-800 uppercase mb-2 flex items-center gap-2">
+                                        <FileText size={12} /> Terms &
+                                        Conditions
+                                    </h5>
+                                    <ul className="list-disc pl-3 space-y-1">
+                                        <li>
+                                            Quotation valid for{" "}
+                                            <strong>1 week</strong>. Rates
+                                            subject to material price change.
+                                        </li>
+                                        <li>
+                                            Size calculated in{" "}
+                                            <strong>3-inch steps</strong>.
+                                        </li>
+                                        <li>
+                                            Design changes post-confirmation
+                                            charged extra.
+                                        </li>
+                                        <li>
+                                            No warranty on glass after
+                                            installation.
+                                        </li>
+                                        <li>
+                                            Defects must be reported within{" "}
+                                            <strong>48 hours</strong>.
+                                        </li>
+                                        <li>
+                                            Scaffolding/electricity under
+                                            customer scope.
+                                        </li>
+                                        <li>
+                                            <strong>Payment:</strong> 70%
+                                            Advance, 20% Dispatch, 10%
+                                            Installation.
+                                        </li>
+                                        <li>
+                                            <strong>Delivery:</strong> 40-45
+                                            Days.
+                                        </li>
+                                        <li>Subject to Rajkot Jurisdiction.</li>
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
+                                        <h5 className="font-bold text-slate-800 uppercase mb-3 text-xs flex items-center gap-2">
+                                            <CreditCard size={12} /> Bank
+                                            Details
+                                        </h5>
+                                        <div className="grid grid-cols-[80px_1fr] gap-y-1 text-xs">
+                                            <span className="text-slate-500">
+                                                Bank:
+                                            </span>
+                                            <span className="font-bold text-slate-800">
+                                                STATE BANK OF INDIA
+                                            </span>
+                                            <span className="text-slate-500">
+                                                Branch:
+                                            </span>
+                                            <span className="text-slate-800">
+                                                CHANDRESH NAGAR, MAVDI
+                                            </span>
+                                            <span className="text-slate-500">
+                                                A/C No:
+                                            </span>
+                                            <span className="font-mono font-bold text-slate-800">
+                                                34200993101
+                                            </span>
+                                            <span className="text-slate-500">
+                                                IFSC:
+                                            </span>
+                                            <span className="font-mono font-bold text-slate-800">
+                                                SBIN0060314
+                                            </span>
                                         </div>
-                                        <div className="mt-8">
-                                            <div className="italic text-gray-400 text-[10px] mb-6 text-center border-t border-dashed border-gray-200 pt-2">
-                                                "I hereby accept the estimate as
-                                                per above specifications and
-                                                agree to the terms."
-                                            </div>
-                                            <div className="flex justify-between items-end gap-4">
-                                                <div className="flex-1 text-center">
-                                                    <div className="h-12"></div>
-                                                    <div className="border-t border-gray-300 pt-2 font-bold text-gray-900">
-                                                        Authorised Signatory
-                                                    </div>
-                                                </div>
-                                                <div className="flex-1 text-center">
-                                                    <div className="h-12"></div>
-                                                    <div className="border-t border-gray-300 pt-2 font-bold text-gray-900">
-                                                        Customer Signature
-                                                    </div>
-                                                </div>
-                                            </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-end pt-4 gap-4">
+                                        <div className="text-center flex-1">
+                                            <div className="h-12 border-b border-slate-300 mb-1"></div>
+                                            <p className="text-[10px] font-bold text-slate-900 uppercase">
+                                                Auth. Signatory
+                                            </p>
+                                        </div>
+                                        <div className="text-center flex-1">
+                                            <div className="h-12 border-b border-slate-300 mb-1"></div>
+                                            <p className="text-[10px] font-bold text-slate-900 uppercase">
+                                                Customer Sign
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
+                            </section>
+
+                            <div className="mt-12 text-center text-[10px] text-slate-400">
+                                <p>
+                                    Thank you for choosing TEKNA Window Systems.
+                                </p>
                             </div>
                         </div>
                     </div>
