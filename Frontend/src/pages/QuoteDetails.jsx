@@ -433,7 +433,15 @@ export default function QuotePreview() {
         return <div className="p-10 text-center text-red-500">{error}</div>;
 
     return (
-        <div className="min-h-screen bg-gray-100 p-4 font-sans text-gray-900 overflow-x-hidden">
+        // UPDATED: Changed from min-h-screen to h-screen with overflow-y-auto to fix double scrollbars
+        // Also conditionally changing this for PDF mode to ensure full capture
+        <div
+            className={`bg-gray-100 p-4 font-sans text-gray-900 ${
+                isPDFMode
+                    ? "min-h-screen"
+                    : "h-screen overflow-y-auto overflow-x-hidden w-full"
+            }`}
+        >
             {/* --- HEADER TOOLBAR --- */}
             <div
                 className={`max-w-5xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4 ${
@@ -498,7 +506,7 @@ export default function QuotePreview() {
             </div>
 
             {/* --- DOCUMENT STAGE --- */}
-            <div className="flex justify-center">
+            <div className="flex justify-center pb-10">
                 <div
                     style={{
                         transform: `scale(${scale})`,
