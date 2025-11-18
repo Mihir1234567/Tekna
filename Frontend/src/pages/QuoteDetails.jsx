@@ -893,158 +893,185 @@ export default function QuotePreview() {
                                 updateHeight={updateSpacer}
                             />
 
-                            {/* Footer (Fixed grid layout) */}
+                            {/* Footer (Modernized Layout) */}
                             <div
                                 ref={(el) => (itemRefs.current["footer"] = el)}
                                 style={{
                                     marginTop: autoMargins["footer"]
                                         ? `${autoMargins["footer"]}px`
-                                        : "2.5rem",
+                                        : "2rem",
                                 }}
-                                className="grid grid-cols-2 gap-8 text-xs text-gray-800 break-inside-avoid"
+                                className="break-inside-avoid"
                             >
-                                <div>
-                                    <h4 className="font-bold border-b border-gray-300 mb-2 pb-1">
-                                        TERMS & CONDITIONS
-                                    </h4>
-                                    <ul className="list-disc pl-6 space-y-1 text-sm text-gray-800">
-                                        <li>
-                                            QUOTATION ARE VALID UPTO 1 WEEK
-                                            (RATE MAY CHANGE DEPENDING ON
-                                            MATERIAL PRICE CHANGE).
-                                        </li>
-                                        <li>
-                                            SIZE IS CALCULATED IN WIDTH AND
-                                            HEIGHT IN 3 INCH STEPS.
-                                        </li>
-                                        <li>
-                                            THE DESIGN AND STYLE OF PRODUCT
-                                            REMAINS UNCHANGED. THE CUSTOMER WILL
-                                            BE CHARGED FOR THAT.
-                                        </li>
-                                        <li>
-                                            THERE IS NO WARRANTY FOR GLASS ONCE
-                                            INSTALLATION IS DONE.
-                                        </li>
-                                        <li>
-                                            FOR MANUFACTURING DEFECT, CLIENT HAS
-                                            TO INFORM US WITHIN 48 HOURS AFTER
-                                            INSTALLATION. AFTER THE TIME PERIOD,
-                                            TEKNA WINDOW SYSTEM WILL BE NOT
-                                            LIABLE FOR ANY DEFECTS.
-                                        </li>
-                                        <li>
-                                            SCAFFOLDING/CRANE SERVICE,
-                                            ELECTRICITY, STORAGE FOR MATERIAL
-                                            AND CLEANING OF GLASS & WINDOW WILL
-                                            BE UNDER CUSTOMER'S SCOPE.
-                                        </li>
-                                        <li>
-                                            ANY DAMAGE OR BREAKAGE OF STONE WILL
-                                            NOT BE OUR RESPONSIBILITY.
-                                        </li>
-                                        <li>
-                                            AFTER HANDOVERING WINDOWS, IF ANY
-                                            SERVICE REQUIRE RELATED TO WINDOWS &
-                                            DOORS, THAT SHOULD BE CHARGEABLE.
-                                        </li>
-
-                                        {/* Installation Time */}
-                                        <li>
-                                            <strong>INSTALLATION TIME:</strong>
-                                            <ul className="list-disc pl-6 mt-1">
-                                                <li>
-                                                    40 - 45 DAYS (DELIVERY TIME
-                                                    WILL BE SCHEDULED AT THE
-                                                    TIME OF ADVANCE PAYMENT
-                                                    RECEIVED).
-                                                </li>
-                                            </ul>
-                                        </li>
-
-                                        {/* Payment Terms */}
-                                        <li>
-                                            <strong>PAYMENT TERMS:</strong>
-                                            <ul className="list-disc pl-6 mt-1">
-                                                <li>
-                                                    70 % ADVANCE TO CONFIRM
-                                                    ORDER.
-                                                </li>
-                                                <li>
-                                                    20 % AGAINST MATERIAL AT
-                                                    READY TO DISPATCH.
-                                                </li>
-                                                <li>
-                                                    10 % AFTER SUCCESSFUL
-                                                    INSTALLATION.
-                                                </li>
-                                            </ul>
-                                        </li>
-
-                                        <li>
-                                            ALL DISPUTES SHALL BE SUBJECT RAJKOT
-                                            CITY JURISDICTION ONLY.
-                                        </li>
-                                        <li>TRANSPORTATION AND GST EXTRA.</li>
-                                    </ul>
-                                </div>
-                                <div className="mt-10">
-                                    <h3 className="font-bold underline mb-4 text-sm">
-                                        BANK DETAILS
-                                    </h3>
-
-                                    <div className="text-sm leading-7">
-                                        <div className="flex">
-                                            <div className="w-40 font-semibold">
-                                                BANK NAME
-                                            </div>
-                                            <div className="mr-2">:</div>
-                                            <div>STATE BANK OF INDIA</div>
+                                <div className="grid grid-cols-2 gap-8">
+                                    {/* Left Column: Terms & Conditions */}
+                                    <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                                        <div className="flex items-center gap-2 mb-4 border-b border-gray-300 pb-2">
+                                            <h4 className="font-bold text-gray-800 uppercase tracking-wider text-sm">
+                                                Terms & Conditions
+                                            </h4>
                                         </div>
 
-                                        <div className="flex">
-                                            <div className="w-40 font-semibold">
-                                                BRANCH
-                                            </div>
-                                            <div className="mr-2">:</div>
-                                            <div>
-                                                CHANDRESH NAGAR, MAVDI PLOT
-                                            </div>
-                                        </div>
+                                        <ul className="list-disc pl-4 space-y-2 text-[11px] leading-relaxed text-gray-600 text-justify">
+                                            <li>
+                                                QUOTATION ARE VALID UPTO 1 WEEK
+                                                (RATE MAY CHANGE DEPENDING ON
+                                                MATERIAL PRICE CHANGE).
+                                            </li>
+                                            <li>
+                                                SIZE IS CALCULATED IN WIDTH AND
+                                                HEIGHT IN 3 INCH STEPS.
+                                            </li>
+                                            <li>
+                                                THE DESIGN AND STYLE OF PRODUCT
+                                                REMAINS UNCHANGED. THE CUSTOMER
+                                                WILL BE CHARGED FOR THAT.
+                                            </li>
+                                            <li>
+                                                THERE IS NO WARRANTY FOR GLASS
+                                                ONCE INSTALLATION IS DONE.
+                                            </li>
+                                            <li>
+                                                FOR MANUFACTURING DEFECT, CLIENT
+                                                HAS TO INFORM US WITHIN 48 HOURS
+                                                AFTER INSTALLATION. AFTER THE
+                                                TIME PERIOD, TEKNA WINDOW SYSTEM
+                                                WILL BE NOT LIABLE FOR ANY
+                                                DEFECTS.
+                                            </li>
+                                            <li>
+                                                SCAFFOLDING/CRANE SERVICE,
+                                                ELECTRICITY, STORAGE FOR
+                                                MATERIAL AND CLEANING OF GLASS &
+                                                WINDOW WILL BE UNDER CUSTOMER'S
+                                                SCOPE.
+                                            </li>
+                                            <li>
+                                                ANY DAMAGE OR BREAKAGE OF STONE
+                                                WILL NOT BE OUR RESPONSIBILITY.
+                                            </li>
+                                            <li>
+                                                AFTER HANDOVERING WINDOWS, IF
+                                                ANY SERVICE REQUIRE RELATED TO
+                                                WINDOWS & DOORS, THAT SHOULD BE
+                                                CHARGEABLE.
+                                            </li>
 
-                                        <div className="flex">
-                                            <div className="w-40 font-semibold">
-                                                CURRENT A/C NO.
-                                            </div>
-                                            <div className="mr-2">:</div>
-                                            <div>34200993101</div>
-                                        </div>
+                                            {/* Nested Terms */}
+                                            <li className="bg-white p-2 rounded border border-gray-100">
+                                                <strong className="text-gray-800">
+                                                    INSTALLATION TIME:
+                                                </strong>
+                                                <ul className="list-circle pl-4 mt-1 text-gray-500">
+                                                    <li>
+                                                        40 - 45 DAYS (DELIVERY
+                                                        TIME WILL BE SCHEDULED
+                                                        AT THE TIME OF ADVANCE
+                                                        PAYMENT RECEIVED).
+                                                    </li>
+                                                </ul>
+                                            </li>
 
-                                        <div className="flex">
-                                            <div className="w-40 font-semibold">
-                                                IFSC CODE
-                                            </div>
-                                            <div className="mr-2">:</div>
-                                            <div>SBIN0060314</div>
-                                        </div>
+                                            <li className="bg-white p-2 rounded border border-gray-100">
+                                                <strong className="text-gray-800">
+                                                    PAYMENT TERMS:
+                                                </strong>
+                                                <ul className="list-circle pl-4 mt-1 text-gray-500">
+                                                    <li>
+                                                        70 % ADVANCE TO CONFIRM
+                                                        ORDER.
+                                                    </li>
+                                                    <li>
+                                                        20 % AGAINST MATERIAL AT
+                                                        READY TO DISPATCH.
+                                                    </li>
+                                                    <li>
+                                                        10 % AFTER SUCCESSFUL
+                                                        INSTALLATION.
+                                                    </li>
+                                                </ul>
+                                            </li>
+
+                                            <li className="font-semibold text-gray-800">
+                                                ALL DISPUTES SHALL BE SUBJECT
+                                                RAJKOT CITY JURISDICTION ONLY.
+                                            </li>
+                                            <li className="font-semibold text-gray-800">
+                                                TRANSPORTATION AND GST EXTRA.
+                                            </li>
+                                        </ul>
                                     </div>
 
-                                    {/* ACCEPTANCE STATEMENT */}
-                                    <p className="mt-8 text-sm text-center font-medium tracking-wide">
-                                        I HEREBY ACCEPT THE ESTIMATE AS PER
-                                        ABOVE MENTIONED PRICE AND
-                                        SPECIFICATIONS. I HAVE READ AND
-                                        UNDERSTOOD THE TERMS & CONDITIONS AND
-                                        AGREE TO THEM.
-                                    </p>
+                                    {/* Right Column: Bank Details & Signatures */}
+                                    <div className="flex flex-col justify-between">
+                                        {/* Bank Details Card */}
+                                        <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 mb-6">
+                                            <h3 className="font-bold text-blue-900 border-b border-blue-200 mb-4 pb-2 text-sm uppercase tracking-wider">
+                                                Bank Details
+                                            </h3>
 
-                                    {/* SIGNATURES */}
-                                    <div className="flex justify-between mt-10">
-                                        <div className="text-sm font-semibold">
-                                            Authorised Signatory
+                                            <div className="text-sm text-blue-900">
+                                                <div className="grid grid-cols-[140px_auto] gap-y-2">
+                                                    <div className="font-semibold text-blue-700">
+                                                        BANK NAME
+                                                    </div>
+                                                    <div>
+                                                        STATE BANK OF INDIA
+                                                    </div>
+
+                                                    <div className="font-semibold text-blue-700">
+                                                        BRANCH
+                                                    </div>
+                                                    <div>
+                                                        CHANDRESH NAGAR, MAVDI
+                                                        PLOT
+                                                    </div>
+
+                                                    <div className="font-semibold text-blue-700">
+                                                        CURRENT A/C NO.
+                                                    </div>
+                                                    <div className="font-mono font-bold text-lg tracking-wide">
+                                                        34200993101
+                                                    </div>
+
+                                                    <div className="font-semibold text-blue-700">
+                                                        IFSC CODE
+                                                    </div>
+                                                    <div className="font-mono font-bold">
+                                                        SBIN0060314
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="text-sm font-semibold">
-                                            Signature of Customer
+
+                                        {/* Acceptance & Signatures */}
+                                        <div>
+                                            <div className="bg-gray-100 p-3 rounded text-[10px] text-gray-600 text-center font-medium italic leading-tight mb-8 border border-dashed border-gray-300">
+                                                I HEREBY ACCEPT THE ESTIMATE AS
+                                                PER ABOVE MENTIONED PRICE AND
+                                                SPECIFICATIONS. I HAVE READ AND
+                                                UNDERSTOOD THE TERMS &
+                                                CONDITIONS AND AGREE TO THEM.
+                                            </div>
+
+                                            <div className="flex justify-between items-end gap-8">
+                                                <div className="text-center w-1/2">
+                                                    <div className="h-12 mb-2">
+                                                        {/* Space for Stamp/Sign */}
+                                                    </div>
+                                                    <div className="border-t border-gray-400 pt-2 text-xs font-bold text-gray-700">
+                                                        Authorised Signatory
+                                                    </div>
+                                                </div>
+                                                <div className="text-center w-1/2">
+                                                    <div className="h-12 mb-2">
+                                                        {/* Space for Manual Sign */}
+                                                    </div>
+                                                    <div className="border-t border-gray-400 pt-2 text-xs font-bold text-gray-700">
+                                                        Signature of Customer
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
