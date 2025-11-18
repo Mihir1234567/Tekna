@@ -36,7 +36,7 @@ const formatINR = (val) => {
     }).format(val || 0);
 };
 
-/* --- 2. Window Sketch Component --- */
+/* --- 2. Window Sketch Component (Fixed Dimensions) --- */
 const WindowSketch = ({ width, height, type = "normal" }) => {
     const boxSize = 120;
     const strokeColor = "#334155"; // Slate-700
@@ -59,17 +59,17 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
     const startY = (160 - drawH) / 2;
 
     return (
-        <div className="relative flex flex-col items-center justify-center p-4 bg-white border border-slate-200 rounded-lg shadow-sm w-full h-full">
-            {/* Dimensions Labels */}
-            <div className="absolute top-1 text-[10px] font-bold text-slate-500">
+        // Added padding-left (pl-8) to make room for the rotated Height label
+        <div className="relative flex flex-col items-center justify-center p-4 pl-8 bg-white border border-slate-200 rounded-lg shadow-sm w-full h-full">
+            {/* Width Label (Top) */}
+            <div className="absolute top-2 w-full text-center text-[10px] font-bold text-slate-600">
                 W: {width}"
             </div>
+
+            {/* Height Label (Left - Rotated) */}
             <div
-                className="absolute left-1 h-full flex items-center text-[10px] font-bold text-slate-500"
-                style={{
-                    writingMode: "vertical-rl",
-                    transform: "rotate(180deg)",
-                }}
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 -rotate-90 text-[10px] font-bold text-slate-600 whitespace-nowrap"
+                style={{ transformOrigin: "center" }}
             >
                 H: {height}"
             </div>
@@ -135,7 +135,9 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                     </>
                 )}
             </svg>
-            <div className="mt-2 text-[10px] uppercase font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-600 truncate max-w-full">
+
+            {/* Type Label */}
+            <div className="mt-2 text-[10px] uppercase font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-600 truncate max-w-full border border-slate-200">
                 {type}
             </div>
         </div>
@@ -265,7 +267,6 @@ export default function QuotePreview() {
                         project: data.quote.project || "",
                         finish: data.quote.finish || "",
                     });
-                    // Optional: Load stored pricing config here if API supports it
                 } catch (err) {
                     console.error(err);
                     setError("Failed to load data");
@@ -577,39 +578,41 @@ export default function QuotePreview() {
                                 </div>
                             </header>
 
-                            {/* 2. CLIENT GRID */}
-                            <section className="grid grid-cols-4 gap-4 mb-10 bg-slate-50 p-5 rounded-xl border border-slate-100">
-                                <div className="col-span-1">
-                                    <span className="block text-[10px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
-                                        <User size={10} /> Client
-                                    </span>
-                                    <p className="font-bold text-slate-800 text-sm truncate">
-                                        {clientDetails.clientName || "—"}
-                                    </p>
-                                </div>
-                                <div className="col-span-1">
-                                    <span className="block text-[10px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
-                                        <Briefcase size={10} /> Project
-                                    </span>
-                                    <p className="font-bold text-slate-800 text-sm truncate">
-                                        {clientDetails.project || "—"}
-                                    </p>
-                                </div>
-                                <div className="col-span-1">
-                                    <span className="block text-[10px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
-                                        <FileText size={10} /> Quote No
-                                    </span>
-                                    <p className="font-mono font-bold text-indigo-600 text-sm">
-                                        {id || "DRAFT"}
-                                    </p>
-                                </div>
-                                <div className="col-span-1">
-                                    <span className="block text-[10px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
-                                        <Calendar size={10} /> Finish
-                                    </span>
-                                    <p className="font-bold text-slate-800 text-sm truncate">
-                                        {clientDetails.finish || "—"}
-                                    </p>
+                            {/* 2. CLIENT GRID (FIXED LAYOUT) */}
+                            <section className="bg-slate-50 p-6 rounded-xl border border-slate-200 mb-10">
+                                <div className="grid grid-cols-4 gap-6">
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase mb-1 flex items-center gap-1">
+                                            <User size={10} /> Client
+                                        </span>
+                                        <span className="text-sm font-bold text-slate-800 break-words">
+                                            {clientDetails.clientName || "—"}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase mb-1 flex items-center gap-1">
+                                            <Briefcase size={10} /> Project
+                                        </span>
+                                        <span className="text-sm font-bold text-slate-800 break-words">
+                                            {clientDetails.project || "—"}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase mb-1 flex items-center gap-1">
+                                            <FileText size={10} /> Quote No
+                                        </span>
+                                        <span className="text-sm font-bold text-indigo-600 font-mono">
+                                            {id || "DRAFT"}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase mb-1 flex items-center gap-1">
+                                            <Calendar size={10} /> Finish
+                                        </span>
+                                        <span className="text-sm font-bold text-slate-800 break-words">
+                                            {clientDetails.finish || "—"}
+                                        </span>
+                                    </div>
                                 </div>
                             </section>
 
@@ -652,61 +655,74 @@ export default function QuotePreview() {
                                                 </div>
 
                                                 {/* Middle: Specs */}
-                                                <div className="flex-1 p-5 grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
-                                                    <div className="col-span-2 flex justify-between items-start mb-2 border-b border-slate-100 pb-2">
+                                                <div className="flex-1 p-5 flex flex-col justify-between text-xs">
+                                                    {/* Header Badge - CLEANED UP */}
+                                                    <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="bg-slate-800 text-white font-bold px-2 py-0.5 rounded text-[10px]">
+                                                            <span className="text-sm font-extrabold text-slate-900">
                                                                 Window{" "}
                                                                 {index + 1}
                                                             </span>
-                                                            <span className="font-bold text-slate-700 text-sm uppercase">
+                                                            <span className="text-xs font-medium text-slate-500 px-2 py-0.5 bg-slate-100 rounded uppercase">
                                                                 {win.windowType}
                                                             </span>
                                                         </div>
                                                     </div>
 
-                                                    <div className="text-slate-500 font-medium">
-                                                        Dimensions
-                                                    </div>
-                                                    <div className="font-bold text-slate-900">
-                                                        W: {win.width}" x H:{" "}
-                                                        {win.height}"
-                                                    </div>
+                                                    <div className="grid grid-cols-[80px_1fr] gap-y-1.5">
+                                                        <span className="font-medium text-slate-500">
+                                                            Dimensions
+                                                        </span>
+                                                        <span className="font-bold text-slate-900">
+                                                            W: {win.width}" x H:{" "}
+                                                            {win.height}"
+                                                        </span>
 
-                                                    <div className="text-slate-500 font-medium">
-                                                        Profile
-                                                    </div>
-                                                    <div className="font-semibold text-slate-800 uppercase">
-                                                        {win.profileSystem ||
-                                                            "-"}
-                                                    </div>
+                                                        <span className="font-medium text-slate-500">
+                                                            Profile
+                                                        </span>
+                                                        <span className="font-semibold text-slate-800 uppercase">
+                                                            {win.profileSystem ||
+                                                                "-"}
+                                                        </span>
 
-                                                    <div className="text-slate-500 font-medium">
-                                                        Glass
-                                                    </div>
-                                                    <div className="font-semibold text-slate-800 uppercase">
-                                                        {win.glassType || "-"}
-                                                    </div>
+                                                        <span className="font-medium text-slate-500">
+                                                            Glass
+                                                        </span>
+                                                        <span className="font-semibold text-slate-800 uppercase">
+                                                            {win.glassType ||
+                                                                "-"}
+                                                        </span>
 
-                                                    <div className="text-slate-500 font-medium">
-                                                        Hardware
-                                                    </div>
-                                                    <div className="font-semibold text-slate-800 uppercase">
-                                                        {win.hardware ||
-                                                            "Premium"}
-                                                    </div>
+                                                        <span className="font-medium text-slate-500">
+                                                            Hardware
+                                                        </span>
+                                                        <span className="font-semibold text-slate-800 uppercase">
+                                                            {win.hardware ||
+                                                                "Premium"}
+                                                        </span>
 
-                                                    <div className="col-span-2 mt-2 text-slate-400 text-[10px] italic pt-2 border-t border-dashed border-slate-100">
-                                                        Additional:{" "}
-                                                        {win.mess
-                                                            ? `Mesh: ${win.mess}, `
-                                                            : ""}{" "}
-                                                        {win.locking
-                                                            ? `Lock: ${win.locking}, `
-                                                            : ""}{" "}
-                                                        {win.grill
-                                                            ? `Grill: ${win.grill}`
-                                                            : ""}
+                                                        {/* MOVED ADDITIONAL DETAILS TO TABLE */}
+                                                        <span className="font-medium text-slate-500">
+                                                            Mesh
+                                                        </span>
+                                                        <span className="font-semibold text-slate-800 uppercase">
+                                                            {win.mess || "-"}
+                                                        </span>
+
+                                                        <span className="font-medium text-slate-500">
+                                                            Locking
+                                                        </span>
+                                                        <span className="font-semibold text-slate-800 uppercase">
+                                                            {win.locking || "-"}
+                                                        </span>
+
+                                                        <span className="font-medium text-slate-500">
+                                                            Grill
+                                                        </span>
+                                                        <span className="font-semibold text-slate-800 uppercase">
+                                                            {win.grill || "-"}
+                                                        </span>
                                                     </div>
                                                 </div>
 
