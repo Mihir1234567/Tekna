@@ -9,12 +9,8 @@ const windowSchema = new mongoose.Schema({
     glassType: String,
     locking: String,
     grill: String,
-
-    // --- NEW FIELDS ADDED HERE ---
     hardware: String,
     mess: String,
-    // -----------------------------
-
     sqFt: Number,
     pricePerFt: Number,
     quantity: Number,
@@ -30,6 +26,12 @@ const quoteSchema = new mongoose.Schema(
             ref: "User",
             required: true,
         },
+
+        // --- NEW FIELDS ---
+        clientName: { type: String, default: "" },
+        project: { type: String, default: "" },
+        finish: { type: String, default: "" },
+        // ------------------
 
         windows: [windowSchema],
 
@@ -48,6 +50,7 @@ const quoteSchema = new mongoose.Schema(
 
     { timestamps: true }
 );
+
 quoteSchema.index({ quoteId: 1 });
 quoteSchema.index({ userId: 1, createdAt: -1 });
 

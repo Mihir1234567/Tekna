@@ -146,6 +146,13 @@ export default function Configurator() {
     const loadedWindows = location.state?.windows || [];
     const editingQuoteId = location.state?.quoteId || null;
 
+    // New State for Client Info
+    const [clientInfo, setClientInfo] = useState({
+        clientName: "",
+        project: "",
+        finish: "",
+    });
+
     const [width, setWidth] = useState(36);
     const [height, setHeight] = useState(48);
     const [quantity, setQuantity] = useState(1);
@@ -172,7 +179,11 @@ export default function Configurator() {
         if (editMode && loadedWindows.length > 0) {
             setWindowList(loadedWindows);
         }
-    }, [editMode, loadedWindows]);
+        // Load client info if we are in edit mode and it was passed
+        if (editMode && location.state?.clientInfo) {
+            setClientInfo(location.state.clientInfo);
+        }
+    }, [editMode, loadedWindows, location.state]);
 
     // --- Handlers ---
     const requiredFields = [
@@ -322,6 +333,10 @@ export default function Configurator() {
             applyGST: true,
             cgstPerc: 9,
             sgstPerc: 9,
+            // Send client details
+            clientName: clientInfo.clientName,
+            project: clientInfo.project,
+            finish: clientInfo.finish,
         };
 
         try {
@@ -369,9 +384,7 @@ export default function Configurator() {
         <div className="min-h-screen bg-gray-50 p-2 md:p-4 pb-24 lg:pb-4 font-sans">
             <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
                 {/* --- CENTER PANEL (3D Preview) --- */}
-                {/* Order 1 on Mobile, Order 2 on Desktop */}
                 <div className="lg:col-span-6 lg:col-start-4 order-1 lg:order-2">
-                    {/* Mobile Height: 40vh, Desktop Height: Full calculation */}
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm h-[40vh] min-h-[300px] lg:h-[calc(100vh-5rem)] flex flex-col overflow-hidden">
                         <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                             <h2 className="font-semibold text-gray-700 flex items-center gap-2 text-sm md:text-base">
@@ -383,7 +396,6 @@ export default function Configurator() {
                             </span>
                         </div>
 
-                        {/* 3D PREVIEW CONTAINER - Fixed for Mobile */}
                         <div className="flex-1 relative bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-gray-100 flex items-center justify-center w-full h-full overflow-hidden">
                             <div className="w-full h-full flex items-center justify-center">
                                 <Window3D
@@ -397,7 +409,6 @@ export default function Configurator() {
                 </div>
 
                 {/* --- LEFT PANEL (Controls) --- */}
-                {/* Order 2 on Mobile, Order 1 on Desktop */}
                 <div className="lg:col-span-3 lg:col-start-1 order-2 lg:order-1 space-y-4">
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 md:p-5">
                         <div className="flex justify-between items-center mb-4">
@@ -581,9 +592,52 @@ export default function Configurator() {
                 </div>
 
                 {/* --- RIGHT PANEL (List & Summary) --- */}
-                {/* Order 3 on Mobile */}
                 <div className="lg:col-span-3 lg:col-start-10 order-3 space-y-4 pb-20 md:pb-0">
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 md:p-5 flex flex-col h-full max-h-[calc(100vh-5rem)]">
+                        {/* --- NEW CLIENT DETAILS INPUTS --- */}
+                        <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-100 space-y-2">
+                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                                Quote Details
+                            </h3>
+                            <input
+                                type="text"
+                                placeholder="Client Name (e.g. PIXON GREEN)"
+                                value={clientInfo.clientName}
+                                onChange={(e) =>
+                                    setClientInfo({
+                                        ...clientInfo,
+                                        clientName: e.target.value,
+                                    })
+                                }
+                                className="w-full p-2 text-sm border border-gray-200 rounded focus:border-blue-500 outline-none transition-colors"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Project (e.g. OFFICE)"
+                                value={clientInfo.project}
+                                onChange={(e) =>
+                                    setClientInfo({
+                                        ...clientInfo,
+                                        project: e.target.value,
+                                    })
+                                }
+                                className="w-full p-2 text-sm border border-gray-200 rounded focus:border-blue-500 outline-none transition-colors"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Finish (e.g. POWDER COATING)"
+                                value={clientInfo.finish}
+                                onChange={(e) =>
+                                    setClientInfo({
+                                        ...clientInfo,
+                                        finish: e.target.value,
+                                    })
+                                }
+                                className="w-full p-2 text-sm border border-gray-200 rounded focus:border-blue-500 outline-none transition-colors"
+                            />
+                        </div>
+                        {/* ---------------------------------- */}
+
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="font-bold text-gray-800">
                                 Window List

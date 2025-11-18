@@ -8,12 +8,16 @@ function isValidObjectId(id) {
 
 exports.createQuote = async (req, res) => {
     try {
-        const userId = req.user.userId; // from auth middleware
+        const userId = req.user.userId;
         const {
             windows,
             applyGST = true,
             cgstPerc = 9,
             sgstPerc = 9,
+            // Extract new fields
+            clientName,
+            project,
+            finish,
         } = req.body;
 
         if (!windows || windows.length === 0)
@@ -39,6 +43,10 @@ exports.createQuote = async (req, res) => {
             cgst,
             sgst,
             grandTotal,
+            // Save new fields
+            clientName,
+            project,
+            finish,
         });
 
         res.status(201).json({
@@ -50,60 +58,51 @@ exports.createQuote = async (req, res) => {
         res.status(500).json({ message: "Server error", error: err.message });
     }
 };
-// controllers/quoteController.js
 
-// existing createQuote above...
-
-/**
- * GET /api/quotes
- * Query params:
- *  - page (default 1)
- *  - limit (default 10)
- *  - q (search string, searches quoteId)
- *  - status (pending|accepted|rejected)
- *  - sort (createdAt|-createdAt|grandTotal|-grandTotal)
- */
 exports.listQuotes = async (req, res) => {
-  try {
-    const userId = req.user.userId; // set by auth middleware
-    const page = Math.max(1, Number(req.query.page) || 1);
-    const limit = Math.max(1, Math.min(100, Number(req.query.limit) || 10));
-    const q = (req.query.q || "").trim();
-    const status = req.query.status;
-    const sortQuery = req.query.sort || "-createdAt"; // default newest first
+    try {
+        const userId = req.user.userId;
+        const page = Math.max(1, Number(req.query.page) || 1);
+        const limit = Math.max(1, Math.min(100, Number(req.query.limit) || 10));
+        const q = (req.query.q || "").trim();
+        const status = req.query.status;
+        const sortQuery = req.query.sort || "-createdAt";
 
-    const filter = { userId };
+        const filter = { userId };
 
-    if (status) filter.status = status;
-    if (q) {
-      // simple search over quoteId (could expand to customer name later)
-      filter.quoteId = { $regex: q, $options: "i" };
+        if (status) filter.status = status;
+        if (q) {
+            filter.quoteId = { $regex: q, $options: "i" };
+        }
+
+        const skip = (page - 1) * limit;
+
+        const [total, items] = await Promise.all([
+            Quote.countDocuments(filter),
+            Quote.find(filter)
+                .sort(sortQuery)
+                .skip(skip)
+                .limit(limit)
+                // Added clientName to selection for list view convenience
+                .select(
+                    "quoteId clientName status subtotal grandTotal createdAt updatedAt"
+                )
+                .lean(),
+        ]);
+
+        res.json({
+            page,
+            limit,
+            total,
+            pages: Math.ceil(total / limit),
+            items,
+        });
+    } catch (err) {
+        console.error("List quotes error:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
     }
-
-    const skip = (page - 1) * limit;
-
-    const [total, items] = await Promise.all([
-      Quote.countDocuments(filter),
-      Quote.find(filter)
-        .sort(sortQuery)
-        .skip(skip)
-        .limit(limit)
-        .select("quoteId status subtotal grandTotal createdAt updatedAt") // lightweight for list
-        .lean(),
-    ]);
-
-    res.json({
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit),
-      items,
-    });
-  } catch (err) {
-    console.error("List quotes error:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
 };
+
 exports.getQuoteById = async (req, res) => {
     try {
         const userId = req.user.userId;
@@ -111,11 +110,9 @@ exports.getQuoteById = async (req, res) => {
 
         const filter = { userId };
 
-        // If it's a valid ObjectId → search by _id
         if (isValidObjectId(identifier)) {
             filter._id = identifier;
         } else {
-            // Otherwise → treat as quoteId
             filter.quoteId = identifier;
         }
 
@@ -134,6 +131,7 @@ exports.getQuoteById = async (req, res) => {
         res.status(500).json({ message: "Server error", error: err.message });
     }
 };
+
 exports.updateQuote = async (req, res) => {
     try {
         const userId = req.user.userId;
@@ -144,9 +142,12 @@ exports.updateQuote = async (req, res) => {
             applyGST = true,
             cgstPerc = 9,
             sgstPerc = 9,
+            // Extract new fields
+            clientName,
+            project,
+            finish,
         } = req.body;
 
-        // Find quote by quoteId or _id
         const filter = { userId };
 
         if (isValidObjectId(identifier)) {
@@ -171,8 +172,16 @@ exports.updateQuote = async (req, res) => {
                 sgst: existing.sgst,
                 grandTotal: existing.grandTotal,
                 status: existing.status,
+                clientName: existing.clientName, // track history
+                project: existing.project,
+                finish: existing.finish,
             },
         });
+
+        // Update fields if present
+        if (clientName !== undefined) existing.clientName = clientName;
+        if (project !== undefined) existing.project = project;
+        if (finish !== undefined) existing.finish = finish;
 
         // If windows array updated → recalc totals
         if (windows && Array.isArray(windows)) {
@@ -192,7 +201,6 @@ exports.updateQuote = async (req, res) => {
             existing.grandTotal = grandTotal;
         }
 
-        // Update status if provided
         if (status) {
             existing.status = status;
         }
@@ -208,6 +216,7 @@ exports.updateQuote = async (req, res) => {
         res.status(500).json({ message: "Server error", error: err.message });
     }
 };
+
 exports.deleteQuote = async (req, res) => {
     try {
         const userId = req.user.userId;
@@ -215,7 +224,6 @@ exports.deleteQuote = async (req, res) => {
 
         const filter = { userId };
 
-        // Allow both Q-0005 or Mongo objectId
         if (isValidObjectId(identifier)) {
             filter._id = identifier;
         } else {
