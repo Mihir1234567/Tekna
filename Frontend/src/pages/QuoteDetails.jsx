@@ -236,6 +236,12 @@ export default function QuotePreview() {
     const { id } = useParams();
 
     const [windowList, setWindowList] = useState([]);
+    // --- NEW: Client Details State ---
+    const [clientDetails, setClientDetails] = useState({
+        clientName: "",
+        project: "",
+        finish: "",
+    });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -259,13 +265,29 @@ export default function QuotePreview() {
     useEffect(() => {
         const fetchData = async () => {
             if (state?.windowList) {
+                // Came from Configurator (Preview Mode)
                 setWindowList(state.windowList);
+                // Extract client info from state
+                if (state.clientInfo) {
+                    setClientDetails({
+                        clientName: state.clientInfo.clientName,
+                        project: state.clientInfo.project,
+                        finish: state.clientInfo.finish,
+                    });
+                }
                 setLoading(false);
             } else if (id) {
+                // Came from URL/DB (Saved Quote)
                 try {
                     const token = getToken();
                     const data = await apiGet(`/quotes/${id}`, token);
                     setWindowList(data.quote.windows || []);
+                    // Extract client info from DB response
+                    setClientDetails({
+                        clientName: data.quote.clientName || "",
+                        project: data.quote.project || "",
+                        finish: data.quote.finish || "",
+                    });
                 } catch (err) {
                     console.error(err);
                     setError("Failed to load data");
@@ -366,7 +388,7 @@ export default function QuotePreview() {
         if (!loading && windowList.length > 0) {
             setTimeout(calculateAutoLayout, 500);
         }
-    }, [loading, windowList, applyGST]);
+    }, [loading, windowList, applyGST, clientDetails]); // Re-calc layout if client details change height
 
     useEffect(() => {
         window.addEventListener("resize", calculatePageBreaks);
@@ -529,52 +551,97 @@ export default function QuotePreview() {
                                 style={{
                                     marginBottom: autoMargins["header"]
                                         ? `${autoMargins["header"]}px`
-                                        : "2rem",
+                                        : "1.5rem",
                                 }}
-                                className="flex justify-between border-b-2 border-gray-800 pb-6"
+                                className="border-b-2 border-gray-800 pb-6"
                             >
-                                <div>
-                                    <h2 className="text-3xl font-extrabold tracking-wide">
-                                        TEKNA WINDOW SYSTEM
-                                    </h2>
-                                    <div className="text-sm font-medium mt-2 text-gray-700">
-                                        <p>
-                                            VAVDI INDUSTRY AREA, VAVDI MAIN
-                                            ROAD, RAJKOT
-                                        </p>
-                                        <div className="mt-3 space-y-1">
+                                <div className="flex justify-between">
+                                    <div>
+                                        <h2 className="text-3xl font-extrabold tracking-wide">
+                                            TEKNA WINDOW SYSTEM
+                                        </h2>
+                                        <div className="text-sm font-medium mt-2 text-gray-700">
                                             <p>
-                                                <strong>Mobile:</strong> 87588
-                                                02598{" "}
+                                                VAVDI INDUSTRY AREA, VAVDI MAIN
+                                                ROAD, RAJKOT
                                             </p>
-                                            <p>
-                                                <strong>Email:</strong>{" "}
-                                                TEKNAWIN01@GMAIL.COM
-                                            </p>
-                                            <p>
-                                                <strong>GSTIN:</strong>{" "}
-                                                24AMIPS5762R1Z4
-                                            </p>
+                                            <div className="mt-3 space-y-1">
+                                                <p>
+                                                    <strong>Mobile:</strong>{" "}
+                                                    87588 02598{" "}
+                                                </p>
+                                                <p>
+                                                    <strong>Email:</strong>{" "}
+                                                    TEKNAWIN01@GMAIL.COM
+                                                </p>
+                                                <p>
+                                                    <strong>GSTIN:</strong>{" "}
+                                                    24AMIPS5762R1Z4
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                        {logo ? (
+                                            <img
+                                                src={logo}
+                                                alt="Logo"
+                                                className="h-32 w-auto object-contain mb-2"
+                                            />
+                                        ) : (
+                                            <div className="h-24 w-40 bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
+                                                No Logo
+                                            </div>
+                                        )}
+                                        <div className="bg-gray-100 px-3 py-1 rounded text-sm font-bold mt-2">
+                                            Date:{" "}
+                                            {new Date().toLocaleDateString(
+                                                "en-IN"
+                                            )}
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex flex-col items-end">
-                                    {logo ? (
-                                        <img
-                                            src={logo}
-                                            alt="Logo"
-                                            className="h-32 w-auto object-contain mb-2"
-                                        />
-                                    ) : (
-                                        <div className="h-24 w-40 bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
-                                            No Logo
+
+                                {/* --- NEW: Client Details Section --- */}
+                                <div className="mt-6 pt-2 border-t border-gray-300">
+                                    <div className="grid grid-cols-2 gap-x-12 gap-y-2 text-sm font-semibold text-gray-800">
+                                        <div className="flex">
+                                            <span className="w-28 text-gray-500 font-bold">
+                                                Client Name :
+                                            </span>
+                                            <span className="uppercase">
+                                                {clientDetails.clientName || ""}
+                                            </span>
                                         </div>
-                                    )}
-                                    <div className="bg-gray-100 px-3 py-1 rounded text-sm font-bold mt-2">
-                                        Date:{" "}
-                                        {new Date().toLocaleDateString("en-IN")}
+                                        <div className="flex">
+                                            <span className="w-32 text-gray-500 font-bold">
+                                                Quotation No. :
+                                            </span>
+                                            <span>
+                                                {id && id !== "undefined"
+                                                    ? id
+                                                    : "QE/TK/--"}
+                                            </span>
+                                        </div>
+                                        <div className="flex">
+                                            <span className="w-28 text-gray-500 font-bold">
+                                                Project :
+                                            </span>
+                                            <span className="uppercase">
+                                                {clientDetails.project || ""}
+                                            </span>
+                                        </div>
+                                        <div className="flex">
+                                            <span className="w-32 text-gray-500 font-bold">
+                                                Finish :
+                                            </span>
+                                            <span className="uppercase">
+                                                {clientDetails.finish || ""}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
+                                {/* ----------------------------------- */}
                             </div>
 
                             {/* Windows Loop */}

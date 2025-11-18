@@ -601,7 +601,7 @@ export default function Configurator() {
                             </h3>
                             <input
                                 type="text"
-                                placeholder="Client Name (e.g. PIXON GREEN)"
+                                placeholder="Client Name "
                                 value={clientInfo.clientName}
                                 onChange={(e) =>
                                     setClientInfo({
@@ -613,7 +613,7 @@ export default function Configurator() {
                             />
                             <input
                                 type="text"
-                                placeholder="Project (e.g. OFFICE)"
+                                placeholder="Project "
                                 value={clientInfo.project}
                                 onChange={(e) =>
                                     setClientInfo({
@@ -625,7 +625,7 @@ export default function Configurator() {
                             />
                             <input
                                 type="text"
-                                placeholder="Finish (e.g. POWDER COATING)"
+                                placeholder="Finish "
                                 value={clientInfo.finish}
                                 onChange={(e) =>
                                     setClientInfo({
