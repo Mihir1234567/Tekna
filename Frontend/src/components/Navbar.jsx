@@ -37,7 +37,7 @@ export default function Navbar() {
                     >
                         {/* UPDATED: Image Logo instead of Text "T" */}
                         <img
-                            src="/Frontend/public/TeknaLogo.png"
+                            src="/Frontend/src/assets/image.png"
                             alt="Tekna Logo"
                             className="h-8 w-auto object-contain"
                         />
