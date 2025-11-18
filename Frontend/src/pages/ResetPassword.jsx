@@ -101,7 +101,7 @@ export default function ResetPassword() {
     const { token } = useParams();
     const navigate = useNavigate();
     const apiBaseUrl =
-        process.env.REACT_APP_API_BASE || "https://tekna-ryyc.onrender.com";
+        import.meta.env.REACT_APP_API_BASE || "https://tekna-ryyc.onrender.com";
 
     const handleSubmit = async (e) => {
         e.preventDefault();

@@ -113,7 +113,7 @@ export default function Dashboard() {
     const [stats, setStats] = useState({ pending: 0, approved: 0, total: 0 });
 
     const apiBaseUrl =
-        process.env.REACT_APP_API_BASE || "https://tekna-ryyc.onrender.com";
+        import.meta.env.REACT_APP_API_BASE || "https://tekna-ryyc.onrender.com";
 
     useEffect(() => {
         const fetchDashboardData = async () => {

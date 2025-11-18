@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Window3D from "../components/Window3D"; // Restored import
-require("dotenv").config();
 // --- Inline Icons ---
 const Icons = {
     RotateCcw: () => (
@@ -138,7 +137,8 @@ const Icons = {
 export default function Configurator() {
     const location = useLocation();
     const navigate = useNavigate();
-    const apiBaseUrl = process.env.REACT_APP_API_BASE || "https://tekna-ryyc.onrender.com";
+    const apiBaseUrl =
+        import.meta.env.REACT_APP_API_BASE || "https://tekna-ryyc.onrender.com";
 
     // --- State ---
     const editMode = location.state?.mode === "edit";

@@ -100,7 +100,7 @@ export default function Quotes() {
     const navigate = useNavigate();
 
     const apiBaseUrl =
-        process.env.REACT_APP_API_BASE || "https://tekna-ryyc.onrender.com";
+        import.meta.env.REACT_APP_API_BASE || "https://tekna-ryyc.onrender.com";
 
     useEffect(() => {
         fetchQuotes();

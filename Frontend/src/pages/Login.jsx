@@ -113,7 +113,7 @@ export default function Login() {
     const navigate = useNavigate();
 
     const apiBaseUrl =
-        process.env.REACT_APP_API_BASE || "https://tekna-ryyc.onrender.com";
+        import.meta.env.REACT_APP_API_BASE || "https://tekna-ryyc.onrender.com";
 
     const handleLogin = async (e) => {
         e.preventDefault();
