@@ -3,6 +3,8 @@ const { Resend } = require("resend");
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 exports.sendResetEmail = async ({ to, resetURL }) => {
+    console.log("🔥 Resend API KEY:", process.env.RESEND_API_KEY);
+
     // Brand Colors
     const brandColor = "#2563eb"; // Blue-600
     const backgroundColor = "#f3f4f6"; // Gray-100
