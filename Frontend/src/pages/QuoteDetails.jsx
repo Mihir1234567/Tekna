@@ -1,10 +1,10 @@
 // src/pages/QuotePreview.jsx
 import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Download, ArrowLeft, Ruler, Plus, Minus } from "lucide-react";
+import { Download, ArrowLeft, Ruler, Plus, Minus, Wand2 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.png"; // Ensure this path matches your project structure
 import { apiGet } from "../utils/api";
 import { getToken } from "../utils/auth";
 
@@ -74,17 +74,6 @@ function WindowSketch({ width = 36, height = 48, type = "normal" }) {
                         stroke={styles.sashFrame}
                         strokeWidth="2"
                     />
-                    <path
-                        d={`M${offsetX + 5} ${offsetY + drawH - 5} L${
-                            offsetX + drawW / 2
-                        } ${offsetY + 5} L${offsetX + drawW / 2 + 5} ${
-                            offsetY + 5
-                        }`}
-                        stroke="white"
-                        strokeWidth="2"
-                        opacity="0.4"
-                        fill="none"
-                    />
                     <rect
                         x={offsetX + drawW / 2 - 4}
                         y={offsetY + 2}
@@ -95,29 +84,11 @@ function WindowSketch({ width = 36, height = 48, type = "normal" }) {
                         strokeWidth="2"
                     />
                     <path
-                        d={`M${offsetX + drawW / 2} ${offsetY + drawH - 5} L${
-                            offsetX + drawW - 5
-                        } ${offsetY + 5}`}
-                        stroke="white"
-                        strokeWidth="2"
-                        opacity="0.4"
-                        fill="none"
-                    />
-                    <path
                         d={`M${offsetX + drawW * 0.75} ${
                             offsetY + drawH * 0.5
-                        } L${offsetX + drawW * 0.85} ${
-                            offsetY + drawH * 0.5
-                        } M${offsetX + drawW * 0.82} ${
-                            offsetY + drawH * 0.5 - 3
-                        } L${offsetX + drawW * 0.85} ${
-                            offsetY + drawH * 0.5
-                        } L${offsetX + drawW * 0.82} ${
-                            offsetY + drawH * 0.5 + 3
-                        }`}
+                        } L${offsetX + drawW * 0.85} ${offsetY + drawH * 0.5}`}
                         stroke="#000"
                         strokeWidth="1.5"
-                        fill="none"
                         opacity="0.6"
                     />
                 </>
@@ -135,37 +106,11 @@ function WindowSketch({ width = 36, height = 48, type = "normal" }) {
                     <path
                         d={`M${offsetX + 5} ${offsetY + drawH} L${
                             offsetX + drawW
-                        } ${offsetY + 5} L${offsetX + drawW} ${
-                            offsetY + drawH / 2
-                        } Z`}
+                        } ${offsetY + 5}`}
                         fill="rgba(255,255,255,0.4)"
                     />
                 </>
             )}
-            <line
-                x1={offsetX}
-                y1={offsetY + drawH + 15}
-                x2={drawW + offsetX}
-                y2={offsetY + drawH + 15}
-                stroke="#6b7280"
-                strokeWidth="1"
-            />
-            <line
-                x1={offsetX}
-                y1={offsetY + drawH + 10}
-                x2={offsetX}
-                y2={offsetY + drawH + 20}
-                stroke="#6b7280"
-                strokeWidth="1"
-            />
-            <line
-                x1={offsetX + drawW}
-                y1={offsetY + drawH + 10}
-                x2={offsetX + drawW}
-                y2={offsetY + drawH + 20}
-                stroke="#6b7280"
-                strokeWidth="1"
-            />
             <text
                 x={offsetX + drawW / 2}
                 y={offsetY + drawH + 30}
@@ -176,30 +121,6 @@ function WindowSketch({ width = 36, height = 48, type = "normal" }) {
             >
                 {W}"
             </text>
-            <line
-                x1={offsetX - 15}
-                y1={offsetY}
-                x2={offsetX - 15}
-                y2={offsetY + drawH}
-                stroke="#6b7280"
-                strokeWidth="1"
-            />
-            <line
-                x1={offsetX - 20}
-                y1={offsetY}
-                x2={offsetX - 10}
-                y2={offsetY}
-                stroke="#6b7280"
-                strokeWidth="1"
-            />
-            <line
-                x1={offsetX - 20}
-                y1={offsetY + drawH}
-                x2={offsetX - 10}
-                y2={offsetY + drawH}
-                stroke="#6b7280"
-                strokeWidth="1"
-            />
             <text
                 x={offsetX - 25}
                 y={offsetY + drawH / 2}
@@ -215,13 +136,10 @@ function WindowSketch({ width = 36, height = 48, type = "normal" }) {
     );
 }
 
-/* ---------- Spacer Component (Fixed Step Size) ---------- */
+/* ---------- Spacer Component ---------- */
 const ManualSpacer = ({ id, height, updateHeight, visible }) => {
     if (!visible && height === 0) return null;
-
-    // STEP SIZE FIXED TO 20px FOR SMOOTH CONTROL
     const STEP = 20;
-
     return (
         <div
             className={`transition-all duration-200 ease-in-out ${
@@ -236,7 +154,6 @@ const ManualSpacer = ({ id, height, updateHeight, visible }) => {
                             updateHeight(id, Math.max(0, height - STEP))
                         }
                         className="p-1 hover:bg-blue-200 rounded"
-                        title="Reduce Space"
                     >
                         <Minus size={16} />
                     </button>
@@ -244,13 +161,9 @@ const ManualSpacer = ({ id, height, updateHeight, visible }) => {
                     <button
                         onClick={() => updateHeight(id, height + STEP)}
                         className="p-1 hover:bg-blue-200 rounded"
-                        title="Add Space (Push Content)"
                     >
                         <Plus size={16} />
                     </button>
-                    <div className="absolute left-2 text-xs opacity-50">
-                        Drag content down
-                    </div>
                 </div>
             ) : (
                 <div style={{ height: `${height}px` }} />
@@ -274,6 +187,10 @@ export default function QuotePreview() {
     const [showSpacers, setShowSpacers] = useState(false);
     const [pageBreaks, setPageBreaks] = useState([]);
 
+    // AUTOMATIC LAYOUT STATE
+    const [autoMargins, setAutoMargins] = useState({});
+    const itemRefs = useRef({}); // Stores references to every printable DOM element
+
     // Pricing State
     const [applyGST, setApplyGST] = useState(true);
     const [cgstPerc, setCgstPerc] = useState(9);
@@ -288,9 +205,7 @@ export default function QuotePreview() {
             if (state?.windowList) {
                 setWindowList(state.windowList);
                 setLoading(false);
-                return;
-            }
-            if (id) {
+            } else if (id) {
                 try {
                     const token = getToken();
                     const data = await apiGet(`/quotes/${id}`, token);
@@ -311,23 +226,71 @@ export default function QuotePreview() {
     /* --- Calculations --- */
     const subtotal = windowList.reduce((s, w) => s + Number(w.amount || 0), 0);
     const totalSqFt = windowList.reduce((s, w) => s + Number(w.sqFt || 0), 0);
-
     const cgstAmount = applyGST ? (subtotal * cgstPerc) / 100 : 0;
     const sgstAmount = applyGST ? (subtotal * sgstPerc) / 100 : 0;
     const grandTotal = subtotal + packingCharges + cgstAmount + sgstAmount;
-
     const avgRate = totalSqFt > 0 ? (grandTotal / totalSqFt).toFixed(2) : 0;
 
-    /* --- A4 Page Break Calculation --- */
+    /* --- Automatic Layout Logic --- */
+    const calculateAutoLayout = () => {
+        if (!mainRef.current) return;
+
+        const containerWidth = mainRef.current.offsetWidth;
+        // A4 Aspect Ratio is ~1.4142. Height = Width * 1.4142
+        const pageHeightPx = containerWidth * 1.4142;
+
+        let currentY = 0; // Tracks accumulated height of all elements
+        const newMargins = {};
+
+        // Define the order of elements to check
+        const keysToProcess = ["header"];
+        windowList.forEach((_, i) => keysToProcess.push(`w-${i}`));
+        keysToProcess.push("totals");
+        keysToProcess.push("footer");
+
+        keysToProcess.forEach((key) => {
+            const el = itemRefs.current[key];
+            if (!el) return;
+
+            const height = el.offsetHeight;
+
+            // Where does this element currently start on the theoretical page?
+            // (modulo operator finds position relative to the top of the current page)
+            const startOnPage = currentY % pageHeightPx;
+            const endOnPage = startOnPage + height;
+
+            // If the element ends past the page bottom boundary
+            // AND the element is smaller than a full page (to prevent infinite loops on huge items)
+            if (endOnPage > pageHeightPx && height < pageHeightPx) {
+                // Calculate margin needed to push it to the start of the NEXT page
+                // +20px buffer for aesthetics
+                const marginNeeded = pageHeightPx - startOnPage + 20;
+
+                newMargins[key] = marginNeeded;
+                currentY += marginNeeded + height;
+            } else {
+                newMargins[key] = 0;
+                currentY += height;
+            }
+        });
+
+        setAutoMargins(newMargins);
+
+        // Recalculate the red visual lines after the margins are applied
+        setTimeout(calculatePageBreaks, 100);
+    };
+
+    /* --- Visual Page Break Lines (Red Dashed Lines) --- */
     const calculatePageBreaks = () => {
         if (!mainRef.current) return;
         const containerWidth = mainRef.current.offsetWidth;
-        const containerHeight = mainRef.current.offsetHeight;
+        const containerHeight = mainRef.current.scrollHeight;
         const a4Ratio = 1.4142;
         const pageHeightPx = containerWidth * a4Ratio;
 
         const breaks = [];
         let currentH = pageHeightPx;
+        // Draw lines all the way down the document
         while (currentH < containerHeight) {
             breaks.push(currentH);
             currentH += pageHeightPx;
@@ -335,28 +298,31 @@ export default function QuotePreview() {
         setPageBreaks(breaks);
     };
 
+    // Run auto layout once when data loads to ensure good initial state
     useLayoutEffect(() => {
-        calculatePageBreaks();
+        if (!loading && windowList.length > 0) {
+            setTimeout(() => {
+                calculateAutoLayout();
+            }, 500); // Delay to allow DOM to fully render images/fonts
+        }
+    }, [loading, windowList, applyGST]);
+
+    // Recalculate red lines on window resize
+    useEffect(() => {
         window.addEventListener("resize", calculatePageBreaks);
         return () => window.removeEventListener("resize", calculatePageBreaks);
-    }, [
-        windowList,
-        spacers,
-        showSpacers,
-        applyGST,
-        packingCharges,
-        cgstPerc,
-        sgstPerc,
-    ]);
+    }, [autoMargins]);
 
     const updateSpacer = (key, val) => {
         setSpacers((prev) => ({ ...prev, [key]: val }));
     };
 
+    /* --- PDF Generation --- */
     const downloadPDF = async () => {
         const container = mainRef.current;
         if (!container) return;
-        setShowSpacers(false);
+
+        setShowSpacers(false); // Hide helper tools
         setIsPDFMode(true);
 
         setTimeout(async () => {
@@ -368,7 +334,9 @@ export default function QuotePreview() {
                 scale: 2,
                 useCORS: true,
                 windowWidth: 1200,
+                scrollY: -window.scrollY, // Ensures full height capture
             });
+
             const imgData = canvas.toDataURL("image/png");
             const imgProps = pdf.getImageProperties(imgData);
             const imgHeight = (imgProps.height * pdfW) / imgProps.width;
@@ -382,7 +350,14 @@ export default function QuotePreview() {
             while (heightLeft >= 0) {
                 position = heightLeft - imgHeight;
                 pdf.addPage();
-                pdf.addImage(imgData, "PNG", 0, position, pdfW, imgHeight);
+                pdf.addImage(
+                    imgData,
+                    "PNG",
+                    0,
+                    -pdfH * (pdf.getNumberOfPages() - 1),
+                    pdfW,
+                    imgHeight
+                );
                 heightLeft -= pdfH;
             }
 
@@ -399,14 +374,23 @@ export default function QuotePreview() {
         <div className="min-h-screen bg-gray-100 p-4 font-sans text-gray-900">
             {/* --- HEADER CONTROLS --- */}
             <div
-                className={`max-w-5xl mx-auto mb-6 flex justify-between items-center ${
+                className={`max-w-5xl mx-auto mb-6 flex flex-wrap justify-between items-center gap-4 ${
                     isPDFMode ? "hidden" : ""
                 }`}
             >
                 <h1 className="text-2xl font-bold">Quotation Preview</h1>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
+                    {/* Auto Adjust Button */}
+                    <button
+                        onClick={calculateAutoLayout}
+                        className="px-4 py-2 border border-purple-300 bg-purple-50 text-purple-700 rounded flex gap-2 items-center hover:bg-purple-100 transition-colors"
+                        title="Automatically fix page cuts"
+                    >
+                        <Wand2 size={16} /> Auto Adjust
+                    </button>
+
                     {/* GST Toggle */}
-                    <div className="flex items-center bg-white border rounded px-3 mr-2">
+                    <div className="flex items-center bg-white border rounded px-3">
                         <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
                             <input
                                 type="checkbox"
@@ -418,6 +402,7 @@ export default function QuotePreview() {
                         </label>
                     </div>
 
+                    {/* Manual Tools Toggle */}
                     <button
                         onClick={() => setShowSpacers(!showSpacers)}
                         className={`px-4 py-2 border rounded flex gap-2 items-center ${
@@ -427,14 +412,16 @@ export default function QuotePreview() {
                         }`}
                     >
                         <Ruler size={16} />{" "}
-                        {showSpacers ? "Hide Adjustments" : "Adjust Spacing"}
+                        {showSpacers ? "Hide Tools" : "Manual Tools"}
                     </button>
+
                     <button
                         onClick={() => navigate(-1)}
                         className="px-4 py-2 border rounded bg-white hover:bg-gray-50"
                     >
                         Back
                     </button>
+
                     <button
                         onClick={downloadPDF}
                         className="px-4 py-2 bg-blue-600 text-white rounded flex gap-2 items-center hover:bg-blue-700"
@@ -446,15 +433,15 @@ export default function QuotePreview() {
 
             {/* --- MAIN DOCUMENT AREA --- */}
             <div className="max-w-5xl mx-auto relative">
-                {/* --- PAGE BREAK VISUALIZERS --- */}
-                {showSpacers &&
+                {/* --- PAGE CUT VISUALIZERS --- */}
+                {(showSpacers || true) &&
                     pageBreaks.map((y, i) => (
                         <div
                             key={i}
-                            className="absolute w-full border-t-2 border-dashed border-red-500 z-50 pointer-events-none flex items-start justify-end"
+                            className="absolute w-full border-t-2 border-dashed border-red-400 z-50 pointer-events-none flex items-start justify-end opacity-50"
                             style={{ top: `${y}px` }}
                         >
-                            <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-b">
+                            <span className="bg-red-400 text-white text-[10px] px-2 py-0.5 rounded-b">
                                 Page Cut {i + 1}
                             </span>
                         </div>
@@ -462,10 +449,18 @@ export default function QuotePreview() {
 
                 <div
                     ref={mainRef}
-                    className="bg-white shadow-lg border p-8 md:p-12 min-h-[297mm] relative"
+                    className="bg-white shadow-lg border p-8 md:p-12 min-h-[297mm] relative transition-all"
                 >
-                    {/* HEADER */}
-                    <div className="flex justify-between border-b-2 border-gray-800 pb-6 mb-8">
+                    {/* --- HEADER SECTION --- */}
+                    <div
+                        ref={(el) => (itemRefs.current["header"] = el)}
+                        style={{
+                            marginBottom: autoMargins["header"]
+                                ? `${autoMargins["header"]}px`
+                                : "2rem",
+                        }}
+                        className="flex justify-between border-b-2 border-gray-800 pb-6 transition-all"
+                    >
                         <div>
                             <h2 className="text-3xl font-extrabold tracking-wide">
                                 TEKNA WINDOW SYSTEM
@@ -505,7 +500,7 @@ export default function QuotePreview() {
                         </div>
                     </div>
 
-                    {/* WINDOW LIST */}
+                    {/* --- WINDOW LIST --- */}
                     <div className="space-y-0">
                         {windowList.map((w, i) => (
                             <React.Fragment key={i}>
@@ -516,99 +511,96 @@ export default function QuotePreview() {
                                     updateHeight={updateSpacer}
                                 />
 
-                                <div className="border border-gray-300 rounded p-4 flex flex-col md:flex-row gap-6 mb-8 break-inside-avoid">
-                                    <div className="w-full md:w-1/3 border border-gray-200 bg-gray-50 flex items-center justify-center p-4">
-                                        <WindowSketch
-                                            width={w.width}
-                                            height={w.height}
-                                            type={w.windowType}
-                                        />
-                                    </div>
-                                    <div className="w-full md:w-2/3 flex flex-col justify-between">
-                                        <div>
-                                            <h3 className="text-lg font-bold border-b pb-2 mb-3">
-                                                Window {i + 1}{" "}
-                                                <span className="text-sm font-normal text-gray-500">
-                                                    ({w.windowType})
-                                                </span>
-                                            </h3>
-                                            <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                                                <div>
-                                                    <strong>Size:</strong> W{" "}
-                                                    {w.width}" × H {w.height}"
-                                                </div>
-                                                <div>
-                                                    <strong>
-                                                        Profile System:
-                                                    </strong>{" "}
-                                                    {w.profileSystem || "-"}
-                                                </div>
-                                                <div>
-                                                    <strong>Design:</strong>{" "}
-                                                    {w.design || "-"}
-                                                </div>
-                                                <div>
-                                                    <strong>Glass:</strong>{" "}
-                                                    {w.glassType || "-"}
-                                                </div>
-                                                <div>
-                                                    <strong>Locking:</strong>{" "}
-                                                    {w.locking || "-"}
-                                                </div>
-                                                <div>
-                                                    <strong>Grill:</strong>{" "}
-                                                    {w.grill || "-"}
-                                                </div>
-                                                <div>
-                                                    <strong>Mess:</strong>{" "}
-                                                    {w.mess || "-"}
-                                                </div>
-                                                <div>
-                                                    <strong>Hardware:</strong>{" "}
-                                                    {w.hardware || "-"}
+                                {/* WRAPPER FOR AUTO MARGIN & REF */}
+                                <div
+                                    ref={(el) =>
+                                        (itemRefs.current[`w-${i}`] = el)
+                                    }
+                                    style={{
+                                        marginTop: autoMargins[`w-${i}`]
+                                            ? `${autoMargins[`w-${i}`]}px`
+                                            : "0px",
+                                    }}
+                                    className="transition-all duration-300"
+                                >
+                                    <div className="border border-gray-300 rounded p-4 flex flex-col md:flex-row gap-6 mb-8 break-inside-avoid bg-white">
+                                        <div className="w-full md:w-1/3 border border-gray-200 bg-gray-50 flex items-center justify-center p-4">
+                                            <WindowSketch
+                                                width={w.width}
+                                                height={w.height}
+                                                type={w.windowType}
+                                            />
+                                        </div>
+                                        <div className="w-full md:w-2/3 flex flex-col justify-between">
+                                            <div>
+                                                <h3 className="text-lg font-bold border-b pb-2 mb-3">
+                                                    Window {i + 1}{" "}
+                                                    <span className="text-sm font-normal text-gray-500">
+                                                        ({w.windowType})
+                                                    </span>
+                                                </h3>
+                                                <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                                                    <div>
+                                                        <strong>Size:</strong> W{" "}
+                                                        {w.width}" × H{" "}
+                                                        {w.height}"
+                                                    </div>
+                                                    <div>
+                                                        <strong>
+                                                            Profile:
+                                                        </strong>{" "}
+                                                        {w.profileSystem || "-"}
+                                                    </div>
+                                                    <div>
+                                                        <strong>Glass:</strong>{" "}
+                                                        {w.glassType || "-"}
+                                                    </div>
+                                                    <div>
+                                                        <strong>Mesh:</strong>{" "}
+                                                        {w.mess || "-"}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div className="mt-4 bg-gray-100 p-3 rounded border border-gray-200">
-                                            <h4 className="text-xs font-bold uppercase text-gray-500 mb-2">
-                                                Computed Values
-                                            </h4>
-                                            <div className="grid grid-cols-4 gap-4 text-sm">
-                                                <div>
-                                                    <span className="block text-xs text-gray-500">
-                                                        Sq.ft
-                                                    </span>
-                                                    <span className="font-medium">
-                                                        {Number(w.sqFt).toFixed(
-                                                            2
-                                                        )}
-                                                    </span>
-                                                </div>
-                                                <div>
-                                                    <span className="block text-xs text-gray-500">
-                                                        Rate
-                                                    </span>
-                                                    <span className="font-medium">
-                                                        {formatINR(
-                                                            w.pricePerFt
-                                                        )}
-                                                    </span>
-                                                </div>
-                                                <div>
-                                                    <span className="block text-xs text-gray-500">
-                                                        Qty
-                                                    </span>
-                                                    <span className="font-medium">
-                                                        {w.quantity}
-                                                    </span>
-                                                </div>
-                                                <div className="text-right">
-                                                    <span className="block text-xs text-gray-500">
-                                                        Value
-                                                    </span>
-                                                    <span className="font-bold text-blue-700">
-                                                        {formatINR(w.amount)}
-                                                    </span>
+                                            <div className="mt-4 bg-gray-100 p-3 rounded border border-gray-200">
+                                                <div className="grid grid-cols-4 gap-4 text-sm">
+                                                    <div>
+                                                        <span className="block text-xs text-gray-500">
+                                                            Sq.ft
+                                                        </span>
+                                                        <span className="font-medium">
+                                                            {Number(
+                                                                w.sqFt
+                                                            ).toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="block text-xs text-gray-500">
+                                                            Rate
+                                                        </span>
+                                                        <span className="font-medium">
+                                                            {formatINR(
+                                                                w.pricePerFt
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="block text-xs text-gray-500">
+                                                            Qty
+                                                        </span>
+                                                        <span className="font-medium">
+                                                            {w.quantity}
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="block text-xs text-gray-500">
+                                                            Value
+                                                        </span>
+                                                        <span className="font-bold text-blue-700">
+                                                            {formatINR(
+                                                                w.amount
+                                                            )}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -618,7 +610,6 @@ export default function QuotePreview() {
                         ))}
                     </div>
 
-                    {/* SPACER BEFORE TOTALS */}
                     <ManualSpacer
                         id="spacer-totals"
                         visible={showSpacers}
@@ -626,15 +617,21 @@ export default function QuotePreview() {
                         updateHeight={updateSpacer}
                     />
 
-                    {/* --- NEW MODERN QUOTE TOTAL SECTION --- */}
-                    <div className="break-inside-avoid mt-4 flex justify-end">
+                    {/* --- QUOTE TOTAL SECTION --- */}
+                    <div
+                        ref={(el) => (itemRefs.current["totals"] = el)}
+                        style={{
+                            marginTop: autoMargins["totals"]
+                                ? `${autoMargins["totals"]}px`
+                                : "1rem",
+                        }}
+                        className="break-inside-avoid flex justify-end transition-all"
+                    >
                         <div className="w-full md:w-2/3 lg:w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-6 shadow-sm">
                             <h3 className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-300 pb-2">
                                 Quote Summary
                             </h3>
-
                             <div className="space-y-2 text-sm">
-                                {/* Windows Count */}
                                 <div className="flex justify-between">
                                     <span className="text-gray-600">
                                         Total Windows
@@ -643,8 +640,6 @@ export default function QuotePreview() {
                                         {windowList.length} pcs
                                     </span>
                                 </div>
-
-                                {/* Total Sq.Ft */}
                                 <div className="flex justify-between">
                                     <span className="text-gray-600">
                                         Total Sq.ft
@@ -653,50 +648,42 @@ export default function QuotePreview() {
                                         {Number(totalSqFt).toFixed(2)} Sq.ft.
                                     </span>
                                 </div>
-
-                                {/* Base Amount */}
                                 <div className="flex justify-between pt-2 border-t border-gray-200 mt-2">
                                     <span className="text-gray-800 font-semibold">
-                                        Subtotal Amount
+                                        Subtotal
                                     </span>
                                     <span className="font-bold">
                                         {formatINR(subtotal)}
                                     </span>
                                 </div>
 
-                                {/* Packing Charges */}
                                 <div className="flex justify-between items-center">
                                     <span className="text-gray-600">
                                         Packing & Forwarding
                                     </span>
-                                    <div className="flex items-center">
-                                        {isPDFMode ? (
-                                            <span className="font-medium">
-                                                {formatINR(packingCharges)}
+                                    {isPDFMode ? (
+                                        <span className="font-medium">
+                                            {formatINR(packingCharges)}
+                                        </span>
+                                    ) : (
+                                        <div className="flex items-center">
+                                            <span className="text-gray-500 mr-1">
+                                                ₹
                                             </span>
-                                        ) : (
-                                            <div className="flex items-center">
-                                                <span className="text-gray-500 mr-1">
-                                                    ₹
-                                                </span>
-                                                <input
-                                                    type="number"
-                                                    value={packingCharges}
-                                                    onChange={(e) =>
-                                                        setPackingCharges(
-                                                            Number(
-                                                                e.target.value
-                                                            )
-                                                        )
-                                                    }
-                                                    className="w-20 text-right outline-none border-b border-gray-300 bg-transparent focus:border-blue-500 text-sm"
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
+                                            <input
+                                                type="number"
+                                                value={packingCharges}
+                                                onChange={(e) =>
+                                                    setPackingCharges(
+                                                        Number(e.target.value)
+                                                    )
+                                                }
+                                                className="w-20 text-right border-b border-gray-300 bg-transparent text-sm"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* GST Section */}
                                 {applyGST && (
                                     <>
                                         <div className="flex justify-between items-center">
@@ -709,7 +696,7 @@ export default function QuotePreview() {
                                                 ) : (
                                                     <input
                                                         type="number"
-                                                        className="w-8 text-center border-b border-gray-300 bg-transparent text-xs"
+                                                        className="w-8 text-center border-b text-xs"
                                                         value={cgstPerc}
                                                         onChange={(e) =>
                                                             setCgstPerc(
@@ -736,7 +723,7 @@ export default function QuotePreview() {
                                                 ) : (
                                                     <input
                                                         type="number"
-                                                        className="w-8 text-center border-b border-gray-300 bg-transparent text-xs"
+                                                        className="w-8 text-center border-b text-xs"
                                                         value={sgstPerc}
                                                         onChange={(e) =>
                                                             setSgstPerc(
@@ -756,27 +743,23 @@ export default function QuotePreview() {
                                     </>
                                 )}
 
-                                {/* Grand Total & Avg Rate */}
-                                <div className="mt-4 pt-3 border-t-2 border-gray-300">
-                                    <div className="flex justify-between items-end">
-                                        <div className="text-xs text-gray-500 mb-1">
-                                            Avg Rate: ₹{avgRate} / sq.ft
-                                        </div>
-                                        <div className="text-right">
-                                            <span className="block text-xs text-gray-500 uppercase tracking-wide">
-                                                Grand Total
-                                            </span>
-                                            <span className="block text-xl font-extrabold text-blue-700">
-                                                {formatINR(grandTotal)}
-                                            </span>
-                                        </div>
+                                <div className="mt-4 pt-3 border-t-2 border-gray-300 flex justify-between items-end">
+                                    <div className="text-xs text-gray-500 mb-1">
+                                        Avg Rate: ₹{avgRate} / sq.ft
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="block text-xs text-gray-500 uppercase tracking-wide">
+                                            Grand Total
+                                        </span>
+                                        <span className="block text-xl font-extrabold text-blue-700">
+                                            {formatINR(grandTotal)}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* SPACER BEFORE FOOTER */}
                     <ManualSpacer
                         id="spacer-footer"
                         visible={showSpacers}
@@ -784,51 +767,33 @@ export default function QuotePreview() {
                         updateHeight={updateSpacer}
                     />
 
-                    <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8 text-xs text-gray-800 break-inside-avoid">
+                    {/* --- FOOTER SECTION --- */}
+                    <div
+                        ref={(el) => (itemRefs.current["footer"] = el)}
+                        style={{
+                            marginTop: autoMargins["footer"]
+                                ? `${autoMargins["footer"]}px`
+                                : "2.5rem",
+                        }}
+                        className="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs text-gray-800 break-inside-avoid transition-all"
+                    >
                         <div>
                             <h4 className="font-bold border-b border-gray-300 mb-2 pb-1">
                                 TERMS & CONDITIONS
                             </h4>
                             <ul className="list-disc pl-4 space-y-1 leading-tight">
-                                <li>
-                                    QUOTATION VALID UPTO 1 WEEK (RATES MAY
-                                    CHANGE).
-                                </li>
+                                <li>QUOTATION VALID UPTO 1 WEEK.</li>
                                 <li>
                                     SIZE CALCULATED IN WIDTH/HEIGHT IN 3 INCH
                                     STEPS.
                                 </li>
                                 <li>
-                                    DESIGN/STYLE REMAINS UNCHANGED; CHANGES
-                                    CHARGEABLE.
+                                    INSTALLATION: 40-45 DAYS FROM ADVANCE
+                                    PAYMENT.
                                 </li>
                                 <li>
-                                    NO WARRANTY FOR GLASS POST-INSTALLATION.
-                                </li>
-                                <li>
-                                    MANUFACTURING DEFECTS: REPORT WITHIN 48
-                                    HOURS.
-                                </li>
-                                <li>
-                                    SCAFFOLDING/CRANE/ELECTRICITY/CLEANING:
-                                    CUSTOMER SCOPE.
-                                </li>
-                                <li>
-                                    STONE DAMAGE/BREAKAGE: NOT OUR
-                                    RESPONSIBILITY.
-                                </li>
-                                <li>POST-HANDOVER SERVICE IS CHARGEABLE.</li>
-                                <li>
-                                    <strong>INSTALLATION:</strong> 40-45 DAYS
-                                    FROM ADVANCE PAYMENT.
-                                </li>
-                                <li>
-                                    <strong>PAYMENT:</strong> 70% ADVANCE, 20%
-                                    BEFORE DISPATCH, 10% AFTER INSTALL.
-                                </li>
-                                <li>
-                                    DISPUTES SUBJECT TO RAJKOT JURISDICTION
-                                    ONLY.
+                                    PAYMENT: 70% ADVANCE, 20% DISPATCH, 10%
+                                    INSTALL.
                                 </li>
                                 <li>TRANSPORTATION AND GST EXTRA.</li>
                             </ul>
@@ -843,15 +808,11 @@ export default function QuotePreview() {
                                     <span>STATE BANK OF INDIA</span>
                                 </div>
                                 <div className="grid grid-cols-[100px_1fr]">
-                                    <span>BRANCH:</span>
-                                    <span>CHANDRESH NAGAR, MAVDI PLOT</span>
-                                </div>
-                                <div className="grid grid-cols-[100px_1fr]">
-                                    <span>CURRENT A/C:</span>
+                                    <span>A/C NO:</span>
                                     <span>34200993101</span>
                                 </div>
                                 <div className="grid grid-cols-[100px_1fr]">
-                                    <span>IFSC CODE:</span>
+                                    <span>IFSC:</span>
                                     <span>SBIN0060314</span>
                                 </div>
                             </div>
@@ -864,7 +825,7 @@ export default function QuotePreview() {
                                 </div>
                                 <div className="text-center">
                                     <p className="mb-8">
-                                        I ACCEPT THE ESTIMATE & TERMS.
+                                        I ACCEPT THE ESTIMATE.
                                     </p>
                                     <p>Signature of Customer</p>
                                 </div>
