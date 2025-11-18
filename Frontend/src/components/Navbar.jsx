@@ -4,6 +4,7 @@ import {
     Menu,
     X,
     LogOut,
+    User,
     LayoutDashboard,
     FileText,
     Layers,
@@ -33,14 +34,11 @@ export default function Navbar() {
                     {/* --- Logo Section --- */}
                     <div
                         onClick={() => navigate("/dashboard")}
-                        className="flex items-center gap-3 cursor-pointer"
+                        className="flex items-center gap-2 cursor-pointer"
                     >
-                        {/* UPDATED: Image Logo instead of Text "T" */}
-                        <img
-                            src="/Frontend/src/assets/image.png"
-                            alt="Tekna Logo"
-                            className="h-8 w-auto object-contain"
-                        />
+                        <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                            T
+                        </div>
                         <span className="text-xl font-bold text-slate-800 tracking-tight">
                             TEKNA
                         </span>
