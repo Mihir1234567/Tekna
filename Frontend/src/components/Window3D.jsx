@@ -233,7 +233,7 @@ const Window3D = ({ width, height, windowType = "normal" }) => {
                 <DimensionLine
                     start={[-halfW, halfH + dimGap, 0]}
                     end={[halfW, halfH + dimGap, 0]}
-                    text={`${width} cm`}
+                    text={`${width} IN`}
                     isVertical={false}
                 />
 
@@ -241,7 +241,7 @@ const Window3D = ({ width, height, windowType = "normal" }) => {
                 <DimensionLine
                     start={[halfW + dimGap, halfH, 0]}
                     end={[halfW + dimGap, -halfH, 0]}
-                    text={`${height} cm`}
+                    text={`${height} IN`}
                     isVertical={true}
                 />
 
