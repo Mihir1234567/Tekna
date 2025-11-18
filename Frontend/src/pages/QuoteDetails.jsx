@@ -36,7 +36,7 @@ function WindowSketch({ width = 36, height = 48, type = "normal" }) {
     const H = Math.max(1, Number(height));
     const boxW = 200;
     const boxH = 200;
-    const padding = 20; // Reduced padding since we draw dimensions outside now
+    const padding = 20;
     const aspect = W / H;
     let drawW = boxW;
     let drawH = boxH;
@@ -51,9 +51,9 @@ function WindowSketch({ width = 36, height = 48, type = "normal" }) {
     const offsetY = (boxH - drawH) / 2 + padding;
 
     const styles = {
-        frame: "#374151", // Gray-700
-        glass: "#eff6ff", // Blue-50
-        sashFrame: "#4b5563", // Gray-600
+        frame: "#374151",
+        glass: "#eff6ff",
+        sashFrame: "#4b5563",
         strokeWidth: 2,
     };
 
@@ -121,16 +121,17 @@ function WindowSketch({ width = 36, height = 48, type = "normal" }) {
                     />
                 </>
             )}
-            {/* Inner Dimensions Removed - Moved to Outside Layout */}
         </svg>
     );
 }
 
-/* ---------- Mobile-Optimized Spacer Component ---------- */
-const ManualSpacer = ({ id, height, updateHeight, visible }) => {
-    const isVisible = visible || height > 0;
+/* ---------- Mobile-Optimized Spacer Component (FIXED) ---------- */
+const ManualSpacer = ({ id, height, updateHeight, visible, pdfMode }) => {
+    // In PDF mode, if height is 0, render nothing. If height > 0, render invisible div.
+    if (pdfMode && height === 0) return null;
 
-    if (!isVisible) return null;
+    // In Edit mode, if hidden and height is 0, render nothing.
+    if (!pdfMode && !visible && height === 0) return null;
 
     const SMALL_STEP = 20;
     const BIG_STEP = 100;
@@ -140,63 +141,80 @@ const ManualSpacer = ({ id, height, updateHeight, visible }) => {
             className="transition-all duration-200 ease-in-out my-2"
             style={{ height: `${height}px` }}
         >
-            <div className="h-14 sm:h-10 bg-blue-50 border border-dashed border-blue-300 rounded-lg flex items-center justify-center gap-3 sm:gap-2 text-blue-700 select-none relative shadow-sm group">
-                <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden shadow-sm">
-                    <button
-                        onClick={() =>
-                            updateHeight(id, Math.max(0, height - BIG_STEP))
-                        }
-                        className="p-3 sm:p-1.5 hover:bg-blue-100 border-r border-blue-100 active:bg-blue-200"
-                        title="-100px"
-                    >
-                        <ChevronsUp size={18} className="sm:w-3.5 sm:h-3.5" />
-                    </button>
-                    <button
-                        onClick={() =>
-                            updateHeight(id, Math.max(0, height - SMALL_STEP))
-                        }
-                        className="p-3 sm:p-1.5 hover:bg-blue-100 active:bg-blue-200"
-                        title="-20px"
-                    >
-                        <Minus size={18} className="sm:w-3.5 sm:h-3.5" />
-                    </button>
+            {/* Only show the UI controls if NOT in PDF mode */}
+            {!pdfMode && (
+                <div className="h-14 sm:h-10 bg-blue-50 border border-dashed border-blue-300 rounded-lg flex items-center justify-center gap-3 sm:gap-2 text-blue-700 select-none relative shadow-sm group">
+                    <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden shadow-sm">
+                        <button
+                            onClick={() =>
+                                updateHeight(id, Math.max(0, height - BIG_STEP))
+                            }
+                            className="p-3 sm:p-1.5 hover:bg-blue-100 border-r border-blue-100 active:bg-blue-200"
+                            title="-100px"
+                        >
+                            <ChevronsUp
+                                size={18}
+                                className="sm:w-3.5 sm:h-3.5"
+                            />
+                        </button>
+                        <button
+                            onClick={() =>
+                                updateHeight(
+                                    id,
+                                    Math.max(0, height - SMALL_STEP)
+                                )
+                            }
+                            className="p-3 sm:p-1.5 hover:bg-blue-100 active:bg-blue-200"
+                            title="-20px"
+                        >
+                            <Minus size={18} className="sm:w-3.5 sm:h-3.5" />
+                        </button>
+                    </div>
+
+                    <span className="font-mono font-bold min-w-[70px] sm:min-w-[60px] text-center bg-white px-2 py-1.5 sm:py-1 rounded border border-blue-200 shadow-sm text-blue-800 text-sm sm:text-xs">
+                        {height}px
+                    </span>
+
+                    <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden shadow-sm">
+                        <button
+                            onClick={() =>
+                                updateHeight(id, height + SMALL_STEP)
+                            }
+                            className="p-3 sm:p-1.5 hover:bg-blue-100 border-r border-blue-100 active:bg-blue-200"
+                            title="+20px"
+                        >
+                            <Plus size={18} className="sm:w-3.5 sm:h-3.5" />
+                        </button>
+                        <button
+                            onClick={() => updateHeight(id, height + BIG_STEP)}
+                            className="p-3 sm:p-1.5 hover:bg-blue-100 active:bg-blue-200"
+                            title="+100px (Push Down)"
+                        >
+                            <ChevronsDown
+                                size={18}
+                                className="sm:w-3.5 sm:h-3.5"
+                            />
+                        </button>
+                    </div>
+
+                    {height > 0 && (
+                        <button
+                            onClick={() => updateHeight(id, 0)}
+                            className="absolute right-2 p-2 sm:p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
+                            title="Reset to 0"
+                        >
+                            <RotateCcw
+                                size={18}
+                                className="sm:w-3.5 sm:h-3.5"
+                            />
+                        </button>
+                    )}
+
+                    <div className="absolute left-3 text-[10px] uppercase tracking-wider opacity-40 font-bold hidden sm:block">
+                        Spacer
+                    </div>
                 </div>
-
-                <span className="font-mono font-bold min-w-[70px] sm:min-w-[60px] text-center bg-white px-2 py-1.5 sm:py-1 rounded border border-blue-200 shadow-sm text-blue-800 text-sm sm:text-xs">
-                    {height}px
-                </span>
-
-                <div className="flex items-center bg-white rounded border border-blue-200 overflow-hidden shadow-sm">
-                    <button
-                        onClick={() => updateHeight(id, height + SMALL_STEP)}
-                        className="p-3 sm:p-1.5 hover:bg-blue-100 border-r border-blue-100 active:bg-blue-200"
-                        title="+20px"
-                    >
-                        <Plus size={18} className="sm:w-3.5 sm:h-3.5" />
-                    </button>
-                    <button
-                        onClick={() => updateHeight(id, height + BIG_STEP)}
-                        className="p-3 sm:p-1.5 hover:bg-blue-100 active:bg-blue-200"
-                        title="+100px (Push Down)"
-                    >
-                        <ChevronsDown size={18} className="sm:w-3.5 sm:h-3.5" />
-                    </button>
-                </div>
-
-                {height > 0 && (
-                    <button
-                        onClick={() => updateHeight(id, 0)}
-                        className="absolute right-2 p-2 sm:p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
-                        title="Reset to 0"
-                    >
-                        <RotateCcw size={18} className="sm:w-3.5 sm:h-3.5" />
-                    </button>
-                )}
-
-                <div className="absolute left-3 text-[10px] uppercase tracking-wider opacity-40 font-bold hidden sm:block">
-                    Spacer
-                </div>
-            </div>
+            )}
         </div>
     );
 };
@@ -221,7 +239,6 @@ export default function QuotePreview() {
     const [showSpacers, setShowSpacers] = useState(false);
     const [pageBreaks, setPageBreaks] = useState([]);
 
-    // SCALING STATE
     const [scale, setScale] = useState(1);
 
     const itemRefs = useRef({});
@@ -287,7 +304,6 @@ export default function QuotePreview() {
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
-    /* --- Calculations --- */
     const subtotal = windowList.reduce((s, w) => s + Number(w.amount || 0), 0);
     const totalSqFt = windowList.reduce((s, w) => s + Number(w.sqFt || 0), 0);
     const cgstAmount = applyGST ? (subtotal * cgstPerc) / 100 : 0;
@@ -383,9 +399,10 @@ export default function QuotePreview() {
 
         const oldScale = scale;
         setScale(1);
-        setShowSpacers(false);
-        setIsPDFMode(true);
+        setShowSpacers(false); // Hide edit controls in state
+        setIsPDFMode(true); // Trigger PDF Mode
 
+        // Wait for React to render the "PDF Mode" state (which hides buttons inside Spacer)
         setTimeout(async () => {
             const pdf = new jsPDF("p", "mm", "a4");
             const pdfW = pdf.internal.pageSize.getWidth();
@@ -433,8 +450,6 @@ export default function QuotePreview() {
         return <div className="p-10 text-center text-red-500">{error}</div>;
 
     return (
-        // UPDATED: Changed from min-h-screen to h-screen with overflow-y-auto to fix double scrollbars
-        // Also conditionally changing this for PDF mode to ensure full capture
         <div
             className={`bg-gray-100 p-4 font-sans text-gray-900 ${
                 isPDFMode
@@ -515,8 +530,9 @@ export default function QuotePreview() {
                     }}
                 >
                     <div className="relative">
-                        {/* Page Cut Lines */}
-                        {(showSpacers || true) &&
+                        {/* Page Cut Lines - Hidden in PDF Mode */}
+                        {!isPDFMode &&
+                            (showSpacers || true) &&
                             pageBreaks.map((y, i) => (
                                 <div
                                     key={i}
@@ -640,6 +656,7 @@ export default function QuotePreview() {
                                         <ManualSpacer
                                             id={`w-${i}`}
                                             visible={showSpacers}
+                                            pdfMode={isPDFMode} // Passed prop
                                             height={spacers[`w-${i}`] || 0}
                                             updateHeight={updateSpacer}
                                         />
@@ -897,6 +914,7 @@ export default function QuotePreview() {
                             <ManualSpacer
                                 id="spacer-totals"
                                 visible={showSpacers}
+                                pdfMode={isPDFMode} // Passed prop
                                 height={spacers["spacer-totals"] || 0}
                                 updateHeight={updateSpacer}
                             />
@@ -1034,6 +1052,7 @@ export default function QuotePreview() {
                             <ManualSpacer
                                 id="spacer-footer"
                                 visible={showSpacers}
+                                pdfMode={isPDFMode} // Passed prop
                                 height={spacers["spacer-footer"] || 0}
                                 updateHeight={updateSpacer}
                             />
