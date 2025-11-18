@@ -533,7 +533,7 @@ export default function QuotePreview() {
                                         <img
                                             src={logo}
                                             alt="Logo"
-                                            className="h-20 w-20 object-contain"
+                                            className="h-auto w-50 object-contain"
                                         />
                                     ) : (
                                         <div className="h-20 w-20 bg-red-100 border border-red-300 text-red-500 rounded flex items-center justify-center text-sm">
