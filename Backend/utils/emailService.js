@@ -1,99 +1,69 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 exports.sendResetEmail = async ({ to, resetURL }) => {
+    // Brand Colors
+    const brandColor = "#2563eb"; // Blue-600
+    const backgroundColor = "#f3f4f6"; // Gray-100
+
     try {
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.EMAIL,
-                pass: process.env.EMAIL_PASS,
-            },
-        });
-
-        // Brand Colors (You can change these)
-        const brandColor = "#2563EB"; // Blue-600 (matches your React app)
-        const backgroundColor = "#F3F4F6"; // Gray-100
-
-        await transporter.sendMail({
-            from: `Tekna Support <${process.env.EMAIL}>`, // Professional sender name
+        await resend.emails.send({
+            from: "Tekna Support <noreply@tekna.app>",
             to,
-            subject: "Reset your password", // Clear subject line
+            subject: "Reset your Tekna password",
             html: `
             <!DOCTYPE html>
             <html>
             <head>
-                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+                <title>Reset Password</title>
                 <style>
-                    /* Mobile responsive styles */
-                    @media screen and (max-width: 600px) {
-                        .content-table { width: 100% !important; }
-                        .padding-box { padding: 20px !important; }
-                    }
+                    body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: ${backgroundColor}; }
+                    .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; margin-top: 40px; margin-bottom: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+                    .header { background-color: #ffffff; padding: 30px 40px; text-align: center; border-bottom: 1px solid #e5e7eb; }
+                    .logo { font-size: 24px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; text-decoration: none; }
+                    .content { padding: 40px 40px; color: #334155; line-height: 1.6; }
+                    .button-container { text-align: center; margin: 30px 0; }
+                    .button { background-color: ${brandColor}; color: #ffffff !important; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block; font-size: 16px; }
+                    .footer { background-color: #f8fafc; padding: 20px 40px; text-align: center; font-size: 12px; color: #94a3b8; }
+                    .link-fallback { color: ${brandColor}; word-break: break-all; font-size: 13px; }
                 </style>
             </head>
-            <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: ${backgroundColor};">
-                
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: ${backgroundColor}; width: 100%;">
-                    <tr>
-                        <td align="center" style="padding: 40px 0;">
-                            
-                            <table class="content-table" role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;">
-                                
-                                <tr>
-                                    <td style="background-color: ${brandColor}; padding: 30px; text-align: center;">
-                                        <h1 style="color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 1px;">TEKNA</h1>
-                                    </td>
-                                </tr>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <a href="#" class="logo">TEKNA</a>
+                    </div>
 
-                                <tr>
-                                    <td class="padding-box" style="padding: 40px;">
-                                        <h2 style="color: #111827; font-size: 20px; margin-top: 0; margin-bottom: 16px;">Password Reset Request</h2>
-                                        
-                                        <p style="color: #4B5563; font-size: 16px; line-height: 24px; margin-bottom: 24px;">
-                                            Hello,
-                                            <br><br>
-                                            We received a request to reset the password for your account. If you didn't make this request, you can safely ignore this email.
-                                        </p>
+                    <div class="content">
+                        <h2 style="margin-top: 0; color: #0f172a;">Password Reset Request</h2>
+                        <p>Hello,</p>
+                        <p>We received a request to reset the password for your <strong>Tekna</strong> account. If you made this request, please click the button below:</p>
+                        
+                        <div class="button-container">
+                            <a href="${resetURL}" class="button" target="_blank">Reset Password</a>
+                        </div>
 
-                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                                            <tr>
-                                                <td align="center" style="padding-bottom: 24px;">
-                                                    <a href="${resetURL}" style="background-color: ${brandColor}; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; display: inline-block; mso-padding-alt: 0;">
-                                                        <span style="mso-text-raise: 15pt;">Reset Password</span>
-                                                        </a>
-                                                </td>
-                                            </tr>
-                                        </table>
+                        <p style="font-size: 14px; color: #64748b;">This link will expire in <strong>10 minutes</strong> for security reasons.</p>
+                        
+                        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+                        
+                        <p style="font-size: 13px; color: #64748b;">
+                            If you didn't request a password reset, you can safely ignore this email. Your password will not be changed.
+                        </p>
 
-                                        <p style="color: #4B5563; font-size: 14px; line-height: 24px; margin-bottom: 0;">
-                                            This password reset link will expire in <strong>10 minutes</strong>.
-                                        </p>
-                                    </td>
-                                </tr>
+                        <p style="margin-top: 20px; font-size: 12px; color: #94a3b8;">
+                            Button not working? Copy and paste this link into your browser:<br>
+                            <a href="${resetURL}" class="link-fallback">${resetURL}</a>
+                        </p>
+                    </div>
 
-                                <tr>
-                                    <td style="background-color: #F9FAFB; padding: 30px; border-top: 1px solid #E5E7EB;">
-                                        <p style="color: #6B7280; font-size: 12px; line-height: 18px; margin: 0 0 10px 0;">
-                                            If the button above doesn't work, copy and paste the following link into your browser:
-                                        </p>
-                                        <p style="word-break: break-all; font-size: 12px; color: ${brandColor}; margin: 0;">
-                                            <a href="${resetURL}" style="color: ${brandColor}; text-decoration: none;">${resetURL}</a>
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                                <tr>
-                                    <td style="padding-top: 24px; text-align: center;">
-                                        <p style="color: #9CA3AF; font-size: 12px;">&copy; ${new Date().getFullYear()} Tekna Window Systems. All rights reserved.</p>
-                                    </td>
-                                </tr>
-                            </table>
-
-                        </td>
-                    </tr>
-                </table>
+                    <div class="footer">
+                        <p>&copy; ${new Date().getFullYear()} Tekna Window Systems. All rights reserved.</p>
+                        <p>This is an automated message, please do not reply.</p>
+                    </div>
+                </div>
             </body>
             </html>
             `,
@@ -101,7 +71,7 @@ exports.sendResetEmail = async ({ to, resetURL }) => {
 
         return true;
     } catch (err) {
-        console.error("Nodemailer error:", err);
+        console.error("Email sending error:", err);
         return false;
     }
 };
