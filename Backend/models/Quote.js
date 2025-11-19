@@ -31,6 +31,12 @@ const quoteSchema = new mongoose.Schema(
         clientName: { type: String, default: "" },
         project: { type: String, default: "" },
         finish: { type: String, default: "" },
+
+        // --- FINANCIAL CONFIG FIELDS (Add these) ---
+        applyGST: { type: Boolean, default: true },
+        cgstPerc: { type: Number, default: 9 },
+        sgstPerc: { type: Number, default: 9 },
+        packingCharges: { type: Number, default: 0 },
         // ------------------
 
         windows: [windowSchema],
@@ -41,8 +47,8 @@ const quoteSchema = new mongoose.Schema(
         },
 
         subtotal: Number,
-        cgst: Number,
-        sgst: Number,
+        cgst: Number, // This is the calculated Amount
+        sgst: Number, // This is the calculated Amount
         grandTotal: Number,
 
         versionHistory: { type: Array, default: [] },

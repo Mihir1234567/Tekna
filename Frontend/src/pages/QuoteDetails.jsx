@@ -19,11 +19,12 @@ import {
     User,
     Briefcase,
     CreditCard,
+    Save,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import logo from "../assets/logo.png";
-import { apiGet } from "../utils/api";
+import { apiGet, apiPut } from "../utils/api"; // Assuming apiPut exists or using fetch
 import { getToken } from "../utils/auth";
 
 /* --- 1. Helper Functions --- */
@@ -295,6 +296,8 @@ export default function QuotePreview() {
     const { id } = useParams();
     const mainRef = useRef(null);
     const itemRefs = useRef({});
+    const apiBaseUrl =
+        import.meta.env.REACT_APP_API_BASE || "https://tekna-ryyc.onrender.com";
 
     const [windowList, setWindowList] = useState([]);
     const [clientDetails, setClientDetails] = useState({
@@ -304,6 +307,7 @@ export default function QuotePreview() {
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isSaving, setIsSaving] = useState(false); // For Save Button State
 
     const [isPDFMode, setIsPDFMode] = useState(false);
     const [scale, setScale] = useState(1);
@@ -336,6 +340,17 @@ export default function QuotePreview() {
                         project: data.quote.project || "",
                         finish: data.quote.finish || "",
                     });
+                    // Load Saved Financial Data if available
+                    if (data.quote) {
+                        setApplyGST(
+                            data.quote.applyGST !== undefined
+                                ? data.quote.applyGST
+                                : true
+                        );
+                        setCgstPerc(data.quote.cgstPerc || 9);
+                        setSgstPerc(data.quote.sgstPerc || 9);
+                        setPackingCharges(data.quote.packingCharges || 0);
+                    }
                 } catch (err) {
                     console.error(err);
                     setError("Failed to load data");
@@ -355,6 +370,45 @@ export default function QuotePreview() {
     const cgstAmount = applyGST ? (subtotal * cgstPerc) / 100 : 0;
     const sgstAmount = applyGST ? (subtotal * sgstPerc) / 100 : 0;
     const grandTotal = subtotal + packingCharges + cgstAmount + sgstAmount;
+
+    // --- API Call to Save Data ---
+    const handleSaveQuote = async () => {
+        if (!id) return; // Can't save if no ID
+        setIsSaving(true);
+        try {
+            const token = getToken();
+            const payload = {
+                // We are just updating financial fields here, but usually PUT requires full object or PATCH
+                // Assuming we can send partial updates or need to send full state
+                applyGST,
+                cgstPerc,
+                sgstPerc,
+                packingCharges,
+                // Re-sending existing data to be safe, depends on API implementation
+                windows: windowList,
+                clientName: clientDetails.clientName,
+                project: clientDetails.project,
+                finish: clientDetails.finish,
+            };
+
+            const res = await fetch(`${apiBaseUrl}/api/quotes/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!res.ok) throw new Error("Failed to save");
+            alert("Quote Saved Successfully!");
+        } catch (err) {
+            console.error("Save error:", err);
+            alert("Error saving quote.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     // --- Core Logic ---
     const updateSpacer = (key, val) =>
@@ -521,28 +575,33 @@ export default function QuotePreview() {
                         )}{" "}
                         Auto-Layout
                     </button>
+
+                    {/* TWO SEPARATE BUTTONS: SAVE and DOWNLOAD */}
                     <button
-                        onClick={() => setShowSpacers(!showSpacers)}
-                        className={`px-3 py-1.5 border rounded text-xs font-medium flex items-center gap-1 ${
-                            showSpacers
-                                ? "bg-indigo-600 text-white"
-                                : "bg-white"
-                        }`}
+                        onClick={handleSaveQuote}
+                        disabled={isSaving}
+                        className="px-4 py-1.5 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700 flex items-center gap-2"
                     >
-                        <Ruler size={14} />{" "}
-                        {showSpacers ? "Hide Controls" : "Manual Layout"}
+                        {isSaving ? (
+                            <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                            <Save size={14} />
+                        )}{" "}
+                        Save
                     </button>
+
+                    <button
+                        onClick={downloadPDF}
+                        className="px-4 py-1.5 bg-gray-800 text-white rounded text-xs font-medium hover:bg-gray-900 flex items-center gap-2"
+                    >
+                        <Printer size={14} /> Download PDF
+                    </button>
+
                     <button
                         onClick={() => navigate(-1)}
                         className="px-3 py-1.5 bg-white border rounded text-xs font-medium hover:bg-gray-50"
                     >
                         Back
-                    </button>
-                    <button
-                        onClick={downloadPDF}
-                        className="px-4 py-1.5 bg-gray-800 text-white rounded text-xs font-medium hover:bg-gray-900 flex items-center gap-2"
-                    >
-                        <Printer size={14} /> Save PDF
                     </button>
                 </div>
             </div>
@@ -556,7 +615,6 @@ export default function QuotePreview() {
                     }}
                 >
                     <div className="relative">
-                        {/* Page Break Lines */}
                         {!isPDFMode &&
                             showSpacers &&
                             pageBreaks.map((y, i) => (
@@ -694,7 +752,7 @@ export default function QuotePreview() {
                                             </div>
                                             <div className="flex-1 p-4 text-xs text-gray-800 flex flex-col">
                                                 <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-3">
-                                                    <span className="font-extrabold text-sm tetx-slate-800 px-2 py-0.5 rounded-sm">
+                                                    <span className="font-extrabold text-sm text-slate-800 px-2 py-0.5 rounded-sm">
                                                         Window {index + 1}
                                                     </span>
                                                     <span className="font-bold text-slate-600 uppercase tracking-wider">

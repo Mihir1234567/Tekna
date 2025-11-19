@@ -11,10 +11,11 @@ exports.createQuote = async (req, res) => {
         const userId = req.user.userId;
         const {
             windows,
+            // Default values used if not sent
             applyGST = true,
             cgstPerc = 9,
             sgstPerc = 9,
-            // Extract new fields
+            packingCharges = 0, // Extract packingCharges
             clientName,
             project,
             finish,
@@ -31,9 +32,14 @@ exports.createQuote = async (req, res) => {
             (s, w) => s + (Number(w.amount) || 0),
             0
         );
-        const cgst = applyGST ? (subtotal * cgstPerc) / 100 : 0;
-        const sgst = applyGST ? (subtotal * sgstPerc) / 100 : 0;
-        const grandTotal = subtotal + cgst + sgst;
+
+        // Calculate Taxes based on inputs
+        const cgst = applyGST ? (subtotal * Number(cgstPerc)) / 100 : 0;
+        const sgst = applyGST ? (subtotal * Number(sgstPerc)) / 100 : 0;
+
+        // Include Packing Charges in Grand Total
+        const grandTotal =
+            subtotal + cgst + sgst + (Number(packingCharges) || 0);
 
         const quote = await Quote.create({
             quoteId,
@@ -43,7 +49,11 @@ exports.createQuote = async (req, res) => {
             cgst,
             sgst,
             grandTotal,
-            // Save new fields
+            // Save configuration fields so they load next time
+            applyGST,
+            cgstPerc,
+            sgstPerc,
+            packingCharges,
             clientName,
             project,
             finish,
@@ -60,6 +70,7 @@ exports.createQuote = async (req, res) => {
 };
 
 exports.listQuotes = async (req, res) => {
+    // ... (No changes needed here usually, unless you want to sort/filter by new fields)
     try {
         const userId = req.user.userId;
         const page = Math.max(1, Number(req.query.page) || 1);
@@ -83,7 +94,6 @@ exports.listQuotes = async (req, res) => {
                 .sort(sortQuery)
                 .skip(skip)
                 .limit(limit)
-                // Added clientName to selection for list view convenience
                 .select(
                     "quoteId clientName status subtotal grandTotal createdAt updatedAt"
                 )
@@ -104,6 +114,7 @@ exports.listQuotes = async (req, res) => {
 };
 
 exports.getQuoteById = async (req, res) => {
+    // ... (No changes needed, it returns the whole object)
     try {
         const userId = req.user.userId;
         const identifier = req.params.id;
@@ -139,10 +150,11 @@ exports.updateQuote = async (req, res) => {
         const {
             windows,
             status,
-            applyGST = true,
-            cgstPerc = 9,
-            sgstPerc = 9,
-            // Extract new fields
+            // Config fields with fallback to undefined to check existence
+            applyGST,
+            cgstPerc,
+            sgstPerc,
+            packingCharges,
             clientName,
             project,
             finish,
@@ -172,38 +184,53 @@ exports.updateQuote = async (req, res) => {
                 sgst: existing.sgst,
                 grandTotal: existing.grandTotal,
                 status: existing.status,
-                clientName: existing.clientName, // track history
+                clientName: existing.clientName,
                 project: existing.project,
                 finish: existing.finish,
+                // History of config
+                applyGST: existing.applyGST,
+                packingCharges: existing.packingCharges,
             },
         });
 
-        // Update fields if present
+        // 1. Update simple text/status fields
         if (clientName !== undefined) existing.clientName = clientName;
         if (project !== undefined) existing.project = project;
         if (finish !== undefined) existing.finish = finish;
+        if (status !== undefined) existing.status = status;
 
-        // If windows array updated → recalc totals
+        // 2. Update configuration fields if present in request
+        if (applyGST !== undefined) existing.applyGST = applyGST;
+        if (cgstPerc !== undefined) existing.cgstPerc = cgstPerc;
+        if (sgstPerc !== undefined) existing.sgstPerc = sgstPerc;
+        if (packingCharges !== undefined)
+            existing.packingCharges = packingCharges;
+
+        // 3. Update Windows if present
         if (windows && Array.isArray(windows)) {
             existing.windows = windows;
-
-            const subtotal = windows.reduce(
+            // Recalculate subtotal based on new windows
+            existing.subtotal = windows.reduce(
                 (sum, w) => sum + (Number(w.amount) || 0),
                 0
             );
-            const cgst = applyGST ? (subtotal * cgstPerc) / 100 : 0;
-            const sgst = applyGST ? (subtotal * sgstPerc) / 100 : 0;
-            const grandTotal = subtotal + cgst + sgst;
-
-            existing.subtotal = subtotal;
-            existing.cgst = cgst;
-            existing.sgst = sgst;
-            existing.grandTotal = grandTotal;
         }
 
-        if (status) {
-            existing.status = status;
-        }
+        // 4. RE-CALCULATE TOTALS
+        // (We do this every time because GST% or Packing might have changed, even if windows didn't)
+        const p_cgstPerc = existing.cgstPerc || 0;
+        const p_sgstPerc = existing.sgstPerc || 0;
+        const p_packing = Number(existing.packingCharges) || 0;
+
+        existing.cgst = existing.applyGST
+            ? (existing.subtotal * p_cgstPerc) / 100
+            : 0;
+        existing.sgst = existing.applyGST
+            ? (existing.subtotal * p_sgstPerc) / 100
+            : 0;
+
+        existing.grandTotal =
+            existing.subtotal + existing.cgst + existing.sgst + p_packing;
 
         await existing.save();
 
@@ -218,10 +245,10 @@ exports.updateQuote = async (req, res) => {
 };
 
 exports.deleteQuote = async (req, res) => {
+    // ... (No changes needed)
     try {
         const userId = req.user.userId;
         const identifier = req.params.id;
-
         const filter = { userId };
 
         if (isValidObjectId(identifier)) {
