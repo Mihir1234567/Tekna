@@ -220,15 +220,10 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
 
 /* --- 3. Manual Spacer Component --- */
 const ManualSpacer = ({ id, height, updateHeight, visible, pdfMode }) => {
-    // If in PDF mode, render nothing if height is 0, or just space if height > 0
     if (pdfMode) {
         return height > 0 ? <div style={{ height: `${height}px` }} /> : null;
     }
-
-    // If not visible (Manual Layout off) and no height, render nothing
     if (!visible && height === 0) return null;
-
-    // If not visible but has height (Auto-adjust applied), just render space
     if (!visible && height > 0) {
         return <div style={{ height: `${height}px` }} />;
     }
@@ -313,7 +308,7 @@ export default function QuotePreview() {
     const [isPDFMode, setIsPDFMode] = useState(false);
     const [scale, setScale] = useState(1);
     const [spacers, setSpacers] = useState({});
-    const [showSpacers, setShowSpacers] = useState(false); // Default FALSE
+    const [showSpacers, setShowSpacers] = useState(false);
     const [isAdjusting, setIsAdjusting] = useState(false);
     const [pageBreaks, setPageBreaks] = useState([]);
 
@@ -381,7 +376,7 @@ export default function QuotePreview() {
     const handleAutoAdjust = (showUi = true) => {
         if (!mainRef.current) return;
         setIsAdjusting(true);
-        if (showUi) setShowSpacers(true); // Only show UI on manual click
+        if (showUi) setShowSpacers(true);
         setSpacers({});
 
         setTimeout(() => {
@@ -418,7 +413,6 @@ export default function QuotePreview() {
         }, 200);
     };
 
-    // --- Effects for Scale and Auto-Adjust ---
     useEffect(() => {
         const handleResize = () => {
             const w = window.innerWidth - 32;
@@ -430,43 +424,34 @@ export default function QuotePreview() {
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
-    // Run auto-adjust silently on load (don't show blue boxes)
     useLayoutEffect(() => {
         if (!loading && windowList.length > 0)
             setTimeout(() => handleAutoAdjust(false), 500);
     }, [loading, windowList]);
 
-    // --- PDF Logic ---
     const downloadPDF = async () => {
         const container = mainRef.current;
         if (!container) return;
-
         setIsPDFMode(true);
         setShowSpacers(false);
         await new Promise((r) => setTimeout(r, 200));
-
         const pdf = new jsPDF("p", "mm", "a4");
         const pdfW = pdf.internal.pageSize.getWidth();
         const pdfH = pdf.internal.pageSize.getHeight();
-
         const canvas = await html2canvas(container, {
             scale: 2,
             useCORS: true,
-            width: 794, // FORCE DESKTOP WIDTH
-            windowWidth: 1200, // FORCE DESKTOP LAYOUT
+            width: 794,
+            windowWidth: 1200,
             scrollY: -window.scrollY,
         });
-
         const imgData = canvas.toDataURL("image/png");
         const imgProps = pdf.getImageProperties(imgData);
         const imgHeight = (imgProps.height * pdfW) / imgProps.width;
-
         let heightLeft = imgHeight;
         let position = 0;
-
         pdf.addImage(imgData, "PNG", 0, position, pdfW, imgHeight);
         heightLeft -= pdfH;
-
         while (heightLeft >= 0) {
             position = heightLeft - imgHeight;
             pdf.addPage();
@@ -480,7 +465,6 @@ export default function QuotePreview() {
             );
             heightLeft -= pdfH;
         }
-
         pdf.save(`${clientDetails.clientName || "Quotation"}.pdf`);
         setIsPDFMode(false);
     };
@@ -636,7 +620,7 @@ export default function QuotePreview() {
                                             </div>
                                         )}
                                     </div>
-                                    <div className="mt-4 bg-gray-100 px-3 py-1.5 text-sm font-bold text-gray-800 border border-gray-200">
+                                    <div className="mt-4 px-3 py-1.5 text-sm font-bold text-gray-800 ">
                                         Date:{" "}
                                         {new Date().toLocaleDateString("en-IN")}
                                     </div>
@@ -710,7 +694,7 @@ export default function QuotePreview() {
                                             </div>
                                             <div className="flex-1 p-4 text-xs text-gray-800 flex flex-col">
                                                 <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-3">
-                                                    <span className="font-extrabold text-sm bg-slate-800 text-white px-2 py-0.5 rounded-sm">
+                                                    <span className="font-extrabold text-sm tetx-slate-800 px-2 py-0.5 rounded-sm">
                                                         Window {index + 1}
                                                     </span>
                                                     <span className="font-bold text-slate-600 uppercase tracking-wider">
@@ -849,7 +833,7 @@ export default function QuotePreview() {
                                             <span>{formatINR(subtotal)}</span>
                                         </div>
 
-                                        {/* PACKING CHARGES INPUT */}
+                                        {/* Packing Charges Input */}
                                         <div className="flex justify-between text-slate-600 items-center">
                                             <span>Packing</span>
                                             {isPDFMode ? (
@@ -879,7 +863,7 @@ export default function QuotePreview() {
                                             )}
                                         </div>
 
-                                        {/* GST SECTION (CONDITIONAL) */}
+                                        {/* GST Inputs */}
                                         {applyGST && (
                                             <>
                                                 <div className="flex justify-between text-slate-600 items-center">
@@ -894,26 +878,21 @@ export default function QuotePreview() {
                                                                 <span>(@</span>
                                                                 <input
                                                                     type="number"
-                                                                    className="w-6 text-center border-b border-slate-300 text-xs mx-0.5 bg-transparent outline-none"
+                                                                    className="w-12 text-center border-b border-slate-300 text-xs mx-0.5 bg-transparent outline-none"
                                                                     value={
                                                                         cgstPerc
                                                                     }
                                                                     onChange={(
                                                                         e
-                                                                    ) => {
-                                                                        const val =
+                                                                    ) =>
+                                                                        setCgstPerc(
                                                                             Number(
                                                                                 e
                                                                                     .target
                                                                                     .value
-                                                                            );
-                                                                        setCgstPerc(
-                                                                            val
-                                                                        );
-                                                                        setSgstPerc(
-                                                                            val
-                                                                        ); // Usually identical
-                                                                    }}
+                                                                            )
+                                                                        )
+                                                                    }
                                                                 />
                                                                 <span>%)</span>
                                                             </div>
@@ -923,7 +902,6 @@ export default function QuotePreview() {
                                                         {formatINR(cgstAmount)}
                                                     </span>
                                                 </div>
-
                                                 <div className="flex justify-between text-slate-600 items-center">
                                                     <div className="flex items-center gap-1">
                                                         <span>SGST</span>
@@ -936,7 +914,7 @@ export default function QuotePreview() {
                                                                 <span>(@</span>
                                                                 <input
                                                                     type="number"
-                                                                    className="w-6 text-center border-b border-slate-300 text-xs mx-0.5 bg-transparent outline-none"
+                                                                    className="w-12 text-center border-b border-slate-300 text-xs mx-0.5 bg-transparent outline-none"
                                                                     value={
                                                                         sgstPerc
                                                                     }
