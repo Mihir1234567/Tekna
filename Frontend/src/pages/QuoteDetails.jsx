@@ -620,7 +620,7 @@ export default function QuotePreview() {
                                             </div>
                                         )}
                                     </div>
-                                    <div className="mt-4 bg-gray-100 px-3 py-1.5 text-sm font-bold text-gray-800 border border-gray-200">
+                                    <div className="mt-4  px-3 py-1.5 text-sm font-bold text-gray-800 border border-gray-200">
                                         Date:{" "}
                                         {new Date().toLocaleDateString("en-IN")}
                                     </div>
