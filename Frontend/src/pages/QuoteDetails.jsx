@@ -690,7 +690,7 @@ export default function QuotePreview() {
                                 <div className="grid grid-cols-4 gap-4 text-sm bg-slate-50 p-4 rounded border border-slate-200">
                                     <div>
                                         <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1 flex items-center gap-1">
-                                            <User size={10} /> Client
+                                            Client
                                         </span>
                                         <span className="font-bold text-gray-900 break-words">
                                             {clientDetails.clientName || "—"}
@@ -698,7 +698,7 @@ export default function QuotePreview() {
                                     </div>
                                     <div>
                                         <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1 flex items-center gap-1">
-                                            <Briefcase size={10} /> Project
+                                            Project
                                         </span>
                                         <span className="font-bold text-gray-900 break-words">
                                             {clientDetails.project || "—"}
@@ -706,7 +706,7 @@ export default function QuotePreview() {
                                     </div>
                                     <div>
                                         <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1 flex items-center gap-1">
-                                            <FileText size={10} /> Quote No
+                                            Quote No
                                         </span>
                                         <span className="font-bold text-indigo-700 font-mono">
                                             {id || "—"}
@@ -714,7 +714,7 @@ export default function QuotePreview() {
                                     </div>
                                     <div>
                                         <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1 flex items-center gap-1">
-                                            <Calendar size={10} /> Finish
+                                            Finish
                                         </span>
                                         <span className="font-bold text-gray-900 break-words">
                                             {clientDetails.finish || "—"}
