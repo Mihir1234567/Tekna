@@ -597,7 +597,7 @@ export default function Configurator() {
                                     )}
                                     {editIndex !== null
                                         ? "Update"
-                                        : "Add to List"}
+                                        : "Add Window"}
                                 </button>
                             </div>
                         </div>
