@@ -1020,7 +1020,7 @@ export default function QuotePreview() {
                                                 <span className="text-slate-500">
                                                     Branch:
                                                 </span>
-                                                <span>
+                                                <span className="font-bold">
                                                     CHANDRESH NAGAR, MAVDI
                                                 </span>
                                                 <span className="text-slate-500">
