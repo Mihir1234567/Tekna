@@ -15,10 +15,10 @@ import {
     Phone,
     Mail,
     FileText,
-    CreditCard,
+    Calendar,
     User,
     Briefcase,
-    Calendar,
+    CreditCard,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -38,9 +38,9 @@ const formatINR = (val) => {
 
 /* --- 2. Window Sketch Component (SVG Text for Perfect Centering) --- */
 const WindowSketch = ({ width, height, type = "normal" }) => {
-    const boxSize = 140; // Slightly smaller to leave room for text inside SVG
-    const strokeColor = "#1f2937"; // Dark Gray
-    const glassColor = "#f8fafc"; // Very light gray/blue
+    const boxSize = 140;
+    const strokeColor = "#1f2937";
+    const glassColor = "#f8fafc";
 
     const w = Math.max(1, Number(width));
     const h = Math.max(1, Number(height));
@@ -63,7 +63,6 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
         <div className="w-full h-full flex items-center justify-center">
             <svg width="200" height="200" viewBox="0 0 200 200">
                 {/* --- Dimension Lines --- */}
-                {/* Width Line */}
                 <line
                     x1={startX}
                     y1={startY + drawH + 10}
@@ -89,7 +88,6 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                     strokeWidth="1"
                 />
 
-                {/* Height Line */}
                 <line
                     x1={startX - 10}
                     y1={startY}
@@ -116,8 +114,6 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                 />
 
                 {/* --- DIMENSION TEXT (Inside SVG for perfect centering) --- */}
-
-                {/* Width Text */}
                 <text
                     x={startX + drawW / 2}
                     y={startY + drawH + 24}
@@ -132,7 +128,6 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                     {width}"
                 </text>
 
-                {/* Height Text (Rotated around its center) */}
                 <text
                     x={startX - 20}
                     y={startY + drawH / 2}
@@ -160,8 +155,6 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                     stroke={strokeColor}
                     strokeWidth="2"
                 />
-
-                {/* --- Glass Glare Effect --- */}
                 <line
                     x1={startX}
                     y1={startY}
@@ -182,7 +175,6 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                             stroke={strokeColor}
                             strokeWidth="1"
                         />
-                        {/* Arrow indicators */}
                         <path
                             d={`M${startX + drawW * 0.25} ${
                                 startY + drawH / 2
@@ -231,10 +223,8 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
 const ManualSpacer = ({ id, height, updateHeight, visible, pdfMode }) => {
     if ((pdfMode && height === 0) || (!pdfMode && !visible && height === 0))
         return null;
-
     const SMALL_STEP = 20;
     const BIG_STEP = 100;
-
     return (
         <div
             className="transition-all duration-200 ease-in-out my-2"
@@ -291,7 +281,7 @@ const ManualSpacer = ({ id, height, updateHeight, visible, pdfMode }) => {
                         </button>
                     )}
                     <div className="absolute left-2 text-[9px] uppercase tracking-wider font-bold opacity-50">
-                        Page Break Spacer
+                        Spacer
                     </div>
                 </div>
             )}
@@ -367,15 +357,14 @@ export default function QuotePreview() {
     const sgstAmount = applyGST ? (subtotal * sgstPerc) / 100 : 0;
     const grandTotal = subtotal + packingCharges + cgstAmount + sgstAmount;
 
-    // --- Core Layout Logic ---
+    // --- Core Logic ---
     const updateSpacer = (key, val) =>
         setSpacers((prev) => ({ ...prev, [key]: val }));
 
     const calculatePageBreaks = () => {
         if (!mainRef.current) return;
         const containerHeight = mainRef.current.scrollHeight;
-        const containerWidth = mainRef.current.offsetWidth;
-        const pageHeightPx = containerWidth * 1.4142;
+        const pageHeightPx = 1123;
         const breaks = [];
         let currentH = pageHeightPx;
         while (currentH < containerHeight + 500) {
@@ -392,8 +381,7 @@ export default function QuotePreview() {
         setSpacers({});
 
         setTimeout(() => {
-            const containerWidth = mainRef.current.offsetWidth;
-            const pageHeightPx = containerWidth * 1.4142;
+            const pageHeightPx = 1123;
             const newSpacers = {};
             let totalAddedMargin = 0;
             const keys = ["header"];
@@ -426,10 +414,13 @@ export default function QuotePreview() {
         }, 200);
     };
 
+    // --- Scaling Logic for Mobile Viewing ---
+    // This ensures the 794px A4 paper shrinks to fit a 375px phone screen visually,
+    // but remains 794px in the DOM for the PDF generator.
     useEffect(() => {
         const handleResize = () => {
-            const w = window.innerWidth - 32;
-            const target = 1024;
+            const w = window.innerWidth - 32; // Screen width minus padding
+            const target = 794; // Fixed A4 width in px
             setScale(w < target ? w / target : 1);
         };
         handleResize();
@@ -458,7 +449,8 @@ export default function QuotePreview() {
         const canvas = await html2canvas(container, {
             scale: 2,
             useCORS: true,
-            windowWidth: 1200,
+            width: 794, // FORCE DESKTOP WIDTH
+            windowWidth: 1200, // FORCE DESKTOP LAYOUT
             scrollY: -window.scrollY,
         });
 
@@ -486,9 +478,7 @@ export default function QuotePreview() {
             heightLeft -= pdfH;
         }
 
-        pdf.save(
-            `${clientDetails.clientName || "Quotation"}_${id || "Draft"}.pdf`
-        );
+        pdf.save(`${clientDetails.clientName || "Quotation"}.pdf`);
         setIsPDFMode(false);
     };
 
@@ -511,9 +501,9 @@ export default function QuotePreview() {
                 isPDFMode ? "min-h-screen" : "h-screen overflow-y-auto w-full"
             }`}
         >
-            {/* --- Toolbar (Hidden in PDF) --- */}
+            {/* --- Toolbar --- */}
             <div
-                className={`max-w-[1024px] mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4 ${
+                className={`max-w-[794px] mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4 ${
                     isPDFMode ? "hidden" : ""
                 }`}
             >
@@ -559,11 +549,11 @@ export default function QuotePreview() {
 
             {/* --- A4 Paper Container --- */}
             <div className="flex justify-center pb-20">
+                {/* Scale container ensures full 794px content is visible on small screens */}
                 <div
                     style={{
                         transform: `scale(${scale})`,
                         transformOrigin: "top center",
-                        width: "1024px",
                     }}
                 >
                     <div className="relative">
@@ -581,27 +571,27 @@ export default function QuotePreview() {
                                 </div>
                             ))}
 
+                        {/* THE PRINTABLE NODE - FIXED WIDTH to prevent mobile squishing */}
                         <div
                             ref={mainRef}
-                            className="bg-white shadow-2xl w-full min-h-[297mm] p-10 relative text-gray-900"
+                            style={{ width: "794px", minHeight: "1123px" }}
+                            className="bg-white shadow-2xl p-10 relative text-gray-900 mx-auto"
                         >
-                            {/* 1. HEADER (Refined) */}
+                            {/* 1. HEADER */}
                             <header
                                 ref={(el) => (itemRefs.current["header"] = el)}
                                 className="flex justify-between items-start pb-6 border-b-2 border-gray-900 mb-8"
                             >
-                                {/* Left Side */}
                                 <div className="flex flex-col items-start text-left w-2/3">
-                                    <h1 className="text-4xl font-extrabold tracking-wide text-gray-900 mb-1">
+                                    <h1 className="text-3xl font-extrabold tracking-wide text-gray-900 mb-1">
                                         TEKNA WINDOW SYSTEM
                                     </h1>
-                                    <p className="text-sm text-gray-600 font-medium">
+                                    <p className="text-sm text-gray-700">
                                         VAVDI INDUSTRY AREA, VAVDI MAIN ROAD
                                     </p>
-                                    <p className="text-sm text-gray-600 mb-4">
+                                    <p className="text-sm text-gray-700 mb-4">
                                         RAJKOT, GUJARAT
                                     </p>
-
                                     <div className="text-sm space-y-1 text-gray-700">
                                         <p>
                                             <strong>Mobile:</strong> 9825256525
@@ -616,29 +606,28 @@ export default function QuotePreview() {
                                         </p>
                                     </div>
                                 </div>
-                                {/* Right Side: Logo & Date */}
                                 <div className="flex flex-col items-end text-right w-1/3">
-                                    <div className="h-28 w-32 mb-2 relative flex items-start justify-end">
+                                    <div className="h-20 mb-2 relative">
                                         {logo ? (
                                             <img
                                                 src={logo}
                                                 alt="Logo"
-                                                className="h-full w-full object-contain object-right-top"
+                                                className="h-full object-contain"
                                             />
                                         ) : (
-                                            <div className="h-24 w-24 bg-red-50 border border-red-200 text-red-400 flex items-center justify-center text-sm font-bold">
-                                                LOGO
+                                            <div className="h-full w-24 bg-red-100 border border-red-300 text-red-500 flex items-center justify-center text-xs font-bold">
+                                                TWS
                                             </div>
                                         )}
                                     </div>
-                                    <div className="mt-4 bg-gray-100 border border-gray-300 px-4 py-2 text-sm font-bold text-gray-800">
+                                    <div className="mt-4 bg-gray-100 px-3 py-1.5 text-sm font-bold text-gray-800 border border-gray-200">
                                         Date:{" "}
                                         {new Date().toLocaleDateString("en-IN")}
                                     </div>
                                 </div>
                             </header>
 
-                            {/* 2. CLIENT INFO GRID (Clean, Modern Blocks) */}
+                            {/* 2. CLIENT INFO */}
                             <section className="mb-10">
                                 <div className="grid grid-cols-4 gap-4 text-sm bg-slate-50 p-4 rounded border border-slate-200">
                                     <div>
@@ -696,16 +685,13 @@ export default function QuotePreview() {
                                             }
                                             className="break-inside-avoid border border-gray-300 rounded-sm overflow-hidden flex"
                                         >
-                                            {/* Left: Sketch */}
-                                            <div className="w-[200px] border-r border-gray-300 p-2 flex items-center justify-center bg-white">
+                                            <div className="w-[180px] border-r border-gray-300 p-2 flex items-center justify-center bg-white">
                                                 <WindowSketch
                                                     width={win.width}
                                                     height={win.height}
                                                     type={win.windowType}
                                                 />
                                             </div>
-
-                                            {/* Middle: Specs */}
                                             <div className="flex-1 p-4 text-xs text-gray-800 flex flex-col">
                                                 <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-3">
                                                     <span className="font-extrabold text-sm bg-slate-800 text-white px-2 py-0.5 rounded-sm">
@@ -715,7 +701,6 @@ export default function QuotePreview() {
                                                         {win.windowType}
                                                     </span>
                                                 </div>
-
                                                 <div className="grid grid-cols-[85px_1fr] gap-y-1.5 leading-tight">
                                                     <span className="font-bold text-slate-500">
                                                         Size:
@@ -769,9 +754,7 @@ export default function QuotePreview() {
                                                     </span>
                                                 </div>
                                             </div>
-
-                                            {/* Right: Financials */}
-                                            <div className="w-[150px] border-l border-gray-300 bg-slate-50 p-4 flex flex-col justify-center gap-2 text-right">
+                                            <div className="w-[140px] border-l border-gray-300 bg-slate-50 p-4 flex flex-col justify-center gap-2 text-right">
                                                 <div>
                                                     <span className="block text-[10px] font-bold text-slate-400 uppercase">
                                                         Area
