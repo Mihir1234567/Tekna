@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Window3D from "../components/Window3D";
 
-// --- Inline Icons (Unchanged) ---
+// --- Inline Icons ---
 const Icons = {
     RotateCcw: () => (
         <svg
@@ -328,15 +328,17 @@ export default function Configurator() {
             return;
         }
 
+        // Include Client Details in Payload
         const payload = {
             windows: windowList,
-            applyGST: true,
-            cgstPerc: 9,
-            sgstPerc: 9,
-            // Send client details
             clientName: clientInfo.clientName,
             project: clientInfo.project,
             finish: clientInfo.finish,
+            // Default financial values for new quotes (can be edited in Preview)
+            applyGST: true,
+            cgstPerc: 9,
+            sgstPerc: 9,
+            packingCharges: 0,
         };
 
         try {
@@ -365,6 +367,8 @@ export default function Configurator() {
 
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Operation failed");
+
+            // Navigate to Preview
             navigate(`/quote/${data.quote.quoteId}`);
         } catch (error) {
             console.error("Quote saving failed:", error);
@@ -597,7 +601,7 @@ export default function Configurator() {
                                     )}
                                     {editIndex !== null
                                         ? "Update"
-                                        : "Add Window"}
+                                        : "Add to List"}
                                 </button>
                             </div>
                         </div>
