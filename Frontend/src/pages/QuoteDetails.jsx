@@ -694,7 +694,7 @@ export default function QuotePreview() {
                                             </div>
                                             <div className="flex-1 p-4 text-xs text-gray-800 flex flex-col">
                                                 <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-3">
-                                                    <span className="font-extrabold text-sm bg-slate-800 text-white px-2 py-0.5 rounded-sm">
+                                                    <span className="font-extrabold text-sm  text-slate-800 px-2 py-0.5 rounded-sm">
                                                         Window {index + 1}
                                                     </span>
                                                     <span className="font-bold text-slate-600 uppercase tracking-wider">
