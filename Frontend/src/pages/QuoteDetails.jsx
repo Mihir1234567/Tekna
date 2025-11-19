@@ -36,7 +36,7 @@ const formatINR = (val) => {
     }).format(val || 0);
 };
 
-/* --- 2. Window Sketch Component (SVG Text for Perfect Centering) --- */
+/* --- 2. Window Sketch Component --- */
 const WindowSketch = ({ width, height, type = "normal" }) => {
     const boxSize = 140;
     const strokeColor = "#1f2937";
@@ -55,7 +55,6 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
         drawW = boxSize * aspect;
     }
 
-    // Center the drawing in the 200x200 viewbox
     const startX = (200 - drawW) / 2;
     const startY = (200 - drawH) / 2;
 
@@ -113,7 +112,7 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
                     strokeWidth="1"
                 />
 
-                {/* --- DIMENSION TEXT (Inside SVG for perfect centering) --- */}
+                {/* --- DIMENSION TEXT --- */}
                 <text
                     x={startX + drawW / 2}
                     y={startY + drawH + 24}
@@ -221,70 +220,75 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
 
 /* --- 3. Manual Spacer Component --- */
 const ManualSpacer = ({ id, height, updateHeight, visible, pdfMode }) => {
-    if ((pdfMode && height === 0) || (!pdfMode && !visible && height === 0))
-        return null;
+    // If in PDF mode, render nothing if height is 0, or just space if height > 0
+    if (pdfMode) {
+        return height > 0 ? <div style={{ height: `${height}px` }} /> : null;
+    }
+
+    // If not visible (Manual Layout off) and no height, render nothing
+    if (!visible && height === 0) return null;
+
+    // If not visible but has height (Auto-adjust applied), just render space
+    if (!visible && height > 0) {
+        return <div style={{ height: `${height}px` }} />;
+    }
+
     const SMALL_STEP = 20;
     const BIG_STEP = 100;
+
     return (
         <div
             className="transition-all duration-200 ease-in-out my-2"
             style={{ height: `${height}px` }}
         >
-            {!pdfMode && (
-                <div className="h-10 bg-indigo-50 border border-dashed border-indigo-300 rounded flex items-center justify-center gap-2 text-indigo-700 select-none relative opacity-70 hover:opacity-100">
-                    <div className="flex items-center bg-white rounded border border-indigo-200 overflow-hidden">
-                        <button
-                            onClick={() =>
-                                updateHeight(id, Math.max(0, height - BIG_STEP))
-                            }
-                            className="p-1 hover:bg-indigo-100 border-r border-indigo-100"
-                        >
-                            <ChevronsUp size={14} />
-                        </button>
-                        <button
-                            onClick={() =>
-                                updateHeight(
-                                    id,
-                                    Math.max(0, height - SMALL_STEP)
-                                )
-                            }
-                            className="p-1 hover:bg-indigo-100"
-                        >
-                            <Minus size={14} />
-                        </button>
-                    </div>
-                    <span className="font-mono font-bold text-xs bg-white px-2 py-0.5 rounded border border-indigo-200">
-                        {height}px
-                    </span>
-                    <div className="flex items-center bg-white rounded border border-indigo-200 overflow-hidden">
-                        <button
-                            onClick={() =>
-                                updateHeight(id, height + SMALL_STEP)
-                            }
-                            className="p-1 hover:bg-indigo-100 border-r border-indigo-100"
-                        >
-                            <Plus size={14} />
-                        </button>
-                        <button
-                            onClick={() => updateHeight(id, height + BIG_STEP)}
-                            className="p-1 hover:bg-indigo-100"
-                        >
-                            <ChevronsDown size={14} />
-                        </button>
-                    </div>
-                    {height > 0 && (
-                        <button
-                            onClick={() => updateHeight(id, 0)}
-                            className="absolute right-2 text-red-400 hover:text-red-600"
-                        >
-                            <RotateCcw size={14} />
-                        </button>
-                    )}
-                    <div className="absolute left-2 text-[9px] uppercase tracking-wider font-bold opacity-50">
-                        Spacer
-                    </div>
+            <div className="h-10 bg-indigo-50 border border-dashed border-indigo-300 rounded flex items-center justify-center gap-2 text-indigo-700 select-none relative opacity-70 hover:opacity-100">
+                <div className="flex items-center bg-white rounded border border-indigo-200 overflow-hidden">
+                    <button
+                        onClick={() =>
+                            updateHeight(id, Math.max(0, height - BIG_STEP))
+                        }
+                        className="p-1 hover:bg-indigo-100 border-r border-indigo-100"
+                    >
+                        <ChevronsUp size={14} />
+                    </button>
+                    <button
+                        onClick={() =>
+                            updateHeight(id, Math.max(0, height - SMALL_STEP))
+                        }
+                        className="p-1 hover:bg-indigo-100"
+                    >
+                        <Minus size={14} />
+                    </button>
                 </div>
-            )}
+                <span className="font-mono font-bold text-xs bg-white px-2 py-0.5 rounded border border-indigo-200">
+                    {height}px
+                </span>
+                <div className="flex items-center bg-white rounded border border-indigo-200 overflow-hidden">
+                    <button
+                        onClick={() => updateHeight(id, height + SMALL_STEP)}
+                        className="p-1 hover:bg-indigo-100 border-r border-indigo-100"
+                    >
+                        <Plus size={14} />
+                    </button>
+                    <button
+                        onClick={() => updateHeight(id, height + BIG_STEP)}
+                        className="p-1 hover:bg-indigo-100"
+                    >
+                        <ChevronsDown size={14} />
+                    </button>
+                </div>
+                {height > 0 && (
+                    <button
+                        onClick={() => updateHeight(id, 0)}
+                        className="absolute right-2 text-red-400 hover:text-red-600"
+                    >
+                        <RotateCcw size={14} />
+                    </button>
+                )}
+                <div className="absolute left-2 text-[9px] uppercase tracking-wider font-bold opacity-50">
+                    Spacer
+                </div>
+            </div>
         </div>
     );
 };
@@ -309,7 +313,7 @@ export default function QuotePreview() {
     const [isPDFMode, setIsPDFMode] = useState(false);
     const [scale, setScale] = useState(1);
     const [spacers, setSpacers] = useState({});
-    const [showSpacers, setShowSpacers] = useState(false);
+    const [showSpacers, setShowSpacers] = useState(false); // Default FALSE
     const [isAdjusting, setIsAdjusting] = useState(false);
     const [pageBreaks, setPageBreaks] = useState([]);
 
@@ -374,10 +378,10 @@ export default function QuotePreview() {
         setPageBreaks(breaks);
     };
 
-    const handleAutoAdjust = () => {
+    const handleAutoAdjust = (showUi = true) => {
         if (!mainRef.current) return;
         setIsAdjusting(true);
-        setShowSpacers(true);
+        if (showUi) setShowSpacers(true); // Only show UI on manual click
         setSpacers({});
 
         setTimeout(() => {
@@ -414,13 +418,11 @@ export default function QuotePreview() {
         }, 200);
     };
 
-    // --- Scaling Logic for Mobile Viewing ---
-    // This ensures the 794px A4 paper shrinks to fit a 375px phone screen visually,
-    // but remains 794px in the DOM for the PDF generator.
+    // --- Effects for Scale and Auto-Adjust ---
     useEffect(() => {
         const handleResize = () => {
-            const w = window.innerWidth - 32; // Screen width minus padding
-            const target = 794; // Fixed A4 width in px
+            const w = window.innerWidth - 32;
+            const target = 794;
             setScale(w < target ? w / target : 1);
         };
         handleResize();
@@ -428,9 +430,10 @@ export default function QuotePreview() {
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
+    // Run auto-adjust silently on load (don't show blue boxes)
     useLayoutEffect(() => {
         if (!loading && windowList.length > 0)
-            setTimeout(handleAutoAdjust, 500);
+            setTimeout(() => handleAutoAdjust(false), 500);
     }, [loading, windowList]);
 
     // --- PDF Logic ---
@@ -508,9 +511,22 @@ export default function QuotePreview() {
                 }`}
             >
                 <h1 className="text-xl font-bold text-gray-800">Preview</h1>
-                <div className="flex flex-wrap justify-center gap-2">
+                <div className="flex flex-wrap justify-center gap-2 items-center">
+                    {/* GST Toggle Checkbox */}
+                    <div className="flex items-center bg-white border rounded px-3 py-1.5 shadow-sm text-xs mr-2">
+                        <label className="flex items-center gap-2 cursor-pointer font-medium select-none">
+                            <input
+                                type="checkbox"
+                                checked={applyGST}
+                                onChange={(e) => setApplyGST(e.target.checked)}
+                                className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                            />
+                            Enable GST
+                        </label>
+                    </div>
+
                     <button
-                        onClick={handleAutoAdjust}
+                        onClick={() => handleAutoAdjust(true)}
                         disabled={isAdjusting}
                         className="px-3 py-1.5 bg-white border border-purple-200 text-purple-700 rounded text-xs font-medium hover:bg-purple-50 flex items-center gap-1"
                     >
@@ -549,7 +565,6 @@ export default function QuotePreview() {
 
             {/* --- A4 Paper Container --- */}
             <div className="flex justify-center pb-20">
-                {/* Scale container ensures full 794px content is visible on small screens */}
                 <div
                     style={{
                         transform: `scale(${scale})`,
@@ -557,6 +572,7 @@ export default function QuotePreview() {
                     }}
                 >
                     <div className="relative">
+                        {/* Page Break Lines */}
                         {!isPDFMode &&
                             showSpacers &&
                             pageBreaks.map((y, i) => (
@@ -571,7 +587,7 @@ export default function QuotePreview() {
                                 </div>
                             ))}
 
-                        {/* THE PRINTABLE NODE - FIXED WIDTH to prevent mobile squishing */}
+                        {/* THE PRINTABLE NODE */}
                         <div
                             ref={mainRef}
                             style={{ width: "794px", minHeight: "1123px" }}
@@ -620,7 +636,7 @@ export default function QuotePreview() {
                                             </div>
                                         )}
                                     </div>
-                                    <div className="mt-4  px-3 py-1.5 text-sm font-bold text-gray-800">
+                                    <div className="mt-4 bg-gray-100 px-3 py-1.5 text-sm font-bold text-gray-800 border border-gray-200">
                                         Date:{" "}
                                         {new Date().toLocaleDateString("en-IN")}
                                     </div>
@@ -694,7 +710,7 @@ export default function QuotePreview() {
                                             </div>
                                             <div className="flex-1 p-4 text-xs text-gray-800 flex flex-col">
                                                 <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-3">
-                                                    <span className="font-extrabold text-sm  text-slate-800 px-2 py-0.5 rounded-sm">
+                                                    <span className="font-extrabold text-sm bg-slate-800 text-white px-2 py-0.5 rounded-sm">
                                                         Window {index + 1}
                                                     </span>
                                                     <span className="font-bold text-slate-600 uppercase tracking-wider">
@@ -832,32 +848,121 @@ export default function QuotePreview() {
                                             <span>Subtotal</span>
                                             <span>{formatINR(subtotal)}</span>
                                         </div>
-                                        <div className="flex justify-between text-slate-600">
+
+                                        {/* PACKING CHARGES INPUT */}
+                                        <div className="flex justify-between text-slate-600 items-center">
                                             <span>Packing</span>
-                                            <span>
-                                                {formatINR(packingCharges)}
-                                            </span>
+                                            {isPDFMode ? (
+                                                <span>
+                                                    {formatINR(packingCharges)}
+                                                </span>
+                                            ) : (
+                                                <div className="flex items-center border-b border-slate-300">
+                                                    <span className="text-gray-500 mr-1 text-xs">
+                                                        ₹
+                                                    </span>
+                                                    <input
+                                                        type="number"
+                                                        value={packingCharges}
+                                                        onChange={(e) =>
+                                                            setPackingCharges(
+                                                                Number(
+                                                                    e.target
+                                                                        .value
+                                                                )
+                                                            )
+                                                        }
+                                                        className="w-20 text-right outline-none bg-transparent font-semibold text-slate-700"
+                                                        placeholder="0"
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
+
+                                        {/* GST SECTION (CONDITIONAL) */}
                                         {applyGST && (
                                             <>
-                                                <div className="flex justify-between text-slate-600">
-                                                    <span>
-                                                        CGST ({cgstPerc}%)
-                                                    </span>
+                                                <div className="flex justify-between text-slate-600 items-center">
+                                                    <div className="flex items-center gap-1">
+                                                        <span>CGST</span>
+                                                        {isPDFMode ? (
+                                                            <span className="text-xs">
+                                                                (@{cgstPerc}%)
+                                                            </span>
+                                                        ) : (
+                                                            <div className="flex items-center">
+                                                                <span>(@</span>
+                                                                <input
+                                                                    type="number"
+                                                                    className="w-6 text-center border-b border-slate-300 text-xs mx-0.5 bg-transparent outline-none"
+                                                                    value={
+                                                                        cgstPerc
+                                                                    }
+                                                                    onChange={(
+                                                                        e
+                                                                    ) => {
+                                                                        const val =
+                                                                            Number(
+                                                                                e
+                                                                                    .target
+                                                                                    .value
+                                                                            );
+                                                                        setCgstPerc(
+                                                                            val
+                                                                        );
+                                                                        setSgstPerc(
+                                                                            val
+                                                                        ); // Usually identical
+                                                                    }}
+                                                                />
+                                                                <span>%)</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                     <span>
                                                         {formatINR(cgstAmount)}
                                                     </span>
                                                 </div>
-                                                <div className="flex justify-between text-slate-600">
-                                                    <span>
-                                                        SGST ({sgstPerc}%)
-                                                    </span>
+
+                                                <div className="flex justify-between text-slate-600 items-center">
+                                                    <div className="flex items-center gap-1">
+                                                        <span>SGST</span>
+                                                        {isPDFMode ? (
+                                                            <span className="text-xs">
+                                                                (@{sgstPerc}%)
+                                                            </span>
+                                                        ) : (
+                                                            <div className="flex items-center">
+                                                                <span>(@</span>
+                                                                <input
+                                                                    type="number"
+                                                                    className="w-6 text-center border-b border-slate-300 text-xs mx-0.5 bg-transparent outline-none"
+                                                                    value={
+                                                                        sgstPerc
+                                                                    }
+                                                                    onChange={(
+                                                                        e
+                                                                    ) =>
+                                                                        setSgstPerc(
+                                                                            Number(
+                                                                                e
+                                                                                    .target
+                                                                                    .value
+                                                                            )
+                                                                        )
+                                                                    }
+                                                                />
+                                                                <span>%)</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                     <span>
                                                         {formatINR(sgstAmount)}
                                                     </span>
                                                 </div>
                                             </>
                                         )}
+
                                         <div className="border-t-2 border-slate-900 pt-2 mt-2 flex justify-between items-center">
                                             <span className="font-bold text-lg">
                                                 Total
@@ -937,7 +1042,7 @@ export default function QuotePreview() {
                                                 <span className="text-slate-500">
                                                     Branch:
                                                 </span>
-                                                <span className="font-bold">
+                                                <span>
                                                     CHANDRESH NAGAR, MAVDI
                                                 </span>
                                                 <span className="text-slate-500">
