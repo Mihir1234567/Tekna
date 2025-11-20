@@ -1,4 +1,3 @@
-// src/pages/QuotePreview.jsx
 import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
@@ -8,26 +7,17 @@ import {
   ChevronsDown,
   Plus,
   Minus,
-  Ruler,
   Wand2,
   Printer,
-  Download,
-  Phone,
-  Mail,
-  FileText,
-  Calendar,
-  User,
-  Briefcase,
-  CreditCard,
   Save,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import logo from "../assets/logo.png";
-import { apiGet, apiPut } from "../utils/api"; // Assuming apiPut exists or using fetch
+import logo from "../assets/logo.png"; // Ensure this path is correct
+import { apiGet } from "../utils/api"; // Removed apiPut for brevity, add back if needed
 import { getToken } from "../utils/auth";
 
-/* --- 1. Helper Functions --- */
+/* --- 1. Helper Functions & Sub-Components --- */
 const formatINR = (val) => {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -37,16 +27,13 @@ const formatINR = (val) => {
   }).format(val || 0);
 };
 
-/* --- 2. Window Sketch Component --- */
 const WindowSketch = ({ width, height, type = "normal" }) => {
   const boxSize = 140;
   const strokeColor = "#1f2937";
   const glassColor = "#f8fafc";
-
   const w = Math.max(1, Number(width));
   const h = Math.max(1, Number(height));
   const aspect = w / h;
-
   let drawW, drawH;
   if (aspect > 1) {
     drawW = boxSize;
@@ -55,14 +42,13 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
     drawH = boxSize;
     drawW = boxSize * aspect;
   }
-
   const startX = (200 - drawW) / 2;
   const startY = (200 - drawH) / 2;
 
   return (
     <div className="w-full h-full flex items-center justify-center">
       <svg width="200" height="200" viewBox="0 0 200 200">
-        {/* --- Dimension Lines --- */}
+        {/* Dimension Lines */}
         <line
           x1={startX}
           y1={startY + drawH + 10}
@@ -87,7 +73,6 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
           stroke="#94a3b8"
           strokeWidth="1"
         />
-
         <line
           x1={startX - 10}
           y1={startY}
@@ -112,8 +97,7 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
           stroke="#94a3b8"
           strokeWidth="1"
         />
-
-        {/* --- DIMENSION TEXT --- */}
+        {/* Text */}
         <text
           x={startX + drawW / 2}
           y={startY + drawH + 24}
@@ -127,7 +111,6 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
         >
           {width}"
         </text>
-
         <text
           x={startX - 20}
           y={startY + drawH / 2}
@@ -142,8 +125,7 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
         >
           {height}"
         </text>
-
-        {/* --- Main Window Frame --- */}
+        {/* Window Frame */}
         <rect
           x={startX}
           y={startY}
@@ -161,8 +143,7 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
           stroke="#e2e8f0"
           strokeWidth="1"
         />
-
-        {/* --- Inner Details --- */}
+        {/* Type Logic */}
         {type.toLowerCase().includes("slider") ? (
           <>
             <line
@@ -217,15 +198,11 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
   );
 };
 
-/* --- 3. Manual Spacer Component --- */
 const ManualSpacer = ({ id, height, updateHeight, visible, pdfMode }) => {
-  if (pdfMode) {
+  if (pdfMode)
     return height > 0 ? <div style={{ height: `${height}px` }} /> : null;
-  }
   if (!visible && height === 0) return null;
-  if (!visible && height > 0) {
-    return <div style={{ height: `${height}px` }} />;
-  }
+  if (!visible && height > 0) return <div style={{ height: `${height}px` }} />;
 
   const SMALL_STEP = 20;
   const BIG_STEP = 100;
@@ -275,24 +252,357 @@ const ManualSpacer = ({ id, height, updateHeight, visible, pdfMode }) => {
             <RotateCcw size={14} />
           </button>
         )}
-        <div className="absolute left-2 text-[9px] uppercase tracking-wider font-bold opacity-50">
-          Spacer
-        </div>
       </div>
     </div>
   );
 };
 
-/* --- 4. Main Component --- */
+/* --- 2. The Reusable Template (Used for both Screen & Print) --- */
+const QuoteTemplate = React.forwardRef(
+  (
+    {
+      data,
+      financials,
+      spacers,
+      showSpacers,
+      updateSpacer,
+      isPDFMode,
+      itemRefs, // Pass ref collector only for the visible instance
+    },
+    ref
+  ) => {
+    const { windowList, clientDetails } = data;
+    const {
+      applyGST,
+      cgstPerc,
+      sgstPerc,
+      packingCharges,
+      subtotal,
+      totalSqFt,
+      cgstAmount,
+      sgstAmount,
+      grandTotal,
+    } = financials;
+
+    // Helper to assign ref only if itemRefs is provided (Visible Mode)
+    const setRef = (key, el) => {
+      if (itemRefs && itemRefs.current) {
+        itemRefs.current[key] = el;
+      }
+    };
+
+    return (
+      <div
+        ref={ref}
+        style={{ width: "794px", minHeight: "1123px" }}
+        className="bg-white shadow-2xl p-10 relative text-gray-900 mx-auto"
+      >
+        {/* HEADER */}
+        <header
+          ref={(el) => setRef("header", el)}
+          className="flex justify-between items-start pb-6 border-b-2 border-gray-900 mb-8"
+        >
+          <div className="flex flex-col items-start text-left w-2/3">
+            <h1 className="text-3xl font-extrabold tracking-wide text-gray-900 mb-1">
+              TEKNA WINDOW SYSTEM
+            </h1>
+            <p className="text-sm text-gray-700">
+              VAVDI INDUSTRY AREA, VAVDI MAIN ROAD
+            </p>
+            <p className="text-sm text-gray-700 mb-4">RAJKOT, GUJARAT</p>
+            <div className="text-sm space-y-1 text-gray-700">
+              <p>
+                <strong>Mobile:</strong> 9825256525
+              </p>
+              <p>
+                <strong>Email:</strong> TEKNAWIN01@GMAIL.COM
+              </p>
+              <p>
+                <strong>GSTIN:</strong> 24AMIPS5762R1Z4
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col items-end text-right w-1/3">
+            <div className="h-20 mb-2 relative">
+              {logo ? (
+                <img src={logo} alt="Logo" className="h-full object-contain" />
+              ) : (
+                <div className="h-full w-24 bg-red-100 text-red-500 flex items-center justify-center font-bold">
+                  TWS
+                </div>
+              )}
+            </div>
+            <div className="mt-4 px-3 py-1.5 text-sm font-bold text-gray-800">
+              Date: {new Date().toLocaleDateString("en-IN")}
+            </div>
+          </div>
+        </header>
+
+        {/* CLIENT INFO */}
+        <section className="mb-10">
+          <div className="grid grid-cols-4 gap-4 text-sm bg-slate-50 p-4 rounded border border-slate-200">
+            <div>
+              <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1">
+                Client
+              </span>
+              <span className="font-bold text-gray-900">
+                {clientDetails.clientName || "—"}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1">
+                Project
+              </span>
+              <span className="font-bold text-gray-900">
+                {clientDetails.project || "—"}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1">
+                Quote No
+              </span>
+              <span className="font-bold text-indigo-700 font-mono">
+                {data.id || "—"}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1">
+                Finish
+              </span>
+              <span className="font-bold text-gray-900">
+                {clientDetails.finish || "—"}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* WINDOWS */}
+        <section className="mb-10 space-y-6">
+          {windowList.map((win, index) => (
+            <React.Fragment key={index}>
+              <ManualSpacer
+                id={`w-${index}`}
+                visible={showSpacers}
+                pdfMode={isPDFMode}
+                height={spacers[`w-${index}`] || 0}
+                updateHeight={updateSpacer}
+              />
+              <div
+                ref={(el) => setRef(`w-${index}`, el)}
+                className="break-inside-avoid border border-gray-300 rounded-sm overflow-hidden flex"
+              >
+                <div className="w-[180px] border-r border-gray-300 p-2 flex items-center justify-center bg-white">
+                  <WindowSketch
+                    width={win.width}
+                    height={win.height}
+                    type={win.windowType}
+                  />
+                </div>
+                <div className="flex-1 p-4 text-xs text-gray-800 flex flex-col">
+                  <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-3">
+                    <span className="font-extrabold text-sm text-slate-800 px-2 py-0.5 rounded-sm">
+                      Window {index + 1}
+                    </span>
+                    <span className="font-bold text-slate-600 uppercase tracking-wider">
+                      {win.windowType}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-[85px_1fr] gap-y-1.5 leading-tight">
+                    <span className="font-bold text-slate-500">Size:</span>
+                    <span>
+                      W {win.width}" x H {win.height}"
+                    </span>
+                    <span className="font-bold text-slate-500">Profile:</span>
+                    <span className="uppercase">
+                      {win.profileSystem || "-"}
+                    </span>
+                    <span className="font-bold text-slate-500">Glass:</span>
+                    <span className="uppercase">{win.glassType || "-"}</span>
+                    <span className="font-bold text-slate-500">Mesh:</span>
+                    <span className="uppercase">{win.mess || "-"}</span>
+                    <span className="font-bold text-slate-500">Hardware:</span>
+                    <span className="uppercase">{win.hardware || "-"}</span>
+                  </div>
+                </div>
+                <div className="w-[140px] border-l border-gray-300 bg-slate-50 p-4 flex flex-col justify-center gap-2 text-right">
+                  <div>
+                    <span className="block text-[10px] font-bold text-slate-400 uppercase">
+                      Area
+                    </span>
+                    <span className="font-bold text-slate-800">
+                      {Number(win.sqFt).toFixed(2)} sq.ft
+                    </span>
+                  </div>
+                  <div>
+                    <span className="block text-[10px] font-bold text-slate-400 uppercase">
+                      Rate
+                    </span>
+                    <span className="font-bold text-slate-800">
+                      ₹{win.pricePerFt}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="block text-[10px] font-bold text-slate-400 uppercase">
+                      Qty
+                    </span>
+                    <span className="font-bold text-slate-800">
+                      {win.quantity} pcs
+                    </span>
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-slate-300">
+                    <span className="block text-[10px] font-bold text-indigo-600 uppercase">
+                      Amount
+                    </span>
+                    <span className="font-bold text-lg text-indigo-900">
+                      {formatINR(win.amount)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </React.Fragment>
+          ))}
+        </section>
+
+        <ManualSpacer
+          id="spacer-totals"
+          visible={showSpacers}
+          pdfMode={isPDFMode}
+          height={spacers["spacer-totals"] || 0}
+          updateHeight={updateSpacer}
+        />
+
+        {/* SUMMARY */}
+        <section
+          ref={(el) => setRef("totals", el)}
+          className="break-inside-avoid flex justify-end mb-10"
+        >
+          <div className="w-1/2 border border-slate-900 p-0">
+            <div className="bg-slate-900 text-white px-4 py-2 text-sm font-bold uppercase tracking-wider">
+              Quote Summary
+            </div>
+            <div className="p-4 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Total Windows</span>
+                <span className="font-bold">{windowList.length} pcs</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Total Area</span>
+                <span className="font-bold">
+                  {Number(totalSqFt).toFixed(2)} Sq.ft
+                </span>
+              </div>
+              <div className="border-t border-slate-200 my-2"></div>
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>{formatINR(subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-slate-600 items-center">
+                <span>Packing</span>
+                <span>{formatINR(packingCharges)}</span>
+              </div>
+              {applyGST && (
+                <>
+                  <div className="flex justify-between text-slate-600 items-center">
+                    <span>
+                      CGST <span className="text-xs">(@{cgstPerc}%)</span>
+                    </span>
+                    <span>{formatINR(cgstAmount)}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600 items-center">
+                    <span>
+                      SGST <span className="text-xs">(@{sgstPerc}%)</span>
+                    </span>
+                    <span>{formatINR(sgstAmount)}</span>
+                  </div>
+                </>
+              )}
+              <div className="border-t-2 border-slate-900 pt-2 mt-2 flex justify-between items-center">
+                <span className="font-bold text-lg">Total</span>
+                <span className="font-bold text-xl text-indigo-700">
+                  {formatINR(grandTotal)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <ManualSpacer
+          id="spacer-footer"
+          visible={showSpacers}
+          pdfMode={isPDFMode}
+          height={spacers["spacer-footer"] || 0}
+          updateHeight={updateSpacer}
+        />
+
+        {/* FOOTER */}
+        <section
+          ref={(el) => setRef("footer", el)}
+          className="break-inside-avoid pt-4 border-t border-gray-200"
+        >
+          <div className="grid grid-cols-2 gap-8">
+            <div className="text-[10px] text-gray-600 leading-relaxed">
+              <h5 className="font-bold text-gray-900 mb-2 border-b border-gray-300 pb-1 uppercase">
+                Terms & Conditions
+              </h5>
+              <ul className="list-disc pl-4 space-y-0.5">
+                <li>Quotation valid for 1 week. Rates subject to change.</li>
+                <li>Size calculated in 3-inch steps (Width/Height).</li>
+                <li>Design changes post-confirmation charged extra.</li>
+                <li>No warranty on glass after installation.</li>
+                <li>Payment: 70% Advance, 20% Dispatch, 10% Install.</li>
+                <li>Subject to Rajkot Jurisdiction.</li>
+              </ul>
+            </div>
+            <div>
+              <div className="bg-slate-50 p-3 border border-slate-200 rounded mb-6 text-xs">
+                <h5 className="font-bold text-gray-900 mb-2 border-b border-slate-200 pb-1 uppercase">
+                  Bank Details
+                </h5>
+                <div className="grid grid-cols-[70px_1fr] gap-y-1">
+                  <span className="text-slate-500">Bank:</span>
+                  <span className="font-bold">STATE BANK OF INDIA</span>
+                  <span className="text-slate-500">A/C:</span>
+                  <span className="font-mono font-bold">34200993101</span>
+                  <span className="text-slate-500">IFSC:</span>
+                  <span className="font-mono font-bold">SBIN0060314</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-end gap-4 text-xs font-bold text-center">
+                <div className="flex-1">
+                  <div className="h-10 border-b border-gray-400 mb-1"></div>
+                  <p>TEKNA WINDOWS</p>
+                </div>
+                <div className="flex-1">
+                  <div className="h-10 border-b border-gray-400 mb-1"></div>
+                  <p>CUSTOMER SIGN</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="text-center text-[10px] text-gray-400 mt-8">
+            Generated by TEKNA Window Systems
+          </div>
+        </section>
+      </div>
+    );
+  }
+);
+
+/* --- 3. Main Component --- */
 export default function QuotePreview() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { id } = useParams();
-  const mainRef = useRef(null);
+
+  // REFS
+  const mainRef = useRef(null); // Visible (Scaled)
+  const mainRefPrint = useRef(null); // Hidden (Full Size)
   const itemRefs = useRef({});
+
   const apiBaseUrl =
     import.meta.env.REACT_APP_API_BASE || "https://tekna-ryyc.onrender.com";
 
+  // STATE
   const [windowList, setWindowList] = useState([]);
   const [clientDetails, setClientDetails] = useState({
     clientName: "",
@@ -301,7 +611,7 @@ export default function QuotePreview() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isSaving, setIsSaving] = useState(false); // For Save Button State
+  const [isSaving, setIsSaving] = useState(false);
 
   const [isPDFMode, setIsPDFMode] = useState(false);
   const [scale, setScale] = useState(1);
@@ -310,19 +620,25 @@ export default function QuotePreview() {
   const [isAdjusting, setIsAdjusting] = useState(false);
   const [pageBreaks, setPageBreaks] = useState([]);
 
+  // Financials
   const [applyGST, setApplyGST] = useState(true);
   const [cgstPerc, setCgstPerc] = useState(9);
   const [sgstPerc, setSgstPerc] = useState(9);
   const [packingCharges, setPackingCharges] = useState(0);
+
+  // Derived Financials
+  const subtotal = windowList.reduce((s, w) => s + Number(w.amount || 0), 0);
+  const totalSqFt = windowList.reduce((s, w) => s + Number(w.sqFt || 0), 0);
+  const cgstAmount = applyGST ? (subtotal * cgstPerc) / 100 : 0;
+  const sgstAmount = applyGST ? (subtotal * sgstPerc) / 100 : 0;
+  const grandTotal = subtotal + packingCharges + cgstAmount + sgstAmount;
 
   // --- Fetch Data ---
   useEffect(() => {
     const fetchData = async () => {
       if (state?.windowList) {
         setWindowList(state.windowList);
-        if (state.clientInfo) {
-          setClientDetails(state.clientInfo);
-        }
+        if (state.clientInfo) setClientDetails(state.clientInfo);
         setLoading(false);
       } else if (id) {
         try {
@@ -334,11 +650,8 @@ export default function QuotePreview() {
             project: data.quote.project || "",
             finish: data.quote.finish || "",
           });
-          // Load Saved Financial Data if available
           if (data.quote) {
-            setApplyGST(
-              data.quote.applyGST !== undefined ? data.quote.applyGST : true
-            );
+            setApplyGST(data.quote.applyGST ?? true);
             setCgstPerc(data.quote.cgstPerc || 9);
             setSgstPerc(data.quote.sgstPerc || 9);
             setPackingCharges(data.quote.packingCharges || 0);
@@ -356,33 +669,22 @@ export default function QuotePreview() {
     fetchData();
   }, [id, state]);
 
-  // --- Calculations ---
-  const subtotal = windowList.reduce((s, w) => s + Number(w.amount || 0), 0);
-  const totalSqFt = windowList.reduce((s, w) => s + Number(w.sqFt || 0), 0);
-  const cgstAmount = applyGST ? (subtotal * cgstPerc) / 100 : 0;
-  const sgstAmount = applyGST ? (subtotal * sgstPerc) / 100 : 0;
-  const grandTotal = subtotal + packingCharges + cgstAmount + sgstAmount;
-
-  // --- API Call to Save Data ---
+  // --- Save Data ---
   const handleSaveQuote = async () => {
-    if (!id) return; // Can't save if no ID
+    if (!id) return;
     setIsSaving(true);
     try {
       const token = getToken();
       const payload = {
-        // We are just updating financial fields here, but usually PUT requires full object or PATCH
-        // Assuming we can send partial updates or need to send full state
         applyGST,
         cgstPerc,
         sgstPerc,
         packingCharges,
-        // Re-sending existing data to be safe, depends on API implementation
         windows: windowList,
         clientName: clientDetails.clientName,
         project: clientDetails.project,
         finish: clientDetails.finish,
       };
-
       const res = await fetch(`${apiBaseUrl}/api/quotes/${id}`, {
         method: "PUT",
         headers: {
@@ -391,7 +693,6 @@ export default function QuotePreview() {
         },
         body: JSON.stringify(payload),
       });
-
       if (!res.ok) throw new Error("Failed to save");
       alert("Quote Saved Successfully!");
     } catch (err) {
@@ -402,7 +703,7 @@ export default function QuotePreview() {
     }
   };
 
-  // --- Core Logic ---
+  // --- Auto Layout Logic ---
   const updateSpacer = (key, val) =>
     setSpacers((prev) => ({ ...prev, [key]: val }));
 
@@ -429,10 +730,13 @@ export default function QuotePreview() {
       const pageHeightPx = 1123;
       const newSpacers = {};
       let totalAddedMargin = 0;
-      const keys = ["header"];
-      windowList.forEach((_, i) => keys.push(`w-${i}`));
-      keys.push("totals");
-      keys.push("footer");
+      const keys = [
+        "header",
+        ...windowList.map((_, i) => `w-${i}`),
+        "totals",
+        "footer",
+      ];
+
       keys.forEach((key) => {
         const el = itemRefs.current[key];
         if (!el) return;
@@ -441,6 +745,7 @@ export default function QuotePreview() {
         const currentBottom = naturalTop + height;
         const startPage = Math.floor(naturalTop / pageHeightPx);
         const endPage = Math.floor(currentBottom / pageHeightPx);
+
         if (startPage !== endPage) {
           const nextPageStart = (startPage + 1) * pageHeightPx;
           const spaceNeeded = nextPageStart - naturalTop + 50;
@@ -459,6 +764,70 @@ export default function QuotePreview() {
     }, 200);
   };
 
+  // --- PDF GENERATION (THE SILVER BULLET FIX) ---
+  const downloadPDF = async () => {
+    const printNode = mainRefPrint.current; // Target the HIDDEN node
+    if (!printNode) return;
+
+    setIsPDFMode(true); // Hide spacers in UI for cleanliness
+
+    // Wait for React to hide spacers (if they were visible)
+    await new Promise((r) => setTimeout(r, 200));
+
+    // Force DPR to avoid pixel shrinking on high-res mobile screens
+    const originalDPR = window.devicePixelRatio;
+    // Temporary override to ensure 1:1 pixel mapping
+    Object.defineProperty(window, "devicePixelRatio", {
+      writable: true,
+      configurable: true,
+      value: 1,
+    });
+
+    try {
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+
+      const canvas = await html2canvas(printNode, {
+        scale: 2, // High quality
+        width: 794, // Fixed A4 width
+        useCORS: true,
+        scrollY: 0,
+        windowWidth: 1200, // Force desktop layout emulation
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const imgHeight = (canvas.height * pdfW) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfW, imgHeight);
+      heightLeft -= pdfH;
+
+      while (heightLeft > 0) {
+        position += pdfH;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, -position, pdfW, imgHeight);
+        heightLeft -= pdfH;
+      }
+
+      pdf.save(`${clientDetails.clientName || "Quotation"}.pdf`);
+    } catch (error) {
+      console.error("PDF Gen Error:", error);
+      alert("Failed to generate PDF");
+    } finally {
+      // Restore DPR
+      Object.defineProperty(window, "devicePixelRatio", {
+        writable: true,
+        configurable: true,
+        value: originalDPR,
+      });
+      setIsPDFMode(false);
+    }
+  };
+
+  // --- Screen Resize for Preview ---
   useEffect(() => {
     const handleResize = () => {
       const w = window.innerWidth - 32;
@@ -475,63 +844,6 @@ export default function QuotePreview() {
       setTimeout(() => handleAutoAdjust(false), 500);
   }, [loading, windowList]);
 
-const downloadPDF = async () => {
-  const container = mainRef.current;
-  if (!container) return;
-
-  setIsPDFMode(true);
-  setShowSpacers(false);
-  await new Promise((r) => setTimeout(r, 300));
-
-  // FIX: disable high-DPR on phones
-  const originalDPR = window.devicePixelRatio;
-  Object.defineProperty(window, "devicePixelRatio", {
-    get: () => 1,
-  });
-
-  // Generate canvas in DESKTOP width
-  const pdf = new jsPDF("p", "mm", "a4");
-  const pdfW = pdf.internal.pageSize.getWidth();
-  const pdfH = pdf.internal.pageSize.getHeight();
-
-  const canvas = await html2canvas(container, {
-    scale: 2,
-    useCORS: true,
-    width: 794,
-    height: container.scrollHeight,
-    windowWidth: 1200,
-    windowHeight: container.scrollHeight,
-    scrollY: 0,
-  });
-
-  const imgData = canvas.toDataURL("image/png");
-  const imgProps = pdf.getImageProperties(imgData);
-  const imgHeight = (imgProps.height * pdfW) / imgProps.width;
-
-  let heightLeft = imgHeight;
-  let position = 0;
-
-  pdf.addImage(imgData, "PNG", 0, 0, pdfW, imgHeight);
-  heightLeft -= pdfH;
-
-  while (heightLeft > 0) {
-    pdf.addPage();
-    pdf.addImage(imgData, "PNG", 0, -position - pdfH, pdfW, imgHeight);
-    heightLeft -= pdfH;
-    position += pdfH;
-  }
-
-  pdf.save(`${clientDetails.clientName || "Quotation"}.pdf`);
-
-  // restore DPR
-  Object.defineProperty(window, "devicePixelRatio", {
-    get: () => originalDPR,
-  });
-
-  setIsPDFMode(false);
-};
-
-
   if (loading)
     return (
       <div className="h-screen flex items-center justify-center">
@@ -545,32 +857,70 @@ const downloadPDF = async () => {
       </div>
     );
 
+  // Combine props for cleaner passing
+  const templateProps = {
+    data: { windowList, clientDetails, id },
+    financials: {
+      applyGST,
+      cgstPerc,
+      sgstPerc,
+      packingCharges,
+      subtotal,
+      totalSqFt,
+      cgstAmount,
+      sgstAmount,
+      grandTotal,
+    },
+    spacers,
+    showSpacers,
+    updateSpacer,
+    isPDFMode,
+  };
+
   return (
-    <div
-      className={`bg-gray-100 p-4 font-sans text-gray-800 ${
-        isPDFMode ? "min-h-screen" : "h-screen overflow-y-auto w-full"
-      }`}
-    >
+    <div className="bg-gray-100 p-4 font-sans text-gray-800 h-screen overflow-y-auto w-full">
       {/* --- Toolbar --- */}
-      <div
-        className={`max-w-[794px] mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4 ${
-          isPDFMode ? "hidden" : ""
-        }`}
-      >
+      <div className="max-w-[794px] mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <h1 className="text-xl font-bold text-gray-800">Preview</h1>
         <div className="flex flex-wrap justify-center gap-2 items-center">
-          {/* GST Toggle Checkbox */}
+          {/* GST Toggle */}
           <div className="flex items-center bg-white border rounded px-3 py-1.5 shadow-sm text-xs mr-2">
             <label className="flex items-center gap-2 cursor-pointer font-medium select-none">
               <input
                 type="checkbox"
                 checked={applyGST}
                 onChange={(e) => setApplyGST(e.target.checked)}
-                className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                className="w-4 h-4 text-indigo-600 rounded"
               />
               Enable GST
             </label>
           </div>
+          {/* GST Inputs */}
+          {applyGST && (
+            <>
+              <input
+                type="number"
+                value={cgstPerc}
+                onChange={(e) => setCgstPerc(Number(e.target.value))}
+                className="w-12 p-1 text-xs border rounded text-center"
+                placeholder="CGST"
+              />
+              <input
+                type="number"
+                value={sgstPerc}
+                onChange={(e) => setSgstPerc(Number(e.target.value))}
+                className="w-12 p-1 text-xs border rounded text-center"
+                placeholder="SGST"
+              />
+            </>
+          )}
+          <input
+            type="number"
+            value={packingCharges}
+            onChange={(e) => setPackingCharges(Number(e.target.value))}
+            className="w-16 p-1 text-xs border rounded text-center"
+            placeholder="Pack."
+          />
 
           <button
             onClick={() => handleAutoAdjust(true)}
@@ -584,8 +934,6 @@ const downloadPDF = async () => {
             )}{" "}
             Auto-Layout
           </button>
-
-          {/* TWO SEPARATE BUTTONS: SAVE and DOWNLOAD */}
           <button
             onClick={handleSaveQuote}
             disabled={isSaving}
@@ -598,14 +946,12 @@ const downloadPDF = async () => {
             )}{" "}
             Save
           </button>
-
           <button
             onClick={downloadPDF}
             className="px-4 py-1.5 bg-gray-800 text-white rounded text-xs font-medium hover:bg-gray-900 flex items-center gap-2"
           >
             <Printer size={14} /> Download PDF
           </button>
-
           <button
             onClick={() => navigate(-1)}
             className="px-3 py-1.5 bg-white border rounded text-xs font-medium hover:bg-gray-50"
@@ -615,7 +961,7 @@ const downloadPDF = async () => {
         </div>
       </div>
 
-      {/* --- A4 Paper Container --- */}
+      {/* --- VISIBLE SCREEN PREVIEW (SCALED) --- */}
       <div className="flex justify-center pb-20">
         <div
           style={{
@@ -624,8 +970,7 @@ const downloadPDF = async () => {
           }}
         >
           <div className="relative">
-            {!isPDFMode &&
-              showSpacers &&
+            {showSpacers &&
               pageBreaks.map((y, i) => (
                 <div
                   key={i}
@@ -638,396 +983,35 @@ const downloadPDF = async () => {
                 </div>
               ))}
 
-            {/* THE PRINTABLE NODE */}
-            <div
+            {/* The Interactive Template */}
+            <QuoteTemplate
               ref={mainRef}
-              style={{ width: "794px", minHeight: "1123px" }}
-              className="bg-white shadow-2xl p-10 relative text-gray-900 mx-auto"
-            >
-              {/* 1. HEADER */}
-              <header
-                ref={(el) => (itemRefs.current["header"] = el)}
-                className="flex justify-between items-start pb-6 border-b-2 border-gray-900 mb-8"
-              >
-                <div className="flex flex-col items-start text-left w-2/3">
-                  <h1 className="text-3xl font-extrabold tracking-wide text-gray-900 mb-1">
-                    TEKNA WINDOW SYSTEM
-                  </h1>
-                  <p className="text-sm text-gray-700">
-                    VAVDI INDUSTRY AREA, VAVDI MAIN ROAD
-                  </p>
-                  <p className="text-sm text-gray-700 mb-4">RAJKOT, GUJARAT</p>
-                  <div className="text-sm space-y-1 text-gray-700">
-                    <p>
-                      <strong>Mobile:</strong> 9825256525
-                    </p>
-                    <p>
-                      <strong>Email:</strong> TEKNAWIN01@GMAIL.COM
-                    </p>
-                    <p>
-                      <strong>GSTIN:</strong> 24AMIPS5762R1Z4
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end text-right w-1/3">
-                  <div className="h-20 mb-2 relative">
-                    {logo ? (
-                      <img
-                        src={logo}
-                        alt="Logo"
-                        className="h-full object-contain"
-                      />
-                    ) : (
-                      <div className="h-full w-24 bg-red-100 border border-red-300 text-red-500 flex items-center justify-center text-xs font-bold">
-                        TWS
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-4 px-3 py-1.5 text-sm font-bold text-gray-800 ">
-                    Date: {new Date().toLocaleDateString("en-IN")}
-                  </div>
-                </div>
-              </header>
-
-              {/* 2. CLIENT INFO */}
-              <section className="mb-10">
-                <div className="grid grid-cols-4 gap-4 text-sm bg-slate-50 p-4 rounded border border-slate-200">
-                  <div>
-                    <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1 flex items-center gap-1">
-                      Client
-                    </span>
-                    <span className="font-bold text-gray-900 break-words">
-                      {clientDetails.clientName || "—"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1 flex items-center gap-1">
-                      Project
-                    </span>
-                    <span className="font-bold text-gray-900 break-words">
-                      {clientDetails.project || "—"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1 flex items-center gap-1">
-                      Quote No
-                    </span>
-                    <span className="font-bold text-indigo-700 font-mono">
-                      {id || "—"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1 flex items-center gap-1">
-                      Finish
-                    </span>
-                    <span className="font-bold text-gray-900 break-words">
-                      {clientDetails.finish || "—"}
-                    </span>
-                  </div>
-                </div>
-              </section>
-
-              {/* 3. WINDOWS LIST */}
-              <section className="mb-10 space-y-6">
-                {windowList.map((win, index) => (
-                  <React.Fragment key={index}>
-                    <ManualSpacer
-                      id={`w-${index}`}
-                      visible={showSpacers}
-                      pdfMode={isPDFMode}
-                      height={spacers[`w-${index}`] || 0}
-                      updateHeight={updateSpacer}
-                    />
-
-                    <div
-                      ref={(el) => (itemRefs.current[`w-${index}`] = el)}
-                      className="break-inside-avoid border border-gray-300 rounded-sm overflow-hidden flex"
-                    >
-                      <div className="w-[180px] border-r border-gray-300 p-2 flex items-center justify-center bg-white">
-                        <WindowSketch
-                          width={win.width}
-                          height={win.height}
-                          type={win.windowType}
-                        />
-                      </div>
-                      <div className="flex-1 p-4 text-xs text-gray-800 flex flex-col">
-                        <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-3">
-                          <span className="font-extrabold text-sm text-slate-800 px-2 py-0.5 rounded-sm">
-                            Window {index + 1}
-                          </span>
-                          <span className="font-bold text-slate-600 uppercase tracking-wider">
-                            {win.windowType}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-[85px_1fr] gap-y-1.5 leading-tight">
-                          <span className="font-bold text-slate-500">
-                            Size:
-                          </span>
-                          <span>
-                            W {win.width}" x H {win.height}"
-                          </span>
-                          <span className="font-bold text-slate-500">
-                            Profile:
-                          </span>
-                          <span className="uppercase">
-                            {win.profileSystem || "-"}
-                          </span>
-                          <span className="font-bold text-slate-500">
-                            Design:
-                          </span>
-                          <span className="uppercase">{win.design || "-"}</span>
-                          <span className="font-bold text-slate-500">
-                            Glass:
-                          </span>
-                          <span className="uppercase">
-                            {win.glassType || "-"}
-                          </span>
-                          <span className="font-bold text-slate-500">
-                            Mesh:
-                          </span>
-                          <span className="uppercase">{win.mess || "-"}</span>
-                          <span className="font-bold text-slate-500">
-                            Locking:
-                          </span>
-                          <span className="uppercase">
-                            {win.locking || "-"}
-                          </span>
-                          <span className="font-bold text-slate-500">
-                            Grill:
-                          </span>
-                          <span className="uppercase">{win.grill || "-"}</span>
-                          <span className="font-bold text-slate-500">
-                            Hardware:
-                          </span>
-                          <span className="uppercase">
-                            {win.hardware || "-"}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="w-[140px] border-l border-gray-300 bg-slate-50 p-4 flex flex-col justify-center gap-2 text-right">
-                        <div>
-                          <span className="block text-[10px] font-bold text-slate-400 uppercase">
-                            Area
-                          </span>
-                          <span className="font-bold text-slate-800">
-                            {Number(win.sqFt).toFixed(2)} sq.ft
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block text-[10px] font-bold text-slate-400 uppercase">
-                            Rate
-                          </span>
-                          <span className="font-bold text-slate-800">
-                            ₹{win.pricePerFt}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block text-[10px] font-bold text-slate-400 uppercase">
-                            Qty
-                          </span>
-                          <span className="font-bold text-slate-800">
-                            {win.quantity} pcs
-                          </span>
-                        </div>
-                        <div className="mt-2 pt-2 border-t border-slate-300">
-                          <span className="block text-[10px] font-bold text-indigo-600 uppercase">
-                            Amount
-                          </span>
-                          <span className="font-bold text-lg text-indigo-900">
-                            {formatINR(win.amount)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </React.Fragment>
-                ))}
-              </section>
-
-              <ManualSpacer
-                id="spacer-totals"
-                visible={showSpacers}
-                pdfMode={isPDFMode}
-                height={spacers["spacer-totals"] || 0}
-                updateHeight={updateSpacer}
-              />
-
-              {/* 4. SUMMARY */}
-              <section
-                ref={(el) => (itemRefs.current["totals"] = el)}
-                className="break-inside-avoid flex justify-end mb-10"
-              >
-                <div className="w-1/2 border border-slate-900 p-0">
-                  <div className="bg-slate-900 text-white px-4 py-2 text-sm font-bold uppercase tracking-wider">
-                    Quote Summary
-                  </div>
-                  <div className="p-4 space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Total Windows</span>
-                      <span className="font-bold">{windowList.length} pcs</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Total Area</span>
-                      <span className="font-bold">
-                        {Number(totalSqFt).toFixed(2)} Sq.ft
-                      </span>
-                    </div>
-                    <div className="border-t border-slate-200 my-2"></div>
-                    <div className="flex justify-between">
-                      <span>Subtotal</span>
-                      <span>{formatINR(subtotal)}</span>
-                    </div>
-
-                    {/* Packing Charges Input */}
-                    <div className="flex justify-between text-slate-600 items-center">
-                      <span>Packing</span>
-                      {isPDFMode ? (
-                        <span>{formatINR(packingCharges)}</span>
-                      ) : (
-                        <div className="flex items-center border-b border-slate-300">
-                          <span className="text-gray-500 mr-1 text-xs">₹</span>
-                          <input
-                            type="number"
-                            value={packingCharges}
-                            onChange={(e) =>
-                              setPackingCharges(Number(e.target.value))
-                            }
-                            className="w-20 text-right outline-none bg-transparent font-semibold text-slate-700"
-                            placeholder="0"
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* GST Inputs */}
-                    {applyGST && (
-                      <>
-                        <div className="flex justify-between text-slate-600 items-center">
-                          <div className="flex items-center gap-1">
-                            <span>CGST</span>
-                            {isPDFMode ? (
-                              <span className="text-xs">(@{cgstPerc}%)</span>
-                            ) : (
-                              <div className="flex items-center">
-                                <span>(@</span>
-                                <input
-                                  type="number"
-                                  className="w-12 text-center border-b border-slate-300 text-xs mx-0.5 bg-transparent outline-none"
-                                  value={cgstPerc}
-                                  onChange={(e) =>
-                                    setCgstPerc(Number(e.target.value))
-                                  }
-                                />
-                                <span>%)</span>
-                              </div>
-                            )}
-                          </div>
-                          <span>{formatINR(cgstAmount)}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-600 items-center">
-                          <div className="flex items-center gap-1">
-                            <span>SGST</span>
-                            {isPDFMode ? (
-                              <span className="text-xs">(@{sgstPerc}%)</span>
-                            ) : (
-                              <div className="flex items-center">
-                                <span>(@</span>
-                                <input
-                                  type="number"
-                                  className="w-12 text-center border-b border-slate-300 text-xs mx-0.5 bg-transparent outline-none"
-                                  value={sgstPerc}
-                                  onChange={(e) =>
-                                    setSgstPerc(Number(e.target.value))
-                                  }
-                                />
-                                <span>%)</span>
-                              </div>
-                            )}
-                          </div>
-                          <span>{formatINR(sgstAmount)}</span>
-                        </div>
-                      </>
-                    )}
-
-                    <div className="border-t-2 border-slate-900 pt-2 mt-2 flex justify-between items-center">
-                      <span className="font-bold text-lg">Total</span>
-                      <span className="font-bold text-xl text-indigo-700">
-                        {formatINR(grandTotal)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <ManualSpacer
-                id="spacer-footer"
-                visible={showSpacers}
-                pdfMode={isPDFMode}
-                height={spacers["spacer-footer"] || 0}
-                updateHeight={updateSpacer}
-              />
-
-              {/* 5. FOOTER */}
-              <section
-                ref={(el) => (itemRefs.current["footer"] = el)}
-                className="break-inside-avoid pt-4 border-t border-gray-200"
-              >
-                <div className="grid grid-cols-2 gap-8">
-                  <div className="text-[10px] text-gray-600 leading-relaxed">
-                    <h5 className="font-bold text-gray-900 mb-2 border-b border-gray-300 pb-1 uppercase">
-                      Terms & Conditions
-                    </h5>
-                    <ul className="list-disc pl-4 space-y-0.5">
-                      <li>
-                        Quotation valid for 1 week. Rates subject to change.
-                      </li>
-                      <li>Size calculated in 3-inch steps (Width/Height).</li>
-                      <li>Design changes post-confirmation charged extra.</li>
-                      <li>No warranty on glass after installation.</li>
-                      <li>Defects to be reported within 48 hours.</li>
-                      <li>
-                        Scaffolding/Electricity/Cleaning in customer scope.
-                      </li>
-                      <li>Payment: 70% Advance, 20% Dispatch, 10% Install.</li>
-                      <li>Subject to Rajkot Jurisdiction.</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <div className="bg-slate-50 p-3 border border-slate-200 rounded mb-6 text-xs">
-                      <h5 className="font-bold text-gray-900 mb-2 border-b border-slate-200 pb-1 uppercase">
-                        Bank Details
-                      </h5>
-                      <div className="grid grid-cols-[70px_1fr] gap-y-1">
-                        <span className="text-slate-500">Bank:</span>
-                        <span className="font-bold">STATE BANK OF INDIA</span>
-                        <span className="text-slate-500">Branch:</span>
-                        <span className="font-bold">
-                          CHANDRESH NAGAR, MAVDI
-                        </span>
-                        <span className="text-slate-500">A/C:</span>
-                        <span className="font-mono font-bold">34200993101</span>
-                        <span className="text-slate-500">IFSC:</span>
-                        <span className="font-mono font-bold">SBIN0060314</span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-end gap-4 text-xs font-bold text-center">
-                      <div className="flex-1">
-                        <div className="h-10 border-b border-gray-400 mb-1"></div>
-                        <p>TEKNA WINDOWS</p>
-                      </div>
-                      <div className="flex-1">
-                        <div className="h-10 border-b border-gray-400 mb-1"></div>
-                        <p>CUSTOMER SIGN</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-center text-[10px] text-gray-400 mt-8">
-                  Generated by TEKNA Window Systems
-                </div>
-              </section>
-            </div>
+              {...templateProps}
+              itemRefs={itemRefs} // Pass refs here so Auto-Layout works
+            />
           </div>
         </div>
+      </div>
+
+      {/* --- HIDDEN PRINT PREVIEW (FIXED 794px) --- */}
+      <div
+        id="print-view"
+        style={{
+          position: "absolute",
+          top: -9999,
+          left: -9999,
+          width: "794px",
+          height: "auto",
+          overflow: "visible",
+        }}
+      >
+        {/* The Clean Template for PDF Generation */}
+        <QuoteTemplate
+          ref={mainRefPrint}
+          {...templateProps}
+          itemRefs={null} // Don't capture refs here to avoid conflict
+          isPDFMode={true} // Force PDF mode logic (hide spacers)
+        />
       </div>
     </div>
   );
