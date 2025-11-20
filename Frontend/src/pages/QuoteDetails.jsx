@@ -259,7 +259,7 @@ const QuoteTemplate = React.forwardRef(
     {
       data,
       financials,
-      actions, // New prop for setters
+      actions,
       spacers,
       showSpacers,
       updateSpacer,
@@ -293,7 +293,7 @@ const QuoteTemplate = React.forwardRef(
         style={{ width: "794px", minHeight: "1123px" }}
         className="bg-white shadow-2xl p-10 relative text-gray-900 mx-auto"
       >
-        {/* HEADER */}
+        {/* HEADER [cite: 1-5] */}
         <header
           ref={(el) => setRef("header", el)}
           className="flex justify-between items-start pb-6 border-b-2 border-gray-900 mb-8"
@@ -302,10 +302,8 @@ const QuoteTemplate = React.forwardRef(
             <h1 className="text-3xl font-extrabold tracking-wide text-gray-900 mb-1">
               TEKNA WINDOW SYSTEM
             </h1>
-            <p className="text-sm text-gray-700">
-              VAVDI INDUSTRY AREA, VAVDI MAIN ROAD
-            </p>
-            <p className="text-sm text-gray-700 mb-4">RAJKOT, GUJARAT</p>
+            <p className="text-sm text-gray-700">VAVDI INDUSTRY AREA</p>
+            <p className="text-sm text-gray-700 mb-4">VAVDI MAIN ROAD</p>
             <div className="text-sm space-y-1 text-gray-700">
               <p>
                 <strong>Mobile:</strong> 9825256525
@@ -328,18 +326,19 @@ const QuoteTemplate = React.forwardRef(
                 </div>
               )}
             </div>
+            {/* Date from PDF example [cite: 14] */}
             <div className="mt-4 px-3 py-1.5 text-sm font-bold text-gray-800">
               Date: {new Date().toLocaleDateString("en-IN")}
             </div>
           </div>
         </header>
 
-        {/* CLIENT INFO */}
+        {/* CLIENT INFO [cite: 6] */}
         <section className="mb-10">
           <div className="grid grid-cols-4 gap-4 text-sm bg-slate-50 p-4 rounded border border-slate-200">
             <div>
               <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1">
-                Client
+                Client Name
               </span>
               <span className="font-bold text-gray-900">
                 {clientDetails.clientName || "—"}
@@ -355,10 +354,10 @@ const QuoteTemplate = React.forwardRef(
             </div>
             <div>
               <span className="block text-[10px] text-slate-400 uppercase font-bold mb-1">
-                Quote No
+                Quotation No.
               </span>
               <span className="font-bold text-indigo-700 font-mono">
-                {data.id || "—"}
+                {data.id ? `QE/TK/${data.id}` : "—"}
               </span>
             </div>
             <div>
@@ -397,49 +396,57 @@ const QuoteTemplate = React.forwardRef(
                 <div className="flex-1 p-4 text-xs text-gray-800 flex flex-col">
                   <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-3">
                     <span className="font-extrabold text-sm text-slate-800 px-2 py-0.5 rounded-sm">
-                      Window {index + 1}
+                      Location: W{index + 1}
                     </span>
                     <span className="font-bold text-slate-600 uppercase tracking-wider">
                       {win.windowType}
                     </span>
                   </div>
                   <div className="grid grid-cols-[85px_1fr] gap-y-1.5 leading-tight">
-                    <span className="font-bold text-slate-500">Size:</span>
-                    <span>
-                      W {win.width}" x H {win.height}"
+                    <span className="font-bold text-slate-500">
+                      Size (Inch):
                     </span>
-                    <span className="font-bold text-slate-500">Profile:</span>
+                    <span>
+                      W {win.width} x H {win.height}
+                    </span>
+                    <span className="font-bold text-slate-500">
+                      Profile System:
+                    </span>
                     <span className="uppercase">
                       {win.profileSystem || "-"}
                     </span>
+                    <span className="font-bold text-slate-500">Design:</span>
+                    <span className="uppercase">{win.design || "-"}</span>
                     <span className="font-bold text-slate-500">Glass:</span>
                     <span className="uppercase">{win.glassType || "-"}</span>
-                    <span className="font-bold text-slate-500">Mesh:</span>
-                    <span className="uppercase">{win.mess || "-"}</span>
-                    <span className="font-bold text-slate-500">Hardware:</span>
-                    <span className="uppercase">{win.hardware || "-"}</span>
+                    <span className="font-bold text-slate-500">Mess:</span>
+                    <span className="uppercase">{win.mess || ""}</span>
+                    <span className="font-bold text-slate-500">Locking:</span>
+                    <span className="uppercase">{win.locking || ""}</span>
+                    <span className="font-bold text-slate-500">Grill:</span>
+                    <span className="uppercase">{win.grill || ""}</span>
                   </div>
                 </div>
                 <div className="w-[140px] border-l border-gray-300 bg-slate-50 p-4 flex flex-col justify-center gap-2 text-right">
                   <div>
                     <span className="block text-[10px] font-bold text-slate-400 uppercase">
-                      Area
+                      Sq.ft per Window
                     </span>
                     <span className="font-bold text-slate-800">
-                      {Number(win.sqFt).toFixed(2)} sq.ft
+                      {Number(win.sqFt).toFixed(2)} Sq.ft.
                     </span>
                   </div>
                   <div>
                     <span className="block text-[10px] font-bold text-slate-400 uppercase">
-                      Rate
+                      Rate sq.ft
                     </span>
                     <span className="font-bold text-slate-800">
-                      ₹{win.pricePerFt}
+                      {win.pricePerFt} Rs.
                     </span>
                   </div>
                   <div>
                     <span className="block text-[10px] font-bold text-slate-400 uppercase">
-                      Qty
+                      Quantity
                     </span>
                     <span className="font-bold text-slate-800">
                       {win.quantity} pcs
@@ -447,10 +454,10 @@ const QuoteTemplate = React.forwardRef(
                   </div>
                   <div className="mt-2 pt-2 border-t border-slate-300">
                     <span className="block text-[10px] font-bold text-indigo-600 uppercase">
-                      Amount
+                      Value
                     </span>
                     <span className="font-bold text-lg text-indigo-900">
-                      {formatINR(win.amount)}
+                      {Number(win.amount).toFixed(2)} Rs.
                     </span>
                   </div>
                 </div>
@@ -467,14 +474,14 @@ const QuoteTemplate = React.forwardRef(
           updateHeight={updateSpacer}
         />
 
-        {/* SUMMARY WITH EMBEDDED INPUTS */}
+        {/* SUMMARY WITH EMBEDDED INPUTS [cite: 66] */}
         <section
           ref={(el) => setRef("totals", el)}
           className="break-inside-avoid flex justify-end mb-10"
         >
           <div className="w-1/2 border border-slate-900 p-0">
             <div className="bg-slate-900 text-white px-4 py-2 text-sm font-bold uppercase tracking-wider">
-              Quote Summary
+              Quote Total
             </div>
             <div className="p-4 space-y-2 text-sm">
               <div className="flex justify-between">
@@ -482,25 +489,24 @@ const QuoteTemplate = React.forwardRef(
                 <span className="font-bold">{windowList.length} pcs</span>
               </div>
               <div className="flex justify-between">
-                <span>Total Area</span>
+                <span>Total Sq.ft:</span>
                 <span className="font-bold">
-                  {Number(totalSqFt).toFixed(2)} Sq.ft
+                  {Number(totalSqFt).toFixed(2)} Sq.ft.
                 </span>
               </div>
               <div className="border-t border-slate-200 my-2"></div>
               <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>{formatINR(subtotal)}</span>
+                <span>Total Amount:</span>
+                <span>{subtotal.toFixed(2)} Rs.</span>
               </div>
 
               {/* Packing Charges */}
               <div className="flex justify-between text-slate-600 items-center">
-                <span>Packing Charges</span>
+                <span>Packing And Forwarding Charges :</span>
                 {isPDFMode ? (
-                  <span>{formatINR(packingCharges)}</span>
+                  <span>{packingCharges} Rs.</span>
                 ) : (
                   <div className="flex items-center border-b border-slate-300 group focus-within:border-indigo-500 transition-colors">
-                    <span className="text-gray-500 mr-1 text-xs">₹</span>
                     <input
                       type="number"
                       value={packingCharges}
@@ -509,6 +515,7 @@ const QuoteTemplate = React.forwardRef(
                       }
                       className="w-20 text-right outline-none bg-transparent font-semibold text-slate-700 focus:text-indigo-700"
                     />
+                    <span className="text-gray-500 ml-1 text-xs">Rs.</span>
                   </div>
                 )}
               </div>
@@ -519,12 +526,11 @@ const QuoteTemplate = React.forwardRef(
                   {/* CGST */}
                   <div className="flex justify-between text-slate-600 items-center">
                     <div className="flex items-center gap-1">
-                      <span>CGST</span>
                       {isPDFMode ? (
-                        <span className="text-xs">(@{cgstPerc}%)</span>
+                        <span>CGST @ {cgstPerc}</span>
                       ) : (
                         <div className="flex items-center">
-                          <span>(@</span>
+                          <span>CGST @ </span>
                           <input
                             type="number"
                             value={cgstPerc}
@@ -533,22 +539,20 @@ const QuoteTemplate = React.forwardRef(
                             }
                             className="w-8 text-center border-b border-slate-300 text-xs mx-0.5 bg-transparent outline-none font-bold text-indigo-600 focus:border-indigo-500"
                           />
-                          <span>%)</span>
                         </div>
                       )}
                     </div>
-                    <span>{formatINR(cgstAmount)}</span>
+                    <span>{cgstAmount.toFixed(1)} Rs.</span>
                   </div>
 
                   {/* SGST */}
                   <div className="flex justify-between text-slate-600 items-center">
                     <div className="flex items-center gap-1">
-                      <span>SGST</span>
                       {isPDFMode ? (
-                        <span className="text-xs">(@{sgstPerc}%)</span>
+                        <span>SGST @ {sgstPerc}</span>
                       ) : (
                         <div className="flex items-center">
-                          <span>(@</span>
+                          <span>SGST @ </span>
                           <input
                             type="number"
                             value={sgstPerc}
@@ -557,19 +561,18 @@ const QuoteTemplate = React.forwardRef(
                             }
                             className="w-8 text-center border-b border-slate-300 text-xs mx-0.5 bg-transparent outline-none font-bold text-indigo-600 focus:border-indigo-500"
                           />
-                          <span>%)</span>
                         </div>
                       )}
                     </div>
-                    <span>{formatINR(sgstAmount)}</span>
+                    <span>{sgstAmount.toFixed(1)} Rs.</span>
                   </div>
                 </>
               )}
 
               <div className="border-t-2 border-slate-900 pt-2 mt-2 flex justify-between items-center">
-                <span className="font-bold text-lg">Total</span>
+                <span className="font-bold text-lg">Grand Total :</span>
                 <span className="font-bold text-xl text-indigo-700">
-                  {formatINR(grandTotal)}
+                  {Math.round(grandTotal)} Rs.
                 </span>
               </div>
             </div>
@@ -584,7 +587,7 @@ const QuoteTemplate = React.forwardRef(
           updateHeight={updateSpacer}
         />
 
-        {/* FOOTER */}
+        {/* FOOTER  */}
         <section
           ref={(el) => setRef("footer", el)}
           className="break-inside-avoid pt-4 border-t border-gray-200"
@@ -592,45 +595,88 @@ const QuoteTemplate = React.forwardRef(
           <div className="grid grid-cols-2 gap-8">
             <div className="text-[10px] text-gray-600 leading-relaxed">
               <h5 className="font-bold text-gray-900 mb-2 border-b border-gray-300 pb-1 uppercase">
-                Terms & Conditions
+                Terms & Condition:
               </h5>
               <ul className="list-disc pl-4 space-y-0.5">
-                <li>Quotation valid for 1 week. Rates subject to change.</li>
-                <li>Size calculated in 3-inch steps (Width/Height).</li>
-                <li>Design changes post-confirmation charged extra.</li>
-                <li>No warranty on glass after installation.</li>
-                <li>Payment: 70% Advance, 20% Dispatch, 10% Install.</li>
-                <li>Subject to Rajkot Jurisdiction.</li>
+                <li>
+                  QUOTATION ARE VALID UPTO 1 WEEK(RATE MAY CHANGE DEPENDING ON
+                  MATERIAL PRICE CHANGE).
+                </li>
+                <li>SIZE IS CALCULATED IN WIDTH AND HEIGHT IN 3 INCH STEPS.</li>
+                <li>
+                  THE DESIGN AND STYLE OF PRODUCT REMAINS UNCHANGED. THE
+                  CUSTOMER WILL BE CHARGED FOR THAT.
+                </li>
+                <li>
+                  THERE IS NO WARRANTY FOR GLASS ONCE INSTALLATION IS DONE.
+                </li>
+                <li>
+                  FOR MANUFACTURING DEFECT, CLIENT HAS TO INFORM US WITHIN 48
+                  HOURS AFTER INSTALLATION. AFTER THE TIME PERIOD, TEKNA WINDOW
+                  SYSTEM WILL BE NOT LIABLE FOR ANY DEFECTS.
+                </li>
+                <li>
+                  SCAFFOLDING/CRANE SERVICE, ELECTRICITY, STORAGE FOR MATERIAL
+                  AND CLEANING OF GLASS & WINDOW WILL BE UNDER CUSTOMER'S SCOPE.
+                </li>
+                <li>
+                  ANY DAMAGE OR BREACKAGE OF STONE WILL NOT BE OUR
+                  RESPONSIBILITY.
+                </li>
+                <li>
+                  AFTER HANDOVERING WINDOWS, IF ANY SERVICE REQUIRE RELATED TO
+                  WINDOWS & DOORS, THAT SHOULD BE CHARGEABLE.
+                </li>
+                <li>
+                  INSTALLATION TIME: 40-45 DAYS. (DELIVERY TIME WILL BE
+                  SCHEDULED AT THE TIME OF ADVANCE PAYMENT RECEIVED).
+                </li>
+                <li>
+                  PAYMENT TERMS: 70% ADVANCE TO CONFIRM ORDER. 20% AGAINST
+                  MATERIAL AT READY TO DISPATCH. 10% AFTER SUCCESSFUL
+                  INSTALLATION.
+                </li>
+                <li>
+                  ALL DISPUTES SHALL BE SUBJECT RAJKOT CITY JURISDICTION ONLY.
+                </li>
+                <li>TRANSPORTATION AND GST EXTRA.</li>
               </ul>
             </div>
             <div>
               <div className="bg-slate-50 p-3 border border-slate-200 rounded mb-6 text-xs">
                 <h5 className="font-bold text-gray-900 mb-2 border-b border-slate-200 pb-1 uppercase">
-                  Bank Details
+                  BANK DETAILS
                 </h5>
-                <div className="grid grid-cols-[70px_1fr] gap-y-1">
-                  <span className="text-slate-500">Bank:</span>
+                <div className="grid grid-cols-[110px_1fr] gap-y-1">
+                  <span className="text-slate-500">BANK NAME :</span>
                   <span className="font-bold">STATE BANK OF INDIA</span>
-                  <span className="text-slate-500">A/C:</span>
+                  <span className="text-slate-500">BRANCH :</span>
+                  <span className="font-bold">CHANDRESH NAGAR, MAVDI PLOT</span>
+                  <span className="text-slate-500">CURRENT A/C NO. :</span>
                   <span className="font-mono font-bold">34200993101</span>
-                  <span className="text-slate-500">IFSC:</span>
+                  <span className="text-slate-500">IFSC CODE :</span>
                   <span className="font-mono font-bold">SBIN0060314</span>
                 </div>
               </div>
+
+              {/* Acceptance Text [cite: 90-91] */}
+              <div className="text-[9px] font-bold text-gray-800 mb-4 leading-tight">
+                I HEREBY ACCEPT THE ESTIMATE AS PER ABOVE MENTIONED PRICE AND
+                SPECIFICATIONS. I HAVE READ AND UNDERSTOOD THE TERMS &
+                CONDITIONS AND AGREE TO THEM.
+              </div>
+
               <div className="flex justify-between items-end gap-4 text-xs font-bold text-center">
                 <div className="flex-1">
                   <div className="h-10 border-b border-gray-400 mb-1"></div>
-                  <p>TEKNA WINDOWS</p>
+                  <p>Authorised Signatory</p>
                 </div>
                 <div className="flex-1">
                   <div className="h-10 border-b border-gray-400 mb-1"></div>
-                  <p>CUSTOMER SIGN</p>
+                  <p>Signature of Customer</p>
                 </div>
               </div>
             </div>
-          </div>
-          <div className="text-center text-[10px] text-gray-400 mt-8">
-            Generated by TEKNA Window Systems
           </div>
         </section>
       </div>
@@ -908,7 +954,7 @@ export default function QuotePreview() {
       sgstAmount,
       grandTotal,
     },
-    actions: { setApplyGST, setCgstPerc, setSgstPerc, setPackingCharges }, // Pass Setters here
+    actions: { setApplyGST, setCgstPerc, setSgstPerc, setPackingCharges },
     spacers,
     showSpacers,
     updateSpacer,
