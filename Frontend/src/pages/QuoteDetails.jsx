@@ -13,8 +13,8 @@ import {
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import logo from "../assets/logo.png"; // Ensure this path is correct
-import { apiGet } from "../utils/api"; // Removed apiPut for brevity, add back if needed
+import logo from "../assets/logo.png";
+import { apiGet } from "../utils/api";
 import { getToken } from "../utils/auth";
 
 /* --- 1. Helper Functions & Sub-Components --- */
@@ -48,7 +48,6 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
   return (
     <div className="w-full h-full flex items-center justify-center">
       <svg width="200" height="200" viewBox="0 0 200 200">
-        {/* Dimension Lines */}
         <line
           x1={startX}
           y1={startY + drawH + 10}
@@ -97,7 +96,6 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
           stroke="#94a3b8"
           strokeWidth="1"
         />
-        {/* Text */}
         <text
           x={startX + drawW / 2}
           y={startY + drawH + 24}
@@ -125,7 +123,6 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
         >
           {height}"
         </text>
-        {/* Window Frame */}
         <rect
           x={startX}
           y={startY}
@@ -143,7 +140,6 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
           stroke="#e2e8f0"
           strokeWidth="1"
         />
-        {/* Type Logic */}
         {type.toLowerCase().includes("slider") ? (
           <>
             <line
@@ -257,17 +253,18 @@ const ManualSpacer = ({ id, height, updateHeight, visible, pdfMode }) => {
   );
 };
 
-/* --- 2. The Reusable Template (Used for both Screen & Print) --- */
+/* --- 2. The Reusable Template --- */
 const QuoteTemplate = React.forwardRef(
   (
     {
       data,
       financials,
+      actions, // New prop for setters
       spacers,
       showSpacers,
       updateSpacer,
       isPDFMode,
-      itemRefs, // Pass ref collector only for the visible instance
+      itemRefs,
     },
     ref
   ) => {
@@ -284,7 +281,6 @@ const QuoteTemplate = React.forwardRef(
       grandTotal,
     } = financials;
 
-    // Helper to assign ref only if itemRefs is provided (Visible Mode)
     const setRef = (key, el) => {
       if (itemRefs && itemRefs.current) {
         itemRefs.current[key] = el;
@@ -471,7 +467,7 @@ const QuoteTemplate = React.forwardRef(
           updateHeight={updateSpacer}
         />
 
-        {/* SUMMARY */}
+        {/* SUMMARY WITH EMBEDDED INPUTS */}
         <section
           ref={(el) => setRef("totals", el)}
           className="break-inside-avoid flex justify-end mb-10"
@@ -496,26 +492,80 @@ const QuoteTemplate = React.forwardRef(
                 <span>Subtotal</span>
                 <span>{formatINR(subtotal)}</span>
               </div>
+
+              {/* Packing Charges */}
               <div className="flex justify-between text-slate-600 items-center">
-                <span>Packing</span>
-                <span>{formatINR(packingCharges)}</span>
+                <span>Packing Charges</span>
+                {isPDFMode ? (
+                  <span>{formatINR(packingCharges)}</span>
+                ) : (
+                  <div className="flex items-center border-b border-slate-300 group focus-within:border-indigo-500 transition-colors">
+                    <span className="text-gray-500 mr-1 text-xs">₹</span>
+                    <input
+                      type="number"
+                      value={packingCharges}
+                      onChange={(e) =>
+                        actions.setPackingCharges(Number(e.target.value))
+                      }
+                      className="w-20 text-right outline-none bg-transparent font-semibold text-slate-700 focus:text-indigo-700"
+                    />
+                  </div>
+                )}
               </div>
+
+              {/* GST Logic */}
               {applyGST && (
                 <>
+                  {/* CGST */}
                   <div className="flex justify-between text-slate-600 items-center">
-                    <span>
-                      CGST <span className="text-xs">(@{cgstPerc}%)</span>
-                    </span>
+                    <div className="flex items-center gap-1">
+                      <span>CGST</span>
+                      {isPDFMode ? (
+                        <span className="text-xs">(@{cgstPerc}%)</span>
+                      ) : (
+                        <div className="flex items-center">
+                          <span>(@</span>
+                          <input
+                            type="number"
+                            value={cgstPerc}
+                            onChange={(e) =>
+                              actions.setCgstPerc(Number(e.target.value))
+                            }
+                            className="w-8 text-center border-b border-slate-300 text-xs mx-0.5 bg-transparent outline-none font-bold text-indigo-600 focus:border-indigo-500"
+                          />
+                          <span>%)</span>
+                        </div>
+                      )}
+                    </div>
                     <span>{formatINR(cgstAmount)}</span>
                   </div>
+
+                  {/* SGST */}
                   <div className="flex justify-between text-slate-600 items-center">
-                    <span>
-                      SGST <span className="text-xs">(@{sgstPerc}%)</span>
-                    </span>
+                    <div className="flex items-center gap-1">
+                      <span>SGST</span>
+                      {isPDFMode ? (
+                        <span className="text-xs">(@{sgstPerc}%)</span>
+                      ) : (
+                        <div className="flex items-center">
+                          <span>(@</span>
+                          <input
+                            type="number"
+                            value={sgstPerc}
+                            onChange={(e) =>
+                              actions.setSgstPerc(Number(e.target.value))
+                            }
+                            className="w-8 text-center border-b border-slate-300 text-xs mx-0.5 bg-transparent outline-none font-bold text-indigo-600 focus:border-indigo-500"
+                          />
+                          <span>%)</span>
+                        </div>
+                      )}
+                    </div>
                     <span>{formatINR(sgstAmount)}</span>
                   </div>
                 </>
               )}
+
               <div className="border-t-2 border-slate-900 pt-2 mt-2 flex justify-between items-center">
                 <span className="font-bold text-lg">Total</span>
                 <span className="font-bold text-xl text-indigo-700">
@@ -594,15 +644,13 @@ export default function QuotePreview() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  // REFS
-  const mainRef = useRef(null); // Visible (Scaled)
-  const mainRefPrint = useRef(null); // Hidden (Full Size)
+  const mainRef = useRef(null);
+  const mainRefPrint = useRef(null);
   const itemRefs = useRef({});
 
   const apiBaseUrl =
     import.meta.env.REACT_APP_API_BASE || "https://tekna-ryyc.onrender.com";
 
-  // STATE
   const [windowList, setWindowList] = useState([]);
   const [clientDetails, setClientDetails] = useState({
     clientName: "",
@@ -626,7 +674,6 @@ export default function QuotePreview() {
   const [sgstPerc, setSgstPerc] = useState(9);
   const [packingCharges, setPackingCharges] = useState(0);
 
-  // Derived Financials
   const subtotal = windowList.reduce((s, w) => s + Number(w.amount || 0), 0);
   const totalSqFt = windowList.reduce((s, w) => s + Number(w.sqFt || 0), 0);
   const cgstAmount = applyGST ? (subtotal * cgstPerc) / 100 : 0;
@@ -669,7 +716,6 @@ export default function QuotePreview() {
     fetchData();
   }, [id, state]);
 
-  // --- Save Data ---
   const handleSaveQuote = async () => {
     if (!id) return;
     setIsSaving(true);
@@ -703,7 +749,6 @@ export default function QuotePreview() {
     }
   };
 
-  // --- Auto Layout Logic ---
   const updateSpacer = (key, val) =>
     setSpacers((prev) => ({ ...prev, [key]: val }));
 
@@ -764,19 +809,14 @@ export default function QuotePreview() {
     }, 200);
   };
 
-  // --- PDF GENERATION (THE SILVER BULLET FIX) ---
   const downloadPDF = async () => {
-    const printNode = mainRefPrint.current; // Target the HIDDEN node
+    const printNode = mainRefPrint.current;
     if (!printNode) return;
 
-    setIsPDFMode(true); // Hide spacers in UI for cleanliness
-
-    // Wait for React to hide spacers (if they were visible)
+    setIsPDFMode(true);
     await new Promise((r) => setTimeout(r, 200));
 
-    // Force DPR to avoid pixel shrinking on high-res mobile screens
     const originalDPR = window.devicePixelRatio;
-    // Temporary override to ensure 1:1 pixel mapping
     Object.defineProperty(window, "devicePixelRatio", {
       writable: true,
       configurable: true,
@@ -789,11 +829,11 @@ export default function QuotePreview() {
       const pdfH = pdf.internal.pageSize.getHeight();
 
       const canvas = await html2canvas(printNode, {
-        scale: 2, // High quality
-        width: 794, // Fixed A4 width
+        scale: 2,
+        width: 794,
         useCORS: true,
         scrollY: 0,
-        windowWidth: 1200, // Force desktop layout emulation
+        windowWidth: 1200,
       });
 
       const imgData = canvas.toDataURL("image/png");
@@ -817,7 +857,6 @@ export default function QuotePreview() {
       console.error("PDF Gen Error:", error);
       alert("Failed to generate PDF");
     } finally {
-      // Restore DPR
       Object.defineProperty(window, "devicePixelRatio", {
         writable: true,
         configurable: true,
@@ -827,7 +866,6 @@ export default function QuotePreview() {
     }
   };
 
-  // --- Screen Resize for Preview ---
   useEffect(() => {
     const handleResize = () => {
       const w = window.innerWidth - 32;
@@ -857,7 +895,6 @@ export default function QuotePreview() {
       </div>
     );
 
-  // Combine props for cleaner passing
   const templateProps = {
     data: { windowList, clientDetails, id },
     financials: {
@@ -871,6 +908,7 @@ export default function QuotePreview() {
       sgstAmount,
       grandTotal,
     },
+    actions: { setApplyGST, setCgstPerc, setSgstPerc, setPackingCharges }, // Pass Setters here
     spacers,
     showSpacers,
     updateSpacer,
@@ -883,7 +921,7 @@ export default function QuotePreview() {
       <div className="max-w-[794px] mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <h1 className="text-xl font-bold text-gray-800">Preview</h1>
         <div className="flex flex-wrap justify-center gap-2 items-center">
-          {/* GST Toggle */}
+          {/* Only GST Enable Toggle remains in Toolbar */}
           <div className="flex items-center bg-white border rounded px-3 py-1.5 shadow-sm text-xs mr-2">
             <label className="flex items-center gap-2 cursor-pointer font-medium select-none">
               <input
@@ -895,32 +933,6 @@ export default function QuotePreview() {
               Enable GST
             </label>
           </div>
-          {/* GST Inputs */}
-          {applyGST && (
-            <>
-              <input
-                type="number"
-                value={cgstPerc}
-                onChange={(e) => setCgstPerc(Number(e.target.value))}
-                className="w-12 p-1 text-xs border rounded text-center"
-                placeholder="CGST"
-              />
-              <input
-                type="number"
-                value={sgstPerc}
-                onChange={(e) => setSgstPerc(Number(e.target.value))}
-                className="w-12 p-1 text-xs border rounded text-center"
-                placeholder="SGST"
-              />
-            </>
-          )}
-          <input
-            type="number"
-            value={packingCharges}
-            onChange={(e) => setPackingCharges(Number(e.target.value))}
-            className="w-16 p-1 text-xs border rounded text-center"
-            placeholder="Pack."
-          />
 
           <button
             onClick={() => handleAutoAdjust(true)}
@@ -961,7 +973,7 @@ export default function QuotePreview() {
         </div>
       </div>
 
-      {/* --- VISIBLE SCREEN PREVIEW (SCALED) --- */}
+      {/* --- VISIBLE SCREEN PREVIEW --- */}
       <div className="flex justify-center pb-20">
         <div
           style={{
@@ -982,18 +994,16 @@ export default function QuotePreview() {
                   </span>
                 </div>
               ))}
-
-            {/* The Interactive Template */}
             <QuoteTemplate
               ref={mainRef}
               {...templateProps}
-              itemRefs={itemRefs} // Pass refs here so Auto-Layout works
+              itemRefs={itemRefs}
             />
           </div>
         </div>
       </div>
 
-      {/* --- HIDDEN PRINT PREVIEW (FIXED 794px) --- */}
+      {/* --- HIDDEN PRINT PREVIEW --- */}
       <div
         id="print-view"
         style={{
@@ -1005,12 +1015,11 @@ export default function QuotePreview() {
           overflow: "visible",
         }}
       >
-        {/* The Clean Template for PDF Generation */}
         <QuoteTemplate
           ref={mainRefPrint}
           {...templateProps}
-          itemRefs={null} // Don't capture refs here to avoid conflict
-          isPDFMode={true} // Force PDF mode logic (hide spacers)
+          itemRefs={null}
+          isPDFMode={true}
         />
       </div>
     </div>
