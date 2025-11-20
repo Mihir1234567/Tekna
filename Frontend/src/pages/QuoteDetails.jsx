@@ -479,85 +479,58 @@ const downloadPDF = async () => {
   const container = mainRef.current;
   if (!container) return;
 
-  // 1. Store current state and styles
-  const parent = container.parentElement; // The div with the transform: scale()
-  const originalTransform = parent.style.transform;
-  const originalOverflow = document.body.style.overflow;
-  const originalWidth = parent.style.width;
-
   setIsPDFMode(true);
   setShowSpacers(false);
+  await new Promise((r) => setTimeout(r, 300));
 
-  // 2. FORCE DESKTOP RENDERING
-  // We remove the scale transform and force the body to allow horizontal overflow
-  // This makes the element render at full 794px resolution even on a 300px phone screen
-  parent.style.transform = "none";
-  parent.style.width = "794px"; // Force A4 width
-  parent.style.margin = "0"; // Reset margin to avoid centering offsets
-  document.body.style.overflowX = "scroll"; // Allow scrolling momentarily
+  // FIX: disable high-DPR on phones
+  const originalDPR = window.devicePixelRatio;
+  Object.defineProperty(window, "devicePixelRatio", {
+    get: () => 1,
+  });
 
-  // Scroll to top to prevent cut-off issues
-  window.scrollTo(0, 0);
+  // Generate canvas in DESKTOP width
+  const pdf = new jsPDF("p", "mm", "a4");
+  const pdfW = pdf.internal.pageSize.getWidth();
+  const pdfH = pdf.internal.pageSize.getHeight();
 
-  // Wait a tiny bit for the DOM to reflow at full size
-  await new Promise((r) => setTimeout(r, 100));
+  const canvas = await html2canvas(container, {
+    scale: 2,
+    useCORS: true,
+    width: 794,
+    height: container.scrollHeight,
+    windowWidth: 1200,
+    windowHeight: container.scrollHeight,
+    scrollY: 0,
+  });
 
-  try {
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pdfW = pdf.internal.pageSize.getWidth(); // 210mm
-    const pdfH = pdf.internal.pageSize.getHeight(); // 297mm
+  const imgData = canvas.toDataURL("image/png");
+  const imgProps = pdf.getImageProperties(imgData);
+  const imgHeight = (imgProps.height * pdfW) / imgProps.width;
 
-    const canvas = await html2canvas(container, {
-      scale: 2, // Higher scale for crisp text
-      useCORS: true,
-      allowTaint: true,
-      width: 794, // Force canvas to be exactly A4 pixel width
-      windowWidth: 1200, // Pretend we are on a desktop
-      x: 0,
-      y: 0,
-      scrollX: 0,
-      scrollY: 0,
-      backgroundColor: "#ffffff", // Ensure white background
-    });
+  let heightLeft = imgHeight;
+  let position = 0;
 
-    const imgData = canvas.toDataURL("image/png");
-    const imgProps = pdf.getImageProperties(imgData);
-    const imgHeight = (imgProps.height * pdfW) / imgProps.width;
+  pdf.addImage(imgData, "PNG", 0, 0, pdfW, imgHeight);
+  heightLeft -= pdfH;
 
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, "PNG", 0, position, pdfW, imgHeight);
+  while (heightLeft > 0) {
+    pdf.addPage();
+    pdf.addImage(imgData, "PNG", 0, -position - pdfH, pdfW, imgHeight);
     heightLeft -= pdfH;
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(
-        imgData,
-        "PNG",
-        0,
-        -pdfH * (pdf.getNumberOfPages() - 1), // Correct calculation for multipage
-        pdfW,
-        imgHeight
-      );
-      heightLeft -= pdfH;
-    }
-
-    pdf.save(`${clientDetails.clientName || "Quotation"}.pdf`);
-  } catch (error) {
-    console.error("PDF Generation failed", error);
-    alert("Failed to generate PDF. Please try again.");
-  } finally {
-    // 3. RESTORE MOBILE PREVIEW
-    // Put everything back exactly how the user sees it
-    parent.style.transform = originalTransform;
-    parent.style.width = originalWidth;
-    parent.style.margin = "auto";
-    document.body.style.overflow = originalOverflow;
-    setIsPDFMode(false);
+    position += pdfH;
   }
+
+  pdf.save(`${clientDetails.clientName || "Quotation"}.pdf`);
+
+  // restore DPR
+  Object.defineProperty(window, "devicePixelRatio", {
+    get: () => originalDPR,
+  });
+
+  setIsPDFMode(false);
 };
+
 
   if (loading)
     return (
