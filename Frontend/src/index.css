@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #f5f7fa;
+  color: #374151;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ----------------------------------------------------
+   PDF visibility rules
+-----------------------------------------------------*/
+.pdf-only {
+  display: none !important;
+}
+
+.hide-in-pdf {
+  display: block !important;
+}
+
+.pdf-mode .hide-in-pdf {
+  display: none !important;
+}
+
+.pdf-mode .pdf-only {
+  display: block !important;
+}
+
+/* ----------------------------------------------------
+   A4 FIX — prevent shrinking while exporting
+-----------------------------------------------------*/
+.pdf-mode {
+  width: 900px !important; /* stable A4 desktop width */
+  max-width: 900px !important;
+  margin: 0 auto !important;
+  transform: scale(1) !important;
+  overflow: visible !important;
+}
+
+/* ----------------------------------------------------
+   Main wrapper (for mobile)
+-----------------------------------------------------*/
+.quote-wrapper {
+  width: 900px;
+  max-width: 900px !important;
+  margin: 0 auto !important;
+}
+
+/* MOBILE — scale down so layout fits properly */
+@media (max-width: 768px) {
+  .quote-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    transform: scale(0.9); /* fits safely in mobile */
+    transform-origin: top center;
+    padding: 4px;
+  }
+}
+
+/* ----------------------------------------------------
+   Responsive window section (your sketch + details)
+-----------------------------------------------------*/
+.window-row {
+  display: flex;
+  gap: 1rem;
+}
+
+/* In PDF always force desktop layout */
+.pdf-mode .window-row {
+  display: flex !important;
+}
+
+/* Mobile — stack layout */
+@media (max-width: 768px) {
+  .window-row {
+    flex-direction: column !important;
+  }
+}
+
+/* Left section (sketch) */
+.sketch-box {
+  width: 33%;
+}
+
+@media (max-width: 768px) {
+  .sketch-box {
+    width: 100% !important;
+  }
+}
+
+/* Right section (details) */
+.details-box {
+  width: 67%;
+}
+
+@media (max-width: 768px) {
+  .details-box {
+    width: 100% !important;
+  }
+}
+
+/* PDF mode forces desktop layout */
+.pdf-mode .sketch-box {
+  width: 33% !important;
+}
+
+.pdf-mode .details-box {
+  width: 67% !important;
+}
+
+/* ----------------------------------------------------
+   Prevent horizontal scrolling issues
+-----------------------------------------------------*/
+.responsive-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
