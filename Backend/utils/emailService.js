@@ -1,20 +1,24 @@
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 exports.sendResetEmail = async ({ to, resetURL }) => {
-    console.log("🔥 Resend API KEY:", process.env.RESEND_API_KEY);
+  // Brand Colors
+  const brandColor = "#2563eb"; // Blue-600
+  const backgroundColor = "#f3f4f6"; // Gray-100
 
-    // Brand Colors
-    const brandColor = "#2563eb"; // Blue-600
-    const backgroundColor = "#f3f4f6"; // Gray-100
-
-    try {
-        await resend.emails.send({
-            from: "Tekna Support <onboarding@resend.dev>",
-            to,
-            subject: "Reset your Tekna password",
-            html: `
+  try {
+    await transporter.sendMail({
+      from: `"Tekna Support" <${process.env.EMAIL}>`,
+      to,
+      subject: "Reset your Tekna password",
+      html: `
             <!DOCTYPE html>
             <html>
             <head>
@@ -69,11 +73,12 @@ exports.sendResetEmail = async ({ to, resetURL }) => {
             </body>
             </html>
             `,
-        });
+    });
 
-        return true;
-    } catch (err) {
-        console.error("Email sending error:", err);
-        return false;
-    }
+    console.log("Email sent successfully");
+    return true;
+  } catch (err) {
+    console.error("Email sending error:", err);
+    return false;
+  }
 };
