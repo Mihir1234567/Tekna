@@ -15,10 +15,10 @@ import { logout } from "../utils/auth";
 
 const navLinks = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-  { label: "Configurator", path: "/configurator", icon: Layers },
+  { label: "Window Config", path: "/configurator", icon: Layers },
+  { label: "Window Quotes", path: "/quotes", icon: FileText },
   { label: "Material Config", path: "/material-config", icon: Archive },
   { label: "Material Quotes", path: "/material-quotes", icon: List },
-  { label: "Quotes", path: "/quotes", icon: FileText },
 ];
 
 export default function Navbar() {
