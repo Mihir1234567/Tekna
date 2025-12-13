@@ -69,6 +69,12 @@ export default function App() {
 
           {/* Note: accepts :id param so pages can navigate to /material-details/:id */}
           <Route
+            path="/material-details/:id"
+            element={
+              isLoggedIn() ? <MaterialDetails /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/material-details"
             element={
               isLoggedIn() ? <MaterialDetails /> : <Navigate to="/login" />

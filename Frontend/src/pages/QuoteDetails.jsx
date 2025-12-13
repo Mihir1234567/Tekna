@@ -11,11 +11,15 @@ import {
   Printer,
   Save,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import logo from "../assets/logo.png";
 import { apiGet } from "../utils/api";
 import { getToken } from "../utils/auth";
+// import { API_BASE_URL } from "../utils/config";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE || "https://tekna-ryyc.onrender.com";
 
 /* --- 1. Helper Functions & Sub-Components --- */
 const formatINR = (val) => {
@@ -694,9 +698,6 @@ export default function QuotePreview() {
   const mainRefPrint = useRef(null);
   const itemRefs = useRef({});
 
-  const apiBaseUrl =
-    import.meta.env.VITE_API_BASE || "https://tekna-ryyc.onrender.com";
-
   const [windowList, setWindowList] = useState([]);
   const [clientDetails, setClientDetails] = useState({
     clientName: "",
@@ -777,7 +778,7 @@ export default function QuotePreview() {
         project: clientDetails.project,
         finish: clientDetails.finish,
       };
-      const res = await fetch(`${apiBaseUrl}/api/quotes/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/quotes/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -786,10 +787,10 @@ export default function QuotePreview() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Failed to save");
-      alert("Quote Saved Successfully!");
+      toast.success("Quote Saved Successfully!");
     } catch (err) {
       console.error("Save error:", err);
-      alert("Error saving quote.");
+      toast.error("Error saving quote.");
     } finally {
       setIsSaving(false);
     }

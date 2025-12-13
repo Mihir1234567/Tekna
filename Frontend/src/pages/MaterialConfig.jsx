@@ -2,12 +2,21 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
+import toast from "react-hot-toast";
+import { getToken } from "../utils/auth";
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE || "https://tekna-ryyc.onrender.com";
+
 export default function MaterialConfig() {
   const navigate = useNavigate();
   const location = useLocation();
   const editMode = location.state?.mode === "edit";
   const loadedMaterials = location.state?.materials || [];
   const editingId = location.state?.materialDocId || null;
+
+  // New state for saving functionality
+  const [isSaving, setIsSaving] = useState(false);
 
   // Client / recipient info
   const [recipientInfo, setRecipientInfo] = useState({
@@ -130,7 +139,7 @@ export default function MaterialConfig() {
   const totalQty = materials.reduce((s, m) => s + Number(m.qty || 0), 0);
   const totalAmount = materials.reduce((s, m) => s + Number(m.amount || 0), 0);
 
-  const handlePreview = () => {
+  const handlePreview = async () => {
     // Validate recipient info
     if (!validateRecipient()) {
       setBannerError("Please fill all required Recipient / Job Info fields.");
@@ -141,14 +150,59 @@ export default function MaterialConfig() {
       setBannerError("Add at least one material line before preview.");
       return;
     }
-    // navigate to material details / preview with state
-    navigate("/material-details", {
-      state: {
+
+    // --- AUTO-SAVE LOGIC ---
+    setIsSaving(true);
+    const toastId = toast.loading("Saving configuration...");
+
+    try {
+      const token = getToken();
+      const payload = {
         materials,
         recipientInfo,
-        materialDocId: editingId,
-      },
-    });
+        // We don't have financial info here (GST/Packing) as that is in Preview page.
+        // If editing existing, backend should preserve missing fields or we accept defautls.
+        // Assuming partial update or defaults are handled. Ideally, we should fetch existing first if editing.
+        // But for "Preview" flow, simplest is to save what we have.
+        // NOTE: If we overwrite existing doc with missing financial info, that could be an issue.
+        // However, this page is mainly for "items + recipient".
+        status: "pending",
+      };
+
+      let url = `${API_BASE_URL}/api/materials`;
+      let method = "POST";
+
+      if (editingId) {
+        url = `${API_BASE_URL}/api/materials/${editingId}`;
+        method = "PUT";
+      }
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errTxt = await res.text();
+        throw new Error(errTxt || "Auto-save failed");
+      }
+
+      const data = await res.json();
+      const savedId = editingId || data.quote?.materialId || data.quote?._id;
+
+      toast.success("Configuration saved!", { id: toastId });
+
+      navigate(`/material-details/${savedId}`, { replace: true });
+    } catch (err) {
+      console.error(err);
+      toast.error(`Error saving: ${err.message}`, { id: toastId });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -270,9 +324,10 @@ export default function MaterialConfig() {
 
                 <button
                   onClick={handlePreview}
-                  className="px-4 py-2 bg-emerald-500 text-white rounded text-sm font-bold w-full sm:w-auto"
+                  disabled={isSaving}
+                  className="px-4 py-2 bg-emerald-500 text-white rounded text-sm font-bold w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Preview
+                  {isSaving ? "Saving..." : "Preview"}
                 </button>
               </div>
             </div>

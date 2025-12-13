@@ -16,31 +16,32 @@ const app = express();
 app.use(helmet());
 app.use(express.json({ limit: "10mb" }));
 app.use(
-    cors({
-        origin: process.env.CLIENT_URL,
-        credentials: true,
-    })
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  })
 );
 app.use(morgan("dev"));
 
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/quotes", require("./routes/quoteRoutes"));
+app.use("/api/materials", require("./routes/materialRoutes"));
 
 // Health route (use this to test server + DB)
 app.get("/health", async (req, res) => {
-    const mongoose = require("mongoose");
-    const state = mongoose.connection.readyState; // 0 disconnected,1 connected,2 connecting,3 disconnecting
-    res.json({
-        status: "ok",
-        env: process.env.NODE_ENV || "development",
-        dbState: state,
-    });
+  const mongoose = require("mongoose");
+  const state = mongoose.connection.readyState; // 0 disconnected,1 connected,2 connecting,3 disconnecting
+  res.json({
+    status: "ok",
+    env: process.env.NODE_ENV || "development",
+    dbState: state,
+  });
 });
 
 app.get("/", (req, res) => {
-    res.send({
-        message: "Tekna backend is running. Visit /health to check status.",
-    });
+  res.send({
+    message: "Tekna backend is running. Visit /health to check status.",
+  });
 });
 
 // TODO: later add routes:
@@ -49,13 +50,13 @@ app.get("/", (req, res) => {
 
 // Start server after DB connects
 (async () => {
-    try {
-        await connectDB(MONGO_URI);
-        app.listen(PORT, () => {
-            console.log(`🚀 Server listening on port ${PORT}`);
-        });
-    } catch (err) {
-        console.error("Failed to start server:", err.message);
-        process.exit(1);
-    }
+  try {
+    await connectDB(MONGO_URI);
+    app.listen(PORT, () => {
+      console.log(`🚀 Server listening on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error("Failed to start server:", err.message);
+    process.exit(1);
+  }
 })();

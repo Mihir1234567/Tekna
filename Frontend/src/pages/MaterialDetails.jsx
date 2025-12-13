@@ -18,10 +18,14 @@ import {
   Printer,
   Save,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import logo from "../assets/logo.png";
 import { getToken } from "../utils/auth";
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE || "https://tekna-ryyc.onrender.com";
 
 const formatNumber = (v) =>
   Number(v || 0).toLocaleString("en-IN", {
@@ -533,9 +537,6 @@ export default function MaterialDetails() {
   const [packingCharges, setPackingCharges] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
 
-  const apiBaseUrl =
-    import.meta.env.VITE_API_BASE || "https://tekna-ryyc.onrender.com";
-
   // totals - derived
   const subtotal = useMemo(
     () => materials.reduce((s, m) => s + Number(m.amount || 0), 0),
@@ -567,7 +568,7 @@ export default function MaterialDetails() {
           setLoading(false);
         } else if (id) {
           const token = getToken();
-          const res = await fetch(`${apiBaseUrl}/api/materials/${id}`, {
+          const res = await fetch(`${API_BASE_URL}/api/materials/${id}`, {
             headers: {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
@@ -576,7 +577,30 @@ export default function MaterialDetails() {
           if (!res.ok) throw new Error("Failed to fetch material doc");
           const data = await res.json();
           setMaterials(data.materials || []);
-          setRecipientInfo(data.recipientInfo || {});
+          // Robustly map recipient info
+          setRecipientInfo({
+            toName:
+              data.recipientInfo?.toName ||
+              data.clientInfo?.toName ||
+              data.toName ||
+              "",
+            company:
+              data.recipientInfo?.company ||
+              data.clientInfo?.company ||
+              data.company ||
+              "",
+            address:
+              data.recipientInfo?.address ||
+              data.clientInfo?.address ||
+              data.address ||
+              "",
+            ref:
+              data.recipientInfo?.ref ||
+              data.ref ||
+              data.po ||
+              data.reference ||
+              "",
+          });
           if (data.financials) {
             setApplyGST(data.financials.applyGST ?? applyGST);
             setCgstPerc(data.financials.cgstPerc ?? cgstPerc);
@@ -671,20 +695,13 @@ export default function MaterialDetails() {
     }, 200);
   };
 
-  // PDF generation (uses html2canvas + jsPDF) - multi-page support
   const downloadPDF = async () => {
     const printNode = mainRefPrint.current;
     if (!printNode) return;
 
     setIsPDFMode(true);
-    await new Promise((r) => setTimeout(r, 200));
-
-    const originalDPR = window.devicePixelRatio;
-    Object.defineProperty(window, "devicePixelRatio", {
-      writable: true,
-      configurable: true,
-      value: 1,
-    });
+    // simplified wait
+    await new Promise((r) => setTimeout(r, 500));
 
     try {
       const pdf = new jsPDF("p", "mm", "a4");
@@ -693,10 +710,10 @@ export default function MaterialDetails() {
 
       const canvas = await html2canvas(printNode, {
         scale: 2,
-        width: 794,
         useCORS: true,
-        scrollY: 0,
-        windowWidth: 1200,
+        logging: false, // disable logging for prod
+        allowTaint: true, // allow cross-origin images if needed
+        scrollY: -window.scrollY, // handle scroll correctly
       });
 
       const imgData = canvas.toDataURL("image/png");
@@ -718,13 +735,8 @@ export default function MaterialDetails() {
       pdf.save(`${recipientInfo.toName || "material_details"}.pdf`);
     } catch (err) {
       console.error("PDF error:", err);
-      alert("Failed to generate PDF");
+      toast.error(`Failed to generate PDF: ${err.message}`);
     } finally {
-      Object.defineProperty(window, "devicePixelRatio", {
-        writable: true,
-        configurable: true,
-        value: originalDPR,
-      });
       setIsPDFMode(false);
     }
   };
@@ -734,12 +746,6 @@ export default function MaterialDetails() {
   };
 
   const handleSave = async () => {
-    if (!id) {
-      alert(
-        "No document id to save. Implement POST if you want server save for new docs."
-      );
-      return;
-    }
     setIsSaving(true);
     try {
       const token = getToken();
@@ -747,20 +753,48 @@ export default function MaterialDetails() {
         materials,
         recipientInfo,
         financials: { applyGST, cgstPerc, sgstPerc, packingCharges },
+        status: "pending", // Default status for new/updates
       };
-      const res = await fetch(`${apiBaseUrl}/api/materials/${id}`, {
-        method: "PUT",
+      let url = `${API_BASE_URL}/api/materials`;
+      let method = "POST";
+
+      if (id) {
+        url = `${API_BASE_URL}/api/materials/${id}`;
+        method = "PUT";
+      }
+
+      const res = await fetch(url, {
+        method,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Save failed");
-      alert("Saved successfully");
+
+      if (!res.ok) {
+        const errTxt = await res.text();
+        throw new Error(errTxt || "Save failed");
+      }
+
+      const data = await res.json();
+
+      if (!id) {
+        // Created new record -> navigate to its edit page
+        const newId = data.quote?.materialId || data.quote?._id;
+        if (newId) {
+          toast.success("Saved successfully! ID assigned.");
+          // Redirect to the same page but with the new ID, so subsequent saves update this record
+          navigate(`/material-details/${newId}`, { replace: true });
+        } else {
+          toast.success("Created successfully!");
+        }
+      } else {
+        toast.success("Saved successfully");
+      }
     } catch (err) {
       console.error(err);
-      alert("Error saving document");
+      toast.error(`Error saving document: ${err.message}`);
     } finally {
       setIsSaving(false);
     }
@@ -873,12 +907,21 @@ export default function MaterialDetails() {
               <span>Download PDF</span>
             </button>
 
-            {/* Back (light) */}
+            {/* Edit / Back (light) */}
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => {
+                navigate("/material-config", {
+                  state: {
+                    mode: "edit",
+                    materialDocId: id, // pass ID so config knows we are editing existing
+                    materials,
+                    recipientInfo,
+                  },
+                });
+              }}
               className="px-4 py-2 rounded-md bg-white border border-slate-200 text-sm shadow-sm"
             >
-              Back
+              Edit
             </button>
           </div>
         </div>
@@ -911,15 +954,17 @@ export default function MaterialDetails() {
         </div>
       </div>
 
-      {/* Hidden print node */}
+      {/* Hidden print node - Using fixed position off-screen instead of absolute -9999 which can partial clip */}
       <div
         id="print-view"
         style={{
-          position: "absolute",
-          top: -9999,
-          left: -9999,
+          position: "fixed",
+          left: "0",
+          top: "0",
           width: "794px",
-          overflow: "visible",
+          zIndex: -1,
+          opacity: 0,
+          pointerEvents: "none",
         }}
       >
         <MaterialTemplate

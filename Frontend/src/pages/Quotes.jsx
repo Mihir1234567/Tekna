@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiGet } from "../utils/api";
+import toast from "react-hot-toast";
+import ConfirmationModal from "../components/ConfirmationModal";
 
 // --- Inline Icons to avoid external dependencies ---
 const Icons = {
@@ -141,11 +143,11 @@ export default function Quotes() {
       if (data && data.items) {
         setQuotes(data.items);
       } else {
-        alert(data.message || "Failed to load quotes.");
+        toast.error(data.message || "Failed to load quotes.");
       }
     } catch (err) {
       console.error("Fetch quotes error:", err);
-      alert("Server error while fetching quotes.");
+      toast.error("Server error while fetching quotes.");
     } finally {
       setLoading(false);
     }
@@ -162,7 +164,7 @@ export default function Quotes() {
       });
       const data = await res.json();
       if (!res.ok || !data.quote) {
-        alert("Could not load quote for editing");
+        toast.error("Could not load quote for editing");
         return;
       }
       navigate("/configurator", {
@@ -175,7 +177,7 @@ export default function Quotes() {
       });
     } catch (error) {
       console.error("Edit load error:", error);
-      alert("Server error loading quote for edit.");
+      toast.error("Server error loading quote for edit.");
     }
   };
 
@@ -191,16 +193,17 @@ export default function Quotes() {
       });
       const data = await res.json();
       if (!res.ok) {
-        alert(data.message || "Failed to delete quote.");
+        toast.error(data.message || "Failed to delete quote.");
         return;
       }
       setQuotes((prevQuotes) =>
         prevQuotes.filter((q) => q.quoteId !== quoteIdToDelete)
       );
       setDeleteConfirmation({ isOpen: false, quoteId: null });
+      toast.success("Quote deleted successfully");
     } catch (error) {
       console.error("Delete error:", error);
-      alert("Server error while deleting quote.");
+      toast.error("Server error while deleting quote.");
     }
   };
 
@@ -217,7 +220,7 @@ export default function Quotes() {
       });
       const data = await res.json();
       if (!res.ok) {
-        alert(data.message || "Failed to update status.");
+        toast.error(data.message || "Failed to update status.");
         return;
       }
       setQuotes((prevQuotes) =>
@@ -228,7 +231,7 @@ export default function Quotes() {
       setEditingStatus(null);
     } catch (error) {
       console.error("Status change error:", error);
-      alert("Server error while changing status.");
+      toast.error("Server error while changing status.");
     }
   };
 
@@ -482,47 +485,18 @@ export default function Quotes() {
       </div>
 
       {/* Delete Confirmation Modal */}
-      {deleteConfirmation.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm transition-opacity">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden transform transition-all">
-            <div className="p-6 text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                <Icons.Alert />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Delete Quote{" "}
-                {deleteConfirmation.quoteId
-                  ? `#${deleteConfirmation.quoteId}`
-                  : ""}
-                ?
-              </h3>
-              <p className="text-sm text-gray-500 mb-6">
-                Are you sure you want to delete this quote? This action cannot
-                be undone and all associated data will be lost.
-              </p>
-              <div className="flex gap-3 justify-center">
-                <button
-                  onClick={() =>
-                    setDeleteConfirmation({
-                      isOpen: false,
-                      quoteId: null,
-                    })
-                  }
-                  className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 focus:ring-2 focus:ring-gray-200 transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleDelete(deleteConfirmation.quoteId)}
-                  className="px-5 py-2.5 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 focus:ring-2 focus:ring-red-500 shadow-md transition-all"
-                >
-                  Delete Quote
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmationModal
+        isOpen={deleteConfirmation.isOpen}
+        onClose={() => setDeleteConfirmation({ isOpen: false, quoteId: null })}
+        onConfirm={() => handleDelete(deleteConfirmation.quoteId)}
+        title={`Delete Quote ${
+          deleteConfirmation.quoteId ? `#${deleteConfirmation.quoteId}` : ""
+        }?`}
+        message="Are you sure you want to delete this quote? This action cannot be undone and all associated data will be lost."
+        confirmText="Delete Quote"
+        cancelText="Cancel"
+        isDanger={true}
+      />
     </div>
   );
 }

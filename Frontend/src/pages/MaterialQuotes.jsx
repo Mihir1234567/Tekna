@@ -1,6 +1,8 @@
 // src/pages/MaterialQuotes.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import ConfirmationModal from "../components/ConfirmationModal";
 
 // --- Inline Icons (kept small and local) ---
 const Icons = {
@@ -88,34 +90,7 @@ const Icons = {
   ),
 };
 
-// demo fallback entry (used only if API returns empty)
-const DEMO_ENTRY = {
-  _id: "demo-1",
-  recipientInfo: {
-    toName: "Demo Customer",
-    company: "Demo Builders",
-    address: "123 Demo Lane",
-  },
-  status: "pending",
-  totalValue: 12500,
-  createdAt: new Date().toISOString(),
-  materials: [
-    {
-      description: "Aluminium Channel 50x20",
-      unit: "pcs",
-      qty: 10,
-      rate: 500,
-      amount: 5000,
-    },
-    {
-      description: "Glass 6mm",
-      unit: "sqft",
-      qty: 100,
-      rate: 75,
-      amount: 7500,
-    },
-  ],
-};
+// Demo data removed
 
 // Robust customer name resolver
 const getCustomerName = (doc) => {
@@ -167,8 +142,7 @@ export default function MaterialQuotes() {
       if (!res.ok) {
         const txt = await res.text().catch(() => "");
         console.error("Failed to fetch materials:", res.status, txt);
-        // show demo entry if fetch fails
-        setItems([DEMO_ENTRY]);
+        // failing silently or w/ error log is sometimes better than alert on load
         return;
       }
 
@@ -177,33 +151,19 @@ export default function MaterialQuotes() {
       const list =
         data.items || data.materials || (Array.isArray(data) ? data : []);
       if (!list || list.length === 0) {
-        // show demo entry when API returns empty
-        setItems([DEMO_ENTRY]);
+        setItems([]);
       } else {
         setItems(list);
       }
     } catch (err) {
       console.error("Fetch materials error:", err);
-      // show demo entry on network error
-      setItems([DEMO_ENTRY]);
+      setItems([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // helper: treat demo entries locally (no network call)
-  const isDemoId = (id) => typeof id === "string" && id.startsWith("demo-");
-
   const handleDelete = async (idToDelete) => {
-    // demo: remove locally
-    if (isDemoId(idToDelete)) {
-      setItems((p) =>
-        p.filter((it) => it._id !== idToDelete && it.id !== idToDelete)
-      );
-      setDeleteConfirmation({ isOpen: false, id: null });
-      return;
-    }
-
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${apiBaseUrl}/api/materials/${idToDelete}`, {
@@ -215,29 +175,21 @@ export default function MaterialQuotes() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        alert(data.message || "Failed to delete material quotation.");
+        toast.error(data.message || "Failed to delete material quotation.");
         return;
       }
       setItems((p) =>
         p.filter((it) => it._id !== idToDelete && it.id !== idToDelete)
       );
       setDeleteConfirmation({ isOpen: false, id: null });
+      toast.success("Deleted successfully");
     } catch (err) {
       console.error("Delete error:", err);
-      alert("Server error while deleting.");
+      toast.error("Server error while deleting.");
     }
   };
 
   const handleStatusChange = async (id, newStatus) => {
-    // demo: update locally
-    if (isDemoId(id)) {
-      setItems((prev) =>
-        prev.map((it) => (it._id === id ? { ...it, status: newStatus } : it))
-      );
-      setEditingStatus(null);
-      return;
-    }
-
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${apiBaseUrl}/api/materials/${id}`, {
@@ -250,7 +202,7 @@ export default function MaterialQuotes() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        alert(data.message || "Failed to update status.");
+        toast.error(data.message || "Failed to update status.");
         return;
       }
       setItems((prev) =>
@@ -259,22 +211,71 @@ export default function MaterialQuotes() {
         )
       );
       setEditingStatus(null);
+      toast.success("Status updated");
     } catch (err) {
       console.error("Status update error:", err);
-      alert("Server error while updating status.");
+      toast.error("Server error while updating status.");
     }
   };
 
-  const openEdit = (doc) => {
-    // navigate to material config page in edit mode
-    navigate("/material-config", {
-      state: {
-        mode: "edit",
-        materialId: doc._id || doc.id,
-        materials: doc.materials || doc.items || doc.lines || [],
-        recipientInfo: doc.recipientInfo || doc.clientInfo || {},
-      },
-    });
+  const openEdit = async (doc) => {
+    const id = doc._id || doc.id;
+    const token = localStorage.getItem("token");
+
+    // Show loading toast or UI indication if desired
+    const toastId = toast.loading("Loading quote details...");
+
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/materials/${id}`, {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : undefined,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch material details");
+      }
+
+      const fullDoc = await res.json();
+      toast.dismiss(toastId);
+
+      // navigate to material config page in edit mode with FULL data
+      navigate("/material-config", {
+        state: {
+          mode: "edit",
+          materialDocId: id,
+          materials: fullDoc.materials || fullDoc.items || fullDoc.lines || [],
+          recipientInfo: {
+            toName:
+              fullDoc.recipientInfo?.toName ||
+              fullDoc.clientInfo?.toName ||
+              fullDoc.toName ||
+              "",
+            company:
+              fullDoc.recipientInfo?.company ||
+              fullDoc.clientInfo?.company ||
+              fullDoc.company ||
+              "",
+            address:
+              fullDoc.recipientInfo?.address ||
+              fullDoc.clientInfo?.address ||
+              fullDoc.address ||
+              "",
+            ref:
+              fullDoc.recipientInfo?.ref ||
+              fullDoc.ref ||
+              fullDoc.po ||
+              fullDoc.reference ||
+              "",
+          },
+        },
+      });
+    } catch (err) {
+      console.error("Edit load error:", err);
+      toast.dismiss(toastId);
+      toast.error("Failed to load quote for editing");
+    }
   };
 
   if (loading) {
@@ -509,7 +510,9 @@ export default function MaterialQuotes() {
                         <td className="px-6 py-4">
                           <div className="flex justify-end gap-2">
                             <button
-                              onClick={() => navigate(`/material-details`)}
+                              onClick={() =>
+                                navigate(`/material-details/${id}`)
+                              }
                               className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                               title="View Details"
                             >
@@ -544,40 +547,16 @@ export default function MaterialQuotes() {
       </div>
 
       {/* Delete confirmation modal */}
-      {deleteConfirmation.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden transform transition-all">
-            <div className="p-6 text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                <Icons.Alert />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Delete material quote?
-              </h3>
-              <p className="text-sm text-gray-500 mb-6">
-                This will permanently remove the material quotation and its
-                lines.
-              </p>
-              <div className="flex gap-3 justify-center">
-                <button
-                  onClick={() =>
-                    setDeleteConfirmation({ isOpen: false, id: null })
-                  }
-                  className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleDelete(deleteConfirmation.id)}
-                  className="px-5 py-2.5 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmationModal
+        isOpen={deleteConfirmation.isOpen}
+        onClose={() => setDeleteConfirmation({ isOpen: false, id: null })}
+        onConfirm={() => handleDelete(deleteConfirmation.id)}
+        title="Delete material quote?"
+        message="This will permanently remove the material quotation and its lines."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDanger={true}
+      />
     </div>
   );
 }
