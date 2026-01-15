@@ -535,11 +535,13 @@ export default function Configurator() {
     className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-transparent text-sm focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all hover:border-slate-200"
   >
     {/* Default placeholder option */}
-    <option value="" disabled hidden>
+    <option value="">
       Select window type
     </option>
 
     {/* Window Types */}
+    <option value="Normal">Normal</option>
+    <option value="Slider">Slider</option>
     <option value="fix open bal left and right">Fix open bal left and right</option>
     <option value="fix partision door">Fix partision door</option>
     <option value="fix sliding">Fix sliding</option>
