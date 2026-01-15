@@ -225,6 +225,18 @@ const Window3D = ({ width, height, windowType = "normal" }) => {
                             />
                         </mesh>
                     )}
+
+                    {windowType !== "slider" && (
+                        <mesh position={[0, 0, 0]} material={materials.glass}>
+                            <boxGeometry
+                                args={[
+                                    W - frameThickness * 2,
+                                    H - frameThickness * 2,
+                                    0.02,
+                                ]}
+                            />
+                        </mesh>
+                    )}
                 </group>
 
                 {/* ✅ DIMENSIONS - Drawn relative to absolute center (0,0,0) */}

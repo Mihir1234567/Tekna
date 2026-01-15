@@ -525,7 +525,7 @@ export default function Configurator() {
 
             {/* Window Type Segmented Control */}
             <div className="mb-6 p-1 bg-slate-100 rounded-xl grid grid-cols-2 gap-1">
-              {["normal", "slider", "1/2"].map((type) => (
+              {["normal", "slider"].map((type) => (
                 <button
                   key={type}
                   onClick={() => setWindowType(type)}
