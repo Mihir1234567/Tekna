@@ -523,21 +523,21 @@ export default function Configurator() {
               )}
             </div>
 
-            {/* Window Type Segmented Control */}
-            <div className="mb-6 p-1 bg-slate-100 rounded-xl grid grid-cols-2 gap-1">
-              {["normal", "slider"].map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setWindowType(type)}
-                  className={`py-2 text-sm font-semibold rounded-lg transition-all duration-200 capitalize ${
-                    windowType === type
-                      ? "bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200/50"
-                      : "text-slate-500 hover:text-slate-700"
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
+            {/* Window Type Dropdown */}
+            <div className="mb-6">
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5 ml-1">
+                Window Type
+              </label>
+              <select
+                value={windowType}
+                onChange={(e) => setWindowType(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-transparent text-sm focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all hover:border-slate-200"
+              >
+                <option value="fix open bal left and right">fix open bal left and right</option>
+                <option value="fix partision door">fix partision door</option>
+                <option value="Fix sliding">Fix sliding</option>
+                <option value="4 track silding">4 track silding</option>
+              </select>
             </div>
 
             {/* Dimensions */}
