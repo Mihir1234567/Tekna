@@ -167,6 +167,7 @@ export default function Configurator() {
     grill: "",
     locking: "",
     hardware: "",
+    make: "",
     mess: "",
     pricePerFt: "",
   });
@@ -274,6 +275,7 @@ export default function Configurator() {
     ["grill", "Grill"],
     ["locking", "Locking"],
     ["hardware", "Hardware"],
+    ["make", "Make"],
     ["mess", "Mess"],
   ];
 
@@ -581,22 +583,55 @@ export default function Configurator() {
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5 ml-1">
                     {label}
                   </label>
-                  <input
-                    type="text"
-                    value={formData[key]}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        [key]: e.target.value,
-                      })
-                    }
-                    placeholder={`Select ${label}...`}
-                    className={`w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-transparent text-sm focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all placeholder:text-slate-400 ${
-                      errors[key]
-                        ? "border-rose-400 bg-rose-50"
-                        : "hover:border-slate-200"
-                    }`}
-                  />
+                  {key === "make" ? (
+                    <select
+                      value={formData[key]}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          [key]: e.target.value,
+                        })
+                      }
+                      className={`w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-transparent text-sm focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all appearance-none cursor-pointer ${
+                        errors[key]
+                          ? "border-rose-400 bg-rose-50"
+                          : "hover:border-slate-200"
+                      }`}
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: "no-repeat",
+                        backgroundPosition: "right 12px center",
+                        paddingRight: "36px",
+                      }}
+                    >
+                      <option value="">Select {label}...</option>
+                      <option value="normal">normal</option>
+                      <option value="slider">slider</option>
+                      <option value="fix open {left, right}">fix open {"{left, right}"}</option>
+                      <option value="fix partition door">fix partition door</option>
+                      <option value="fix sliding">fix sliding</option>
+                      <option value="trak sliding">trak sliding</option>
+                      <option value="3-trak sliding">3-trak sliding</option>
+                      <option value="door">door</option>
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={formData[key]}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          [key]: e.target.value,
+                        })
+                      }
+                      placeholder={`Select ${label}...`}
+                      className={`w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-transparent text-sm focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all placeholder:text-slate-400 ${
+                        errors[key]
+                          ? "border-rose-400 bg-rose-50"
+                          : "hover:border-slate-200"
+                      }`}
+                    />
+                  )}
                 </div>
               ))}
 
