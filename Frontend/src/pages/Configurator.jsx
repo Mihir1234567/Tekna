@@ -525,21 +525,28 @@ export default function Configurator() {
 
             {/* Window Type Dropdown */}
             <div className="mb-6">
-              <label className="block text-xs font-semibold text-slate-600 mb-1.5 ml-1">
-                Window Type
-              </label>
-              <select
-                value={windowType}
-                onChange={(e) => setWindowType(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-transparent text-sm focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all hover:border-slate-200"
-              >
-                <option value="" disabled selected>Select the window</option>
-                <option value="fix open bal left and right">fix open bal left and right</option>
-                <option value="fix partision door">fix partision door</option>
-                <option value="Fix sliding">Fix sliding</option>
-                <option value="4 track silding">4 track silding</option>
-              </select>
-            </div>
+  <label className="block text-xs font-semibold text-slate-600 mb-1.5 ml-1">
+    Window Type
+  </label>
+
+  <select
+    value={windowType}
+    onChange={(e) => setWindowType(e.target.value)}
+    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-transparent text-sm focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all hover:border-slate-200"
+  >
+    {/* Default placeholder option */}
+    <option value="" disabled hidden>
+      Select window type
+    </option>
+
+    {/* Window Types */}
+    <option value="fix open bal left and right">Fix open bal left and right</option>
+    <option value="fix partision door">Fix partision door</option>
+    <option value="fix sliding">Fix sliding</option>
+    <option value="4 track sliding">4 track sliding</option>
+  </select>
+</div>
+
 
             {/* Dimensions */}
             <div className="grid grid-cols-2 gap-4 mb-6">
