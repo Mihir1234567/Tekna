@@ -747,7 +747,11 @@ const Window3D = ({ width, height, windowType = "normal" }) => {
     return (
         <div className="w-full h-full min-h-[500px]">
             {/* Camera positioned straight on for "Blueprint" feel initially */}
-            <Canvas camera={{ position: [0, 0, 5], fov: 50 }} dpr={[1, 2]}>
+            <Canvas 
+                camera={{ position: [0, 0, 5], fov: 50 }} 
+                dpr={[1, 2]}
+                onContextLost={(e) => e.preventDefault()}
+            >
                 <Environment files="/hdr/potsdamer_platz_1k.hdr" />
 
                 {/* ✅ ALIGNMENT FIX: 
