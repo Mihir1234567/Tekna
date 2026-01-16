@@ -424,7 +424,6 @@ export default function Configurator() {
     try {
       let res;
       const token = getToken();
-      console.log("Token:", token); // Debug log
       
       if (!token) {
         setBannerError("Authentication required. Please log in.");
