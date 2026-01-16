@@ -153,8 +153,8 @@ export default function Configurator() {
     finish: "",
   });
 
-  const [width, setWidth] = useState(36);
-  const [height, setHeight] = useState(48);
+  const [width, setWidth] = useState(60);
+  const [height, setHeight] = useState(70);
   const [quantity, setQuantity] = useState(1);
   const [windowType, setWindowType] = useState("normal");
   const [windowList, setWindowList] = useState([]);
@@ -200,13 +200,9 @@ export default function Configurator() {
       if (hasClientInfo && loadedWindows.length > 0) return;
 
       try {
-        const token = localStorage.getItem("token");
-        if (!token) return; // user not logged in
-
         const res = await fetch(`${apiBaseUrl}/api/quotes/${editingQuoteId}`, {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -229,10 +225,10 @@ export default function Configurator() {
           quote.recipientInfo ||
           (quote.clientName || quote.project || quote.finish
             ? {
-                clientName: quote.clientName || "",
-                project: quote.project || "",
-                finish: quote.finish || "",
-              }
+              clientName: quote.clientName || "",
+              project: quote.project || "",
+              finish: quote.finish || "",
+            }
             : null) ||
           null;
 
@@ -399,11 +395,6 @@ export default function Configurator() {
   };
 
   const handleGenerateQuote = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
     if (windowList.length === 0) {
       setBannerError("Please add at least one window.");
       return;
@@ -426,7 +417,6 @@ export default function Configurator() {
       let res;
       const headers = {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       };
 
       if (editMode && editingQuoteId) {
@@ -523,31 +513,60 @@ export default function Configurator() {
               )}
             </div>
 
-            {/* Window Type Dropdown */}
+            {/* Window Type Segmented Control */}
             <div className="mb-6">
-  <label className="block text-xs font-semibold text-slate-600 mb-1.5 ml-1">
-    Window Type
-  </label>
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5 ml-1">
+                Window Type
+              </label>
 
-  <select
-    value={windowType}
-    onChange={(e) => setWindowType(e.target.value)}
-    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-transparent text-sm focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all hover:border-slate-200"
-  >
-    {/* Default placeholder option */}
-    <option value="">
-      Select window type
-    </option>
+              <select
+                value={windowType}
+                onChange={(e) => setWindowType(e.target.value)}
+                className={`w-full px-4 py-2.5 rounded-xl bg-slate-50 border-2 text-sm font-medium text-slate-900 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all appearance-none cursor-pointer ${!windowType
+                    ? "text-slate-400"
+                    : "text-slate-900"
+                  } ${errors.windowType
+                    ? "border-rose-400 bg-rose-50"
+                    : "border-transparent hover:border-slate-200"
+                  }`}
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234B5563' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "right 12px center",
+                  paddingRight: "36px",
+                }}
+              >
+                <option value="" className="text-slate-400">
+                  Select window type
+                </option>
 
-    {/* Window Types */}
-    <option value="Normal">Normal</option>
-    <option value="Slider">Slider</option>
-    <option value="fix open bal left and right">Fix open bal left and right</option>
-    <option value="fix partision door">Fix partision door</option>
-    <option value="fix sliding">Fix sliding</option>
-    <option value="4 track sliding">4 track sliding</option>
-  </select>
-</div>
+                {/* Window Types */}
+                <option value="Normal" className="text-slate-900">
+                  Normal
+                </option>
+                <option value="Slider" className="text-slate-900">
+                  Slider
+                </option>
+                <option value="fix left" className="text-slate-900">
+                  Fix left
+                </option>
+                <option value="fix right" className="text-slate-900">
+                  Fix right
+                </option>
+                <option value="fix partision door" className="text-slate-900">
+                  Fix partision door
+                </option>
+                <option value="fix sliding" className="text-slate-900">
+                  Fix sliding
+                </option>
+                <option value="4 track sliding" className="text-slate-900">
+                  4 track sliding
+                </option>
+                <option value="Bathroom window with top vent" className="text-slate-900">
+                  Bathroom window with top vent
+                </option>
+              </select>
+            </div>
 
 
             {/* Dimensions */}
@@ -560,14 +579,13 @@ export default function Configurator() {
                   type="number"
                   value={width}
                   onChange={(e) => setWidth(e.target.value)}
-                  className={`w-full p-3 rounded-xl bg-slate-50 border-2 text-slate-900 font-medium focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all ${
-                    errors.width
+                  className={`w-full p-3 rounded-xl bg-slate-50 border-2 text-slate-900 font-medium focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all ${errors.width
                       ? "border-rose-400 bg-rose-50/50"
                       : "border-transparent hover:border-slate-200 focus:border-indigo-500"
-                  }`}
+                    }`}
                 />
               </div>
-              <div>
+              <div> 
                 <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">
                   Height (in)
                 </label>
@@ -575,11 +593,10 @@ export default function Configurator() {
                   type="number"
                   value={height}
                   onChange={(e) => setHeight(e.target.value)}
-                  className={`w-full p-3 rounded-xl bg-slate-50 border-2 text-slate-900 font-medium focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all ${
-                    errors.height
+                  className={`w-full p-3 rounded-xl bg-slate-50 border-2 text-slate-900 font-medium focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all ${errors.height
                       ? "border-rose-400 bg-rose-50/50"
                       : "border-transparent hover:border-slate-200 focus:border-indigo-500"
-                  }`}
+                    }`}
                 />
               </div>
             </div>
@@ -601,11 +618,10 @@ export default function Configurator() {
                       })
                     }
                     placeholder={`Select ${label}...`}
-                    className={`w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-transparent text-sm focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all placeholder:text-slate-400 ${
-                      errors[key]
+                    className={`w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-transparent text-sm focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all placeholder:text-slate-400 ${errors[key]
                         ? "border-rose-400 bg-rose-50"
                         : "hover:border-slate-200"
-                    }`}
+                      }`}
                   />
                 </div>
               ))}
@@ -628,11 +644,10 @@ export default function Configurator() {
                         pricePerFt: e.target.value,
                       })
                     }
-                    className={`w-full pl-9 px-4 py-2.5 rounded-xl bg-slate-50 border border-transparent text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all ${
-                      errors.pricePerFt
+                    className={`w-full pl-9 px-4 py-2.5 rounded-xl bg-slate-50 border border-transparent text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all ${errors.pricePerFt
                         ? "border-rose-400 bg-rose-50"
                         : "hover:border-slate-200"
-                    }`}
+                      }`}
                   />
                 </div>
               </div>
@@ -665,11 +680,10 @@ export default function Configurator() {
               <div className="flex-1 flex flex-col justify-end">
                 <button
                   onClick={handleAddOrUpdateWindow}
-                  className={`w-full h-[46px] rounded-xl text-sm font-bold shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] ${
-                    editIndex !== null
+                  className={`w-full h-[46px] rounded-xl text-sm font-bold shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] ${editIndex !== null
                       ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-orange-200"
                       : "bg-gradient-to-r from-indigo-600 to-blue-600 text-white hover:from-indigo-700 hover:to-blue-700"
-                  }`}
+                    }`}
                 >
                   {editIndex !== null ? <Icons.Check /> : <Icons.Plus />}
                   {editIndex !== null ? "Update" : "Add to List"}
@@ -755,11 +769,10 @@ export default function Configurator() {
                 windowList.map((w, i) => (
                   <div
                     key={i}
-                    className={`relative p-4 rounded-xl border transition-all duration-200 group hover:-translate-y-1 hover:shadow-md ${
-                      editIndex === i
+                    className={`relative p-4 rounded-xl border transition-all duration-200 group hover:-translate-y-1 hover:shadow-md ${editIndex === i
                         ? "border-amber-400 bg-amber-50/50 shadow-sm ring-1 ring-amber-200"
                         : "border-slate-100 bg-white hover:border-indigo-200"
-                    }`}
+                      }`}
                   >
                     <div className="flex justify-between items-start mb-1.5">
                       <span className="text-sm font-bold text-slate-700 flex items-center gap-2">
