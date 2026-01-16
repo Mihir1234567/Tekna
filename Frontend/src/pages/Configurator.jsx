@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Window3D from "../components/Window3D";
+import { getToken } from "../utils/auth";
 
 // --- Inline Icons ---
 const Icons = {
@@ -200,9 +201,16 @@ export default function Configurator() {
       if (hasClientInfo && loadedWindows.length > 0) return;
 
       try {
+        const token = getToken();
+        if (!token) {
+          console.warn("No token available for fetching quote");
+          return;
+        }
+
         const res = await fetch(`${apiBaseUrl}/api/quotes/${editingQuoteId}`, {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -415,8 +423,17 @@ export default function Configurator() {
 
     try {
       let res;
+      const token = getToken();
+      console.log("Token:", token); // Debug log
+      
+      if (!token) {
+        setBannerError("Authentication required. Please log in.");
+        return;
+      }
+
       const headers = {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       };
 
       if (editMode && editingQuoteId) {
