@@ -641,93 +641,78 @@ const Window3D = ({ width, height, windowType = "normal" }) => {
         );
     };
 
-const renderBathroomWindowWithTopVent = () => {
-    // --- Configuration ---
-    const topSectionRatio = 0.35; // Top section takes up 35% of the height
-    const holeRadius = 0.20;      // Radius of the circular cutout (approx 20cm)
-    const glassThickness = 0.02;  
-    
-    // Derived Dimensions
-    const innerH = H - frameThickness * 2;
-    const innerW = W - frameThickness * 2;
-    const topPaneH = innerH * topSectionRatio;
-    const bottomPaneH = innerH * (1 - topSectionRatio) - sashThickness; 
-    const mullionY = H / 2 - frameThickness - topPaneH - (sashThickness / 2);
-    
-    // The center position for the Top Pane (Glass + Fan)
-    const topPaneCenterY = H / 2 - frameThickness - topPaneH / 2;
+    const renderBathroomWindowWithTopVent = () => {
+//   Configuration for the bathroom window with a top vent
+//   Based on the provided image, it has a small top vent section and a larger bottom section.
 
-    // --- NEW: Fan Component ---
-    const RenderFan = () => {
-        // Material for the fan (White Plastic)
-        const fanMaterial = new THREE.MeshStandardMaterial({ 
-            color: "#EEEEEE", 
-            roughness: 0.4,
-            metalness: 0.1
-        });
+//   Main dimensions (assuming these are provided via props or context, e.g., W, H, frameThickness, frameDepth)
+//   For this specific type, we define the split ratio.
+  const ventHeightRatio = 0.32; // Top vent is approx. 1/4 of the total height.
+  const dividerThickness = sashThickness; // Thickness of the horizontal mullion.
+  
+//   Calculate heights for the top vent and bottom pane areas
+  const ventAreaHeight = (H - frameThickness * 2) * ventHeightRatio;
+  const bottomAreaHeight = (H - frameThickness * 2) * (1 - ventHeightRatio);
+  
+//   Y-position for the horizontal divider
+//   It sits between the top vent and the bottom pane.
+  const dividerYPos = H / 2 - frameThickness - ventAreaHeight + dividerThickness / 2;
 
-        // return (
-        //     <group position={[0, topPaneCenterY, 0]}>
-        //         {/* 1. Outer Ring (Frame inside the hole) */}
-        //         <mesh rotation={[Math.PI / 2, 0, 0]} material={fanMaterial}>
-        //             <torusGeometry args={[holeRadius - 0.01, 0.015, 12, 64]} />
-        //         </mesh>
+  return (
+    <group>
+      {/* --- Outer Frame --- */}
+      {/* Top Frame part */}
+      <mesh position={[0, H / 2 - frameThickness / 2, 0]} material={materials.frame}>
+        <boxGeometry args={[W, frameThickness, frameDepth]} />
+      </mesh>
+      {/* Bottom Frame part */}
+      <mesh position={[0, -H / 2 + frameThickness / 2, 0]} material={materials.frame}>
+        <boxGeometry args={[W, frameThickness, frameDepth]} />
+      </mesh>
+      {/* Left Frame part */}
+      <mesh position={[-W / 2 + frameThickness / 2, 0, 0]} material={materials.frame}>
+        <boxGeometry args={[frameThickness, H - frameThickness * 2, frameDepth]} />
+      </mesh>
+      {/* Right Frame part */}
+      <mesh position={[W / 2 - frameThickness / 2, 0, 0]} material={materials.frame}>
+        <boxGeometry args={[frameThickness, H - frameThickness * 2, frameDepth]} />
+      </mesh>
 
-        //         {/* 2. Center Hub (Motor) */}
-        //         <mesh rotation={[Math.PI / 2, 0, 0]} material={fanMaterial}>
-        //             <cylinderGeometry args={[0.05, 0.05, 0.06, 32]} />
-        //         </mesh>
-        //         {/* Small cap on motor */}
-        //         <mesh position={[0, 0, 0.03]} rotation={[Math.PI / 2, 0, 0]} material={new THREE.MeshStandardMaterial({ color: "#999999" })}>
-        //             <cylinderGeometry args={[0.02, 0.02, 0.01, 16]} />
-        //         </mesh>
+      {/* Horizontal Divider (Mullion) */}
+      <mesh position={[0, dividerYPos, 0]} material={materials.frame}>
+        <boxGeometry args={[W - frameThickness * 2, dividerThickness, frameDepth]} />
+      </mesh>
 
-        //         {/* 3. Fan Blades (5 Blades) */}
-        //         <group position={[0, 0, -0.01]}>
-        //             {[0, 1, 2, 3, 4].map((i) => (
-        //                 <mesh 
-        //                     key={i} 
-        //                     rotation={[0, 0, (Math.PI * 2 / 5) * i]} 
-        //                     material={fanMaterial}
-        //                 >
-        //                     {/* Blade Geometry: Shifted out from center and angled */}
-        //                     <group position={[holeRadius * 0.4, 0, 0]} rotation={[0.4, 0, 0]}>
-        //                         <boxGeometry args={[holeRadius * 0.7, 0.05, 0.005]} />
-        //                     </group>
-        //                 </mesh>
-        //             ))}
-        //         </group>
-
-        //         {/* 4. Support Spokes (The 'X' or '+' shape holding the motor) */}
-        //         <mesh position={[0, 0, 0.015]} material={fanMaterial}>
-        //             <boxGeometry args={[holeRadius * 2, 0.012, 0.005]} />
-        //         </mesh>
-        //         <mesh position={[0, 0, 0.015]} material={fanMaterial}>
-        //             <boxGeometry args={[0.012, holeRadius * 2, 0.005]} />
-        //         </mesh>
-        //     </group>
-        // );
-    };
-
-    return (
-        <group>
-            {/* Top Pane with Glass and Fan */}
-            <mesh position={[0, topPaneCenterY, 0]} material={materials.glass}>
-                <primitive object={glassWithHoleGeometry} />
-            </mesh>
-            <RenderFan />
-
-            {/* Horizontal Mullion (Divider between top and bottom) */}
-            <mesh position={[0, mullionY, 0]} material={materials.frame}>
-                <boxGeometry args={[innerW, sashThickness, frameDepth / 2]} />
-            </mesh>
-
-            {/* Bottom Pane (Regular glass) */}
-            <mesh position={[0, H / 2 - frameThickness - topPaneH - sashThickness - bottomPaneH / 2, 0]} material={materials.glass}>
-                <boxGeometry args={[innerW, bottomPaneH, 0.02]} />
-            </mesh>
-        </group>
-    );
+      {/* Glass Panes (Frosted/Textured for Bathroom) */}
+      {/* Top Vent Glass Pane */}
+      <mesh
+        position={[0, H / 2 - frameThickness - ventAreaHeight / 2 + dividerThickness / 4, 0]}
+        material={materials.glassFrosted || materials.glass} // Use a frosted material if available
+      >
+        <boxGeometry
+          args={[
+            W - frameThickness * 2,
+            ventAreaHeight - dividerThickness / 2,
+            0.02 // Glass thickness
+          ]}
+        />
+      </mesh>
+      
+      {/* Bottom Fixed Glass Pane */}
+      <mesh
+        position={[0, -H / 2 + frameThickness + bottomAreaHeight / 2 - dividerThickness / 90, 0]}
+        material={materials.glassFrosted || materials.glass} // Use a frosted material if available
+      >
+        <boxGeometry
+          args={[
+            W - frameThickness * 2,
+            bottomAreaHeight - dividerThickness / 990,
+            0.02 // Glass thickness
+          ]}
+        />
+      </mesh>
+    </group>
+  );
 };
 
     
