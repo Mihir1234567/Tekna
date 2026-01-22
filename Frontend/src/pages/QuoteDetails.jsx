@@ -49,150 +49,560 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
   const startX = (200 - drawW) / 2;
   const startY = (200 - drawH) / 2;
 
+  // Normalize type for comparison
+  const normalizedType = type?.toLowerCase() || "normal";
+
+  // Helper to draw dimension lines
+  const DimensionLines = () => (
+    <>
+      <line
+        x1={startX}
+        y1={startY + drawH + 10}
+        x2={startX + drawW}
+        y2={startY + drawH + 10}
+        stroke="#94a3b8"
+        strokeWidth="1"
+      />
+      <line
+        x1={startX}
+        y1={startY + drawH + 5}
+        x2={startX}
+        y2={startY + drawH + 15}
+        stroke="#94a3b8"
+        strokeWidth="1"
+      />
+      <line
+        x1={startX + drawW}
+        y1={startY + drawH + 5}
+        x2={startX + drawW}
+        y2={startY + drawH + 15}
+        stroke="#94a3b8"
+        strokeWidth="1"
+      />
+      <line
+        x1={startX - 10}
+        y1={startY}
+        x2={startX - 10}
+        y2={startY + drawH}
+        stroke="#94a3b8"
+        strokeWidth="1"
+      />
+      <line
+        x1={startX - 15}
+        y1={startY}
+        x2={startX - 5}
+        y2={startY}
+        stroke="#94a3b8"
+        strokeWidth="1"
+      />
+      <line
+        x1={startX - 15}
+        y1={startY + drawH}
+        x2={startX - 5}
+        y2={startY + drawH}
+        stroke="#94a3b8"
+        strokeWidth="1"
+      />
+      <text
+        x={startX + drawW / 2}
+        y={startY + drawH + 24}
+        textAnchor="middle"
+        fill="#374151"
+        style={{
+          fontSize: "12px",
+          fontWeight: "bold",
+          fontFamily: "sans-serif",
+        }}
+      >
+        {width}"
+      </text>
+      <text
+        x={startX - 20}
+        y={startY + drawH / 2}
+        textAnchor="middle"
+        fill="#374151"
+        transform={`rotate(-90, ${startX - 20}, ${startY + drawH / 2})`}
+        style={{
+          fontSize: "12px",
+          fontWeight: "bold",
+          fontFamily: "sans-serif",
+        }}
+      >
+        {height}"
+      </text>
+    </>
+  );
+
+  // Render different window types
+  const renderWindowContent = () => {
+    if (normalizedType.includes("4 track")) {
+      // 4-Track Sliding: 4 vertical panels
+      const panelW = drawW / 4;
+      return (
+        <>
+          {/* Glass panels */}
+          {[0, 1, 2, 3].map((i) => (
+            <rect
+              key={`panel-${i}`}
+              x={startX + i * panelW}
+              y={startY}
+              width={panelW}
+              height={drawH}
+              fill={glassColor}
+              stroke={strokeColor}
+              strokeWidth="1.5"
+            />
+          ))}
+          {/* Vertical track lines */}
+          {[1, 2, 3].map((i) => (
+            <line
+              key={`track-${i}`}
+              x1={startX + i * panelW}
+              y1={startY}
+              x2={startX + i * panelW}
+              y2={startY + drawH}
+              stroke={strokeColor}
+              strokeWidth="2"
+            />
+          ))}
+          {/* Arrows indicating sliding panels */}
+          {[0.5, 2.5].map((pos) => (
+            <g key={`arrow-${pos}`}>
+              <path
+                d={`M${startX + pos * panelW - 5} ${startY + drawH / 2} l3 -2 m-3 2 l3 2`}
+                stroke="#94a3b8"
+                strokeWidth="1.5"
+                fill="none"
+              />
+              <path
+                d={`M${startX + pos * panelW + 5} ${startY + drawH / 2} l-3 -2 m3 2 l-3 2`}
+                stroke="#94a3b8"
+                strokeWidth="1.5"
+                fill="none"
+              />
+            </g>
+          ))}
+        </>
+      );
+    } else if (normalizedType.includes("slider")) {
+      // 2-Panel Slider: Center divider with sliding arrows
+      return (
+        <>
+          <rect
+            x={startX}
+            y={startY}
+            width={drawW}
+            height={drawH}
+            fill={glassColor}
+            stroke={strokeColor}
+            strokeWidth="2"
+          />
+          <line
+            x1={startX + drawW / 2}
+            y1={startY}
+            x2={startX + drawW / 2}
+            y2={startY + drawH}
+            stroke={strokeColor}
+            strokeWidth="2"
+          />
+          {/* Left sliding arrow */}
+          <path
+            d={`M${startX + drawW * 0.25} ${startY + drawH / 2} l-3 -2 m3 2 l-3 2`}
+            stroke="#94a3b8"
+            strokeWidth="1.5"
+            fill="none"
+          />
+          {/* Right sliding arrow */}
+          <path
+            d={`M${startX + drawW * 0.75} ${startY + drawH / 2} l3 -2 m-3 2 l3 2`}
+            stroke="#94a3b8"
+            strokeWidth="1.5"
+            fill="none"
+          />
+        </>
+      );
+    } else if (normalizedType.includes("fix left")) {
+      // Fix left: Left openable, center and right fixed
+      const colW = drawW / 3;
+      return (
+        <>
+          {/* Left openable with X */}
+          <rect
+            x={startX}
+            y={startY}
+            width={colW}
+            height={drawH}
+            fill={glassColor}
+            stroke={strokeColor}
+            strokeWidth="1.5"
+          />
+          <line
+            x1={startX}
+            y1={startY}
+            x2={startX + colW}
+            y2={startY + drawH}
+            stroke="#cbd5e1"
+            strokeWidth="1"
+          />
+          <line
+            x1={startX + colW}
+            y1={startY}
+            x2={startX}
+            y2={startY + drawH}
+            stroke="#cbd5e1"
+            strokeWidth="1"
+          />
+          {/* Center fixed */}
+          <rect
+            x={startX + colW}
+            y={startY}
+            width={colW}
+            height={drawH}
+            fill={glassColor}
+            stroke={strokeColor}
+            strokeWidth="1.5"
+          />
+          {/* Right fixed */}
+          <rect
+            x={startX + 2 * colW}
+            y={startY}
+            width={colW}
+            height={drawH}
+            fill={glassColor}
+            stroke={strokeColor}
+            strokeWidth="1.5"
+          />
+          {/* Vertical dividers */}
+          <line
+            x1={startX + colW}
+            y1={startY}
+            x2={startX + colW}
+            y2={startY + drawH}
+            stroke={strokeColor}
+            strokeWidth="2"
+          />
+          <line
+            x1={startX + 2 * colW}
+            y1={startY}
+            x2={startX + 2 * colW}
+            y2={startY + drawH}
+            stroke={strokeColor}
+            strokeWidth="2"
+          />
+        </>
+      );
+    } else if (normalizedType.includes("fix right")) {
+      // Fix right: Left fixed, right openable
+      const colW = drawW / 2;
+      return (
+        <>
+          {/* Left fixed */}
+          <rect
+            x={startX}
+            y={startY}
+            width={colW}
+            height={drawH}
+            fill={glassColor}
+            stroke={strokeColor}
+            strokeWidth="1.5"
+          />
+          {/* Right openable with X */}
+          <rect
+            x={startX + colW}
+            y={startY}
+            width={colW}
+            height={drawH}
+            fill={glassColor}
+            stroke={strokeColor}
+            strokeWidth="1.5"
+          />
+          <line
+            x1={startX + colW}
+            y1={startY}
+            x2={startX + 2 * colW}
+            y2={startY + drawH}
+            stroke="#cbd5e1"
+            strokeWidth="1"
+          />
+          <line
+            x1={startX + 2 * colW}
+            y1={startY}
+            x2={startX + colW}
+            y2={startY + drawH}
+            stroke="#cbd5e1"
+            strokeWidth="1"
+          />
+          {/* Center divider */}
+          <line
+            x1={startX + colW}
+            y1={startY}
+            x2={startX + colW}
+            y2={startY + drawH}
+            stroke={strokeColor}
+            strokeWidth="2"
+          />
+        </>
+      );
+    } else if (normalizedType.includes("fix partition door")) {
+      // Fix partition door: Grid with door on right
+      const colW = drawW / 3;
+      const rowH = drawH / 3;
+      return (
+        <>
+          {/* Left 2 columns: 3x3 grid */}
+          {[0, 1].map((col) =>
+            [0, 1, 2].map((row) => (
+              <rect
+                key={`grid-${col}-${row}`}
+                x={startX + col * colW}
+                y={startY + row * rowH}
+                width={colW}
+                height={rowH}
+                fill={glassColor}
+                stroke={strokeColor}
+                strokeWidth="1"
+              />
+            ))
+          )}
+          {/* Door on right (bottom 2 rows) */}
+          <rect
+            x={startX + 2 * colW}
+            y={startY + rowH}
+            width={colW}
+            height={2 * rowH}
+            fill={glassColor}
+            stroke={strokeColor}
+            strokeWidth="1.5"
+          />
+          {/* Transom (top right) */}
+          <rect
+            x={startX + 2 * colW}
+            y={startY}
+            width={colW}
+            height={rowH}
+            fill={glassColor}
+            stroke={strokeColor}
+            strokeWidth="1"
+          />
+          {/* Door handle */}
+          <circle
+            cx={startX + 2 * colW + colW * 0.2}
+            cy={startY + rowH + rowH}
+            r="1.5"
+            fill={strokeColor}
+          />
+          {/* Vertical mullions */}
+          {[1, 2].map((col) => (
+            <line
+              key={`vmull-${col}`}
+              x1={startX + col * colW}
+              y1={startY}
+              x2={startX + col * colW}
+              y2={startY + drawH}
+              stroke={strokeColor}
+              strokeWidth="1.5"
+            />
+          ))}
+          {/* Horizontal mullions */}
+          {[1, 2].map((row) => (
+            <line
+              key={`hmull-${row}`}
+              x1={startX}
+              y1={startY + row * rowH}
+              x2={startX + drawW}
+              y2={startY + row * rowH}
+              stroke={strokeColor}
+              strokeWidth="1.5"
+            />
+          ))}
+        </>
+      );
+    } else if (normalizedType.includes("fix sliding")) {
+      // 3-Track Sliding: 3 vertical panels
+      const panelW = drawW / 3;
+      return (
+        <>
+          {/* Glass panels */}
+          {[0, 1, 2].map((i) => (
+            <rect
+              key={`panel-${i}`}
+              x={startX + i * panelW}
+              y={startY}
+              width={panelW}
+              height={drawH}
+              fill={glassColor}
+              stroke={strokeColor}
+              strokeWidth="1.5"
+            />
+          ))}
+          {/* Vertical track lines */}
+          {[1, 2].map((i) => (
+            <line
+              key={`track-${i}`}
+              x1={startX + i * panelW}
+              y1={startY}
+              x2={startX + i * panelW}
+              y2={startY + drawH}
+              stroke={strokeColor}
+              strokeWidth="2"
+            />
+          ))}
+          {/* Arrows indicating sliding panels */}
+          {[0.5, 1.5].map((pos) => (
+            <g key={`arrow-${pos}`}>
+              <path
+                d={`M${startX + pos * panelW - 4} ${startY + drawH / 2} l2 -1.5 m-2 1.5 l2 1.5`}
+                stroke="#94a3b8"
+                strokeWidth="1"
+                fill="none"
+              />
+              <path
+                d={`M${startX + pos * panelW + 4} ${startY + drawH / 2} l-2 -1.5 m2 1.5 l-2 1.5`}
+                stroke="#94a3b8"
+                strokeWidth="1"
+                fill="none"
+              />
+            </g>
+          ))}
+        </>
+      );
+    } else if (normalizedType.includes("bathroom window with top vent")) {
+      // Bathroom window: Top vent + bottom main window
+      const topHeight = drawH * 0.3;
+      const bottomHeight = drawH * 0.7;
+      return (
+        <>
+          {/* Top vent (small window) */}
+          <rect
+            x={startX}
+            y={startY}
+            width={drawW}
+            height={topHeight}
+            fill={glassColor}
+            stroke={strokeColor}
+            strokeWidth="1.5"
+          />
+          {/* Bottom main window */}
+          <rect
+            x={startX}
+            y={startY + topHeight}
+            width={drawW}
+            height={bottomHeight}
+            fill={glassColor}
+            stroke={strokeColor}
+            strokeWidth="1.5"
+          />
+          {/* Horizontal divider */}
+          <line
+            x1={startX}
+            y1={startY + topHeight}
+            x2={startX + drawW}
+            y2={startY + topHeight}
+            stroke={strokeColor}
+            strokeWidth="2"
+          />
+          {/* Center dividers for openable panels */}
+          <line
+            x1={startX + drawW / 2}
+            y1={startY}
+            x2={startX + drawW / 2}
+            y2={startY + topHeight}
+            stroke={strokeColor}
+            strokeWidth="1.5"
+          />
+          <line
+            x1={startX + drawW / 2}
+            y1={startY + topHeight}
+            x2={startX + drawW / 2}
+            y2={startY + drawH}
+            stroke={strokeColor}
+            strokeWidth="1.5"
+          />
+          {/* Sliding arrows for bottom */}
+          <path
+            d={`M${startX + drawW * 0.25} ${startY + topHeight + bottomHeight / 2} l-3 -2 m3 2 l-3 2`}
+            stroke="#94a3b8"
+            strokeWidth="1"
+            fill="none"
+          />
+          <path
+            d={`M${startX + drawW * 0.75} ${startY + topHeight + bottomHeight / 2} l3 -2 m-3 2 l3 2`}
+            stroke="#94a3b8"
+            strokeWidth="1"
+            fill="none"
+          />
+        </>
+      );
+    } else {
+      // Default/Normal: Simple 4-pane window
+      const halfW = drawW / 2;
+      const halfH = drawH / 2;
+      return (
+        <>
+          {/* Four panes */}
+          <rect
+            x={startX}
+            y={startY}
+            width={halfW}
+            height={halfH}
+            fill={glassColor}
+            stroke={strokeColor}
+            strokeWidth="1.5"
+          />
+          <rect
+            x={startX + halfW}
+            y={startY}
+            width={halfW}
+            height={halfH}
+            fill={glassColor}
+            stroke={strokeColor}
+            strokeWidth="1.5"
+          />
+          <rect
+            x={startX}
+            y={startY + halfH}
+            width={halfW}
+            height={halfH}
+            fill={glassColor}
+            stroke={strokeColor}
+            strokeWidth="1.5"
+          />
+          <rect
+            x={startX + halfW}
+            y={startY + halfH}
+            width={halfW}
+            height={halfH}
+            fill={glassColor}
+            stroke={strokeColor}
+            strokeWidth="1.5"
+          />
+          {/* Center cross dividers */}
+          <line
+            x1={startX + halfW}
+            y1={startY}
+            x2={startX + halfW}
+            y2={startY + drawH}
+            stroke={strokeColor}
+            strokeWidth="2"
+          />
+          <line
+            x1={startX}
+            y1={startY + halfH}
+            x2={startX + drawW}
+            y2={startY + halfH}
+            stroke={strokeColor}
+            strokeWidth="2"
+          />
+        </>
+      );
+    }
+  };
+
   return (
     <div className="w-full h-full flex items-center justify-center">
       <svg width="200" height="200" viewBox="0 0 200 200">
-        <line
-          x1={startX}
-          y1={startY + drawH + 10}
-          x2={startX + drawW}
-          y2={startY + drawH + 10}
-          stroke="#94a3b8"
-          strokeWidth="1"
-        />
-        <line
-          x1={startX}
-          y1={startY + drawH + 5}
-          x2={startX}
-          y2={startY + drawH + 15}
-          stroke="#94a3b8"
-          strokeWidth="1"
-        />
-        <line
-          x1={startX + drawW}
-          y1={startY + drawH + 5}
-          x2={startX + drawW}
-          y2={startY + drawH + 15}
-          stroke="#94a3b8"
-          strokeWidth="1"
-        />
-        <line
-          x1={startX - 10}
-          y1={startY}
-          x2={startX - 10}
-          y2={startY + drawH}
-          stroke="#94a3b8"
-          strokeWidth="1"
-        />
-        <line
-          x1={startX - 15}
-          y1={startY}
-          x2={startX - 5}
-          y2={startY}
-          stroke="#94a3b8"
-          strokeWidth="1"
-        />
-        <line
-          x1={startX - 15}
-          y1={startY + drawH}
-          x2={startX - 5}
-          y2={startY + drawH}
-          stroke="#94a3b8"
-          strokeWidth="1"
-        />
-        <text
-          x={startX + drawW / 2}
-          y={startY + drawH + 24}
-          textAnchor="middle"
-          fill="#374151"
-          style={{
-            fontSize: "12px",
-            fontWeight: "bold",
-            fontFamily: "sans-serif",
-          }}
-        >
-          {width}"
-        </text>
-        <text
-          x={startX - 20}
-          y={startY + drawH / 2}
-          textAnchor="middle"
-          fill="#374151"
-          transform={`rotate(-90, ${startX - 20}, ${startY + drawH / 2})`}
-          style={{
-            fontSize: "12px",
-            fontWeight: "bold",
-            fontFamily: "sans-serif",
-          }}
-        >
-          {height}"
-        </text>
-        <rect
-          x={startX}
-          y={startY}
-          width={drawW}
-          height={drawH}
-          fill={glassColor}
-          stroke={strokeColor}
-          strokeWidth="2"
-        />
-        <line
-          x1={startX}
-          y1={startY}
-          x2={startX + drawW}
-          y2={startY + drawH}
-          stroke="#e2e8f0"
-          strokeWidth="1"
-        />
-        {type.toLowerCase().includes("slider") ? (
-          <>
-            <line
-              x1={startX + drawW / 2}
-              y1={startY}
-              x2={startX + drawW / 2}
-              y2={startY + drawH}
-              stroke={strokeColor}
-              strokeWidth="1"
-            />
-            <path
-              d={`M${startX + drawW * 0.25} ${
-                startY + drawH / 2
-              } l-3 0 l2 -2 m-2 2 l2 2`}
-              stroke="#94a3b8"
-              strokeWidth="1"
-              fill="none"
-            />
-            <path
-              d={`M${startX + drawW * 0.75} ${
-                startY + drawH / 2
-              } l3 0 l-2 -2 m2 2 l-2 2`}
-              stroke="#94a3b8"
-              strokeWidth="1"
-              fill="none"
-            />
-          </>
-        ) : (
-          <>
-            <line
-              x1={startX + drawW / 2}
-              y1={startY}
-              x2={startX + drawW / 2}
-              y2={startY + drawH}
-              stroke="#cbd5e1"
-              strokeWidth="1"
-              strokeDasharray="4 2"
-            />
-            <line
-              x1={startX}
-              y1={startY + drawH / 2}
-              x2={startX + drawW}
-              y2={startY + drawH / 2}
-              stroke="#cbd5e1"
-              strokeWidth="1"
-              strokeDasharray="4 2"
-            />
-          </>
-        )}
+        <DimensionLines />
+        {renderWindowContent()}
       </svg>
     </div>
   );
