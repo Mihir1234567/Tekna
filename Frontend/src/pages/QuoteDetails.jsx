@@ -135,7 +135,8 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
 
   // Render different window types
   const renderWindowContent = () => {
-    if (normalizedType.includes("4 track")) {
+    // Check most specific types first
+    if (normalizedType.includes("4 track sliding")) {
       // 4-Track Sliding: 4 vertical panels
       const panelW = drawW / 4;
       return (
@@ -184,7 +185,7 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
           ))}
         </>
       );
-    } else if (normalizedType.includes("slider")) {
+    } else if (normalizedType === "slider") {
       // 2-Panel Slider: Center divider with sliding arrows
       return (
         <>
@@ -221,7 +222,7 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
           />
         </>
       );
-    } else if (normalizedType.includes("fix left")) {
+    } else if (normalizedType === "fix left") {
       // Fix left: Left openable, center and right fixed
       const colW = drawW / 3;
       return (
@@ -343,7 +344,7 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
           />
         </>
       );
-    } else if (normalizedType.includes("fix partition door")) {
+    } else if (normalizedType === "fix partision door") {
       // Fix partition door: Grid with door on right
       const colW = drawW / 3;
       const rowH = drawH / 3;
@@ -417,7 +418,7 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
           ))}
         </>
       );
-    } else if (normalizedType.includes("fix sliding")) {
+    } else if (normalizedType === "fix sliding") {
       // 3-Track Sliding: 3 vertical panels
       const panelW = drawW / 3;
       return (
@@ -466,7 +467,7 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
           ))}
         </>
       );
-    } else if (normalizedType.includes("bathroom window with top vent")) {
+    } else if (normalizedType === "bathroom window with top vent") {
       // Bathroom window: Top vent + bottom main window
       const topHeight = drawH * 0.3;
       const bottomHeight = drawH * 0.7;
