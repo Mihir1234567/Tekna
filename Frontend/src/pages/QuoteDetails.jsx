@@ -699,6 +699,7 @@ export default function QuotePreview() {
   const itemRefs = useRef({});
 
   const [windowList, setWindowList] = useState([]);
+  const [selectedWindowType, setSelectedWindowType] = useState(""); // Track selected window type for PDF
   const [clientDetails, setClientDetails] = useState({
     clientName: "",
     project: "",
@@ -721,8 +722,13 @@ export default function QuotePreview() {
   const [sgstPerc, setSgstPerc] = useState(9);
   const [packingCharges, setPackingCharges] = useState(0);
 
-  const subtotal = windowList.reduce((s, w) => s + Number(w.amount || 0), 0);
-  const totalSqFt = windowList.reduce((s, w) => s + Number(w.sqFt || 0), 0);
+  // Filter windows based on selected type for PDF display
+  const filteredWindowList = selectedWindowType
+    ? windowList.filter(w => w.windowType === selectedWindowType)
+    : windowList;
+
+  const subtotal = filteredWindowList.reduce((s, w) => s + Number(w.amount || 0), 0);
+  const totalSqFt = filteredWindowList.reduce((s, w) => s + Number(w.sqFt || 0), 0);
   const cgstAmount = applyGST ? (subtotal * cgstPerc) / 100 : 0;
   const sgstAmount = applyGST ? (subtotal * sgstPerc) / 100 : 0;
   const grandTotal = subtotal + packingCharges + cgstAmount + sgstAmount;
@@ -733,6 +739,7 @@ export default function QuotePreview() {
       if (state?.windowList) {
         setWindowList(state.windowList);
         if (state.clientInfo) setClientDetails(state.clientInfo);
+        if (state.selectedWindowType) setSelectedWindowType(state.selectedWindowType);
         setLoading(false);
       } else if (id) {
         try {
@@ -749,6 +756,9 @@ export default function QuotePreview() {
             setCgstPerc(data.quote.cgstPerc || 9);
             setSgstPerc(data.quote.sgstPerc || 9);
             setPackingCharges(data.quote.packingCharges || 0);
+            if (data.quote.selectedWindowType) {
+              setSelectedWindowType(data.quote.selectedWindowType);
+            }
           }
         } catch (err) {
           console.error(err);
@@ -943,7 +953,7 @@ export default function QuotePreview() {
     );
 
   const templateProps = {
-    data: { windowList, clientDetails, id },
+    data: { windowList: filteredWindowList, clientDetails, id },
     financials: {
       applyGST,
       cgstPerc,
@@ -962,12 +972,32 @@ export default function QuotePreview() {
     isPDFMode,
   };
 
+  // Get unique window types for filtering
+  const uniqueWindowTypes = [...new Set(windowList.map(w => w.windowType))].filter(Boolean);
+
   return (
     <div className="bg-gray-100 p-4 font-sans text-gray-800 h-screen overflow-y-auto w-full">
       {/* --- Toolbar --- */}
       <div className="max-w-[794px] mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <h1 className="text-xl font-bold text-gray-800">Preview</h1>
         <div className="flex flex-wrap justify-center gap-2 items-center">
+          {/* Window Type Filter Selector */}
+          {uniqueWindowTypes.length > 1 && (
+            <div className="flex items-center bg-white border rounded px-3 py-1.5 shadow-sm text-xs">
+              <label className="mr-2 font-medium text-gray-600">Filter by Type:</label>
+              <select
+                value={selectedWindowType}
+                onChange={(e) => setSelectedWindowType(e.target.value)}
+                className="text-xs font-medium text-gray-700 bg-white border-0 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">All Types</option>
+                {uniqueWindowTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Only GST Enable Toggle remains in Toolbar */}
           <div className="flex items-center bg-white border rounded px-3 py-1.5 shadow-sm text-xs mr-2">
             <label className="flex items-center gap-2 cursor-pointer font-medium select-none">

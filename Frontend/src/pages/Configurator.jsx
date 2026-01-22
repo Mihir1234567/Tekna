@@ -414,6 +414,7 @@ export default function Configurator() {
       clientName: clientInfo.clientName,
       project: clientInfo.project,
       finish: clientInfo.finish,
+      selectedWindowType: windowType, // Store the currently selected window type for PDF
       // Default financial values for new quotes (can be edited in Preview)
       applyGST: true,
       cgstPerc: 9,
