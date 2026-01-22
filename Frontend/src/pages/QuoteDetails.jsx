@@ -292,7 +292,7 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
           />
         </>
       );
-    } else if (normalizedType.includes("fix right")) {
+    } else if (normalizedType === "fix right") {
       // Fix right: Left fixed, right openable
       const colW = drawW / 2;
       return (
