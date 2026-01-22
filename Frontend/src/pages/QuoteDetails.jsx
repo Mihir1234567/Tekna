@@ -15,6 +15,7 @@ import toast from "react-hot-toast";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import logo from "../assets/logo.png";
+import WindowSketch from "../components/WindowSketch";
 import { apiGet } from "../utils/api";
 import { getToken } from "../utils/auth";
 // import { API_BASE_URL } from "../utils/config";
@@ -31,10 +32,14 @@ const formatINR = (val) => {
   }).format(val || 0);
 };
 
-const WindowSketch = ({ width, height, type = "normal" }) => {
-  const boxSize = 140;
-  const strokeColor = "#1f2937";
-  const glassColor = "#f8fafc";
+// WindowSketch is now imported from ../components/WindowSketch.jsx
+
+const DummyWindowSketch = ({ width, height, type = "normal" }) => {
+  const boxSize = 120;
+  const frameColor = "#2E3A43"; // Match 3D frame color
+  const glassColor = "#A5D6E7"; // Match 3D glass color
+  const frameThickness = 3; // SVG frame thickness
+  
   const w = Math.max(1, Number(width));
   const h = Math.max(1, Number(height));
   const aspect = w / h;
@@ -48,6 +53,8 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
   }
   const startX = (200 - drawW) / 2;
   const startY = (200 - drawH) / 2;
+  const endX = startX + drawW;
+  const endY = startY + drawH;
 
   // Normalize type for comparison
   const normalizedType = type?.toLowerCase() || "normal";
@@ -608,6 +615,7 @@ const WindowSketch = ({ width, height, type = "normal" }) => {
     </div>
   );
 };
+// End of old DummyWindowSketch definition (kept for reference but not used)
 
 const ManualSpacer = ({ id, height, updateHeight, visible, pdfMode }) => {
   if (pdfMode)
